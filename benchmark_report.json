@@ -1,0 +1,24 @@
+{
+  "timestamp": "2025-10-18T23:49:18.878331",
+  "device_info": {
+    "platform": "Darwin",
+    "processor": "Apple M4 Max (14)",
+    "ram_gb": 36.0,
+    "device": "mps",
+    "gpu_name": "Apple M4 Max (32 cores)",
+    "gpu_memory_gb": "shared with system RAM"
+  },
+  "dataset_size": 1000,
+  "models": {
+    "gte": {
+      "model_name": "thenlper/gte-large",
+      "encoding_time_seconds": 28.82,
+      "texts_per_second": 34.7
+    },
+    "modernbert": {
+      "model_name": "nomic-ai/modernbert-embed-base",
+      "encoding_time_seconds": 21.3,
+      "texts_per_second": 46.96
+    }
+  }
+}
