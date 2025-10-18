@@ -64,7 +64,7 @@ print(f"Dataset loaded: {dataset}")
 print(f"Number of rows: {len(dataset)}\n")
 
 # Подготовка результатов
-texts = dataset['text'][:1000]  # Берем первые 1000 строк для теста
+texts = dataset['text'] 
 results = {
     "timestamp": datetime.now().isoformat(),
     "device_info": device_info,
