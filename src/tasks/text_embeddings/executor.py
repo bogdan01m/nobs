@@ -3,7 +3,10 @@ from sentence_transformers import SentenceTransformer
 from src.memory_cleaner import clear_memory
 from statistics import median
 
-def run_single_model(model_name: str, model_key: str, texts: list, batch_size: int = 16):
+
+def run_single_model(
+    model_name: str, model_key: str, texts: list, batch_size: int = 16
+):
     """
     Loads model, encodes texts, measures time and clears memory
 
@@ -45,7 +48,7 @@ def run_single_model(model_name: str, model_key: str, texts: list, batch_size: i
         "dtype": model_dtype,
         "actual_dataset_size": len(texts),
         "encoding_time_seconds": round(encoding_time, 2),
-        "rows_per_second": round(len(texts) / encoding_time, 2)
+        "rows_per_second": round(len(texts) / encoding_time, 2),
     }
 
     # Clear memory
@@ -56,7 +59,13 @@ def run_single_model(model_name: str, model_key: str, texts: list, batch_size: i
     return results
 
 
-def run_model_with_repeats(model_name: str, model_key: str, texts: list, batch_size: int = 16, num_runs: int = 3):
+def run_model_with_repeats(
+    model_name: str,
+    model_key: str,
+    texts: list,
+    batch_size: int = 16,
+    num_runs: int = 3,
+):
     """
     Runs model multiple times with warmup run and calculates median
 
@@ -75,12 +84,12 @@ def run_model_with_repeats(model_name: str, model_key: str, texts: list, batch_s
     print(f"{'='*60}")
 
     # Warmup run (not counted in results)
-    print(f"\n🔥 WARMUP RUN (not counted)")
-    warmup_result = run_single_model(
+    print("\n🔥 WARMUP RUN (not counted)")
+    _ = run_single_model(
         model_name=model_name,
         model_key=model_key,
         texts=texts[:50],
-        batch_size=batch_size
+        batch_size=batch_size,
     )
 
     # Real runs
@@ -91,13 +100,15 @@ def run_model_with_repeats(model_name: str, model_key: str, texts: list, batch_s
             model_name=model_name,
             model_key=model_key,
             texts=texts,
-            batch_size=batch_size
+            batch_size=batch_size,
         )
-        runs.append({
-            "run": i + 1,
-            "encoding_time_seconds": run_result["encoding_time_seconds"],
-            "rows_per_second": run_result["rows_per_second"]
-        })
+        runs.append(
+            {
+                "run": i + 1,
+                "encoding_time_seconds": run_result["encoding_time_seconds"],
+                "rows_per_second": run_result["rows_per_second"],
+            }
+        )
 
     # Calculate median
     median_time = median([r["encoding_time_seconds"] for r in runs])
@@ -117,5 +128,5 @@ def run_model_with_repeats(model_name: str, model_key: str, texts: list, batch_s
         "num_runs": num_runs,
         "runs": runs,
         "median_encoding_time_seconds": round(median_time, 2),
-        "median_rows_per_second": round(median_rps, 2)
+        "median_rows_per_second": round(median_rps, 2),
     }

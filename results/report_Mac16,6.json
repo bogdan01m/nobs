@@ -1,5 +1,5 @@
 {
-  "timestamp": "2025-10-19T16:45:08.734556",
+  "timestamp": "2025-10-20T00:20:13.631954",
   "device_info": {
     "platform": "Darwin",
     "device": "mps",
@@ -26,22 +26,22 @@
           "runs": [
             {
               "run": 1,
-              "encoding_time_seconds": 2.99,
-              "rows_per_second": 33.45
+              "encoding_time_seconds": 2.94,
+              "rows_per_second": 34.01
             },
             {
               "run": 2,
-              "encoding_time_seconds": 2.85,
-              "rows_per_second": 35.08
+              "encoding_time_seconds": 2.89,
+              "rows_per_second": 34.55
             },
             {
               "run": 3,
-              "encoding_time_seconds": 2.85,
-              "rows_per_second": 35.04
+              "encoding_time_seconds": 2.89,
+              "rows_per_second": 34.63
             }
           ],
-          "median_encoding_time_seconds": 2.85,
-          "median_rows_per_second": 35.04
+          "median_encoding_time_seconds": 2.89,
+          "median_rows_per_second": 34.55
         },
         "nomic-ai/modernbert-embed-base": {
           "model_name": "nomic-ai/modernbert-embed-base",
@@ -55,26 +55,65 @@
           "runs": [
             {
               "run": 1,
-              "encoding_time_seconds": 2.8,
-              "rows_per_second": 35.75
+              "encoding_time_seconds": 2.81,
+              "rows_per_second": 35.53
             },
             {
               "run": 2,
-              "encoding_time_seconds": 2.79,
-              "rows_per_second": 35.8
+              "encoding_time_seconds": 2.75,
+              "rows_per_second": 36.31
             },
             {
               "run": 3,
-              "encoding_time_seconds": 2.79,
-              "rows_per_second": 35.82
+              "encoding_time_seconds": 2.76,
+              "rows_per_second": 36.3
             }
           ],
-          "median_encoding_time_seconds": 2.79,
-          "median_rows_per_second": 35.8
+          "median_encoding_time_seconds": 2.76,
+          "median_rows_per_second": 36.3
         }
       },
-      "task_score": 638.2979
+      "task_score": 637.1681
+    },
+    {
+      "task": "llms",
+      "dataset": "awesome-chatgpt-prompts",
+      "num_prompts": 3,
+      "model": {
+        "model_name": "gpt-oss-20b",
+        "num_prompts": 3,
+        "num_runs": 3,
+        "runs": [
+          {
+            "run": 1,
+            "median_latency_s": 21.4834,
+            "median_ttft_s": 6.085,
+            "median_tokens_per_sec": 176.096,
+            "total_input_tokens": 561,
+            "total_output_tokens": 4280
+          },
+          {
+            "run": 2,
+            "median_latency_s": 22.8079,
+            "median_ttft_s": 6.5012,
+            "median_tokens_per_sec": 168.1383,
+            "total_input_tokens": 561,
+            "total_output_tokens": 4280
+          },
+          {
+            "run": 3,
+            "median_latency_s": 26.3158,
+            "median_ttft_s": 7.6552,
+            "median_tokens_per_sec": 140.2815,
+            "total_input_tokens": 561,
+            "total_output_tokens": 4280
+          }
+        ],
+        "final_median_latency_s": 22.8079,
+        "final_median_ttft_s": 6.5012,
+        "final_median_tokens_per_sec": 168.1383
+      },
+      "task_score": 157.84
     }
-  ],
-  "total_score": 638.2979
+  ]
 }

@@ -1,6 +1,4 @@
-def calculate_score(total_time: float,
-                    num_tasks: int = 1,
-                    C: float = 3600) -> float:
+def calculate_score(total_time: float, num_tasks: int = 1, C: float = 3600) -> float:
     """
     Calculate benchmark score.
 
@@ -13,5 +11,5 @@ def calculate_score(total_time: float,
         Score as float
     """
     if total_time <= 0:
-        return float('inf')
+        return float("inf")
     return round(num_tasks * C / float(total_time), 4)

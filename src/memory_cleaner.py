@@ -1,5 +1,7 @@
 import gc
 import torch
+
+
 def clear_memory():
     """Очистка памяти независимо от устройства"""
     gc.collect()

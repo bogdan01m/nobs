@@ -2,22 +2,19 @@ from src.data.imdb_data import dataset
 from .executor import run_model_with_repeats
 from src.score import calculate_score
 
-def run_embeddings_benchmark():
+
+def run_embeddings_benchmark() -> dict:
     """
     Runs full embeddings models benchmark
 
     Returns:
         dict: Results for all models with metadata
     """
-    texts = dataset['text'][:100]
+    texts = dataset["text"][:100]
     print(f"Dataset loaded: {dataset}")
     print(f"Number of rows: {len(texts)}\n")
 
-    results = {
-        "task": "embeddings",
-        "dataset_size": len(texts),
-        "models": {}
-    }
+    results: dict = {"task": "embeddings", "dataset_size": len(texts), "models": {}}
 
     # Models for benchmark
     gte_model = "thenlper/gte-large"
@@ -26,11 +23,7 @@ def run_embeddings_benchmark():
     modernbert_key = "modernbert-embed-base"
     # Run benchmarks with repeats
     results["models"][gte_model] = run_model_with_repeats(
-        model_name=gte_model,
-        model_key=gte_key,
-        texts=texts,
-        batch_size=16,
-        num_runs=3
+        model_name=gte_model, model_key=gte_key, texts=texts, batch_size=16, num_runs=3
     )
 
     results["models"][modernbert_model] = run_model_with_repeats(
@@ -38,7 +31,7 @@ def run_embeddings_benchmark():
         model_key=modernbert_key,
         texts=texts,
         batch_size=16,
-        num_runs=3
+        num_runs=3,
     )
 
     # Calculate task score using median times

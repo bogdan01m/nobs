@@ -1,13 +1,21 @@
-import json, os, platform, psutil, subprocess, shlex
+import json
+import platform
+import psutil
+import subprocess
+import shlex
 import torch
+
 
 # ---------- helpers ----------
 def _run(cmd: str, timeout=4):
     try:
-        out = subprocess.check_output(shlex.split(cmd), stderr=subprocess.DEVNULL, timeout=timeout)
+        out = subprocess.check_output(
+            shlex.split(cmd), stderr=subprocess.DEVNULL, timeout=timeout
+        )
         return out.decode("utf-8", "ignore")
     except Exception:
         return ""
+
 
 def _read(path):
     try:
@@ -16,21 +24,33 @@ def _read(path):
     except Exception:
         return ""
 
+
 def _norm(s: str):
-    if not s: return ""
+    if not s:
+        return ""
     s = " ".join(s.replace("\x00", " ").split())
-    bad = {"", "To Be Filled By O.E.M.", "INVALID", "Default string", "System Product Name", "None", "Unknown"}
+    bad = {
+        "",
+        "To Be Filled By O.E.M.",
+        "INVALID",
+        "Default string",
+        "System Product Name",
+        "None",
+        "Unknown",
+    }
     return "" if s in bad else s
 
-def _join_unique(*parts):
-    parts = [p for p in parts if p]
+
+def _join_unique(*parts: str) -> str:
+    filtered_parts = [p for p in parts if p]
     # убираем дубли типа "Apple Apple M4 Max"
-    res = []
-    for p in parts:
+    res: list[str] = []
+    for p in filtered_parts:
         low = p.lower()
         if not res or low not in " ".join(res).lower():
             res.append(p)
     return " ".join(res)
+
 
 # ---------- fastfetch (optional) ----------
 def _from_fastfetch():
@@ -46,7 +66,7 @@ def _from_fastfetch():
     gpu_name = ""
     gpu_cores = None
     for item in data:
-        t = item.get("type","")
+        t = item.get("type", "")
         if t == "CPU":
             r = item.get("result", {})
             name = _norm(r.get("cpu") or r.get("name") or "")
@@ -57,8 +77,8 @@ def _from_fastfetch():
             r = item.get("result", [])
             if isinstance(r, list) and r:
                 g = r[0]
-                vendor = _norm(g.get("vendor",""))
-                name = _norm(g.get("name",""))
+                vendor = _norm(g.get("vendor", ""))
+                name = _norm(g.get("name", ""))
                 gpu_cores = g.get("coreCount")
                 if vendor and name and not name.lower().startswith(vendor.lower()):
                     gpu_name = f"{vendor} {name}"
@@ -68,6 +88,7 @@ def _from_fastfetch():
         gpu_name = f"{gpu_name} ({gpu_cores} cores)"
     return {"cpu": cpu_name or None, "gpu": gpu_name or None}
 
+
 # ---------- macOS ----------
 def _mac_host():
     sp = _run("system_profiler SPHardwareDataType")
@@ -76,9 +97,9 @@ def _mac_host():
     for line in sp.splitlines():
         L = line.strip()
         if L.lower().startswith("model identifier:"):
-            model_id = _norm(L.split(":",1)[1].strip())
+            model_id = _norm(L.split(":", 1)[1].strip())
         elif L.lower().startswith(("chip:", "processor name:")):
-            chip = _norm(L.split(":",1)[1].strip())
+            chip = _norm(L.split(":", 1)[1].strip())
 
     # Попробуем вытащить GPU ядра (не всегда доступно)
     dsp = _run("system_profiler SPDisplaysDataType")
@@ -87,7 +108,9 @@ def _mac_host():
         L = line.strip()
         if "Total Number of Cores" in L or "Количество ядер всего" in L:
             try:
-                gpu_core_count = str(int("".join(ch for ch in L.split(":")[-1] if ch.isdigit())))
+                gpu_core_count = str(
+                    int("".join(ch for ch in L.split(":")[-1] if ch.isdigit()))
+                )
                 break
             except Exception:
                 pass
@@ -102,15 +125,18 @@ def _mac_host():
     for line in sp.splitlines():
         L = line.strip()
         if L.lower().startswith(("chip:", "processor name:")):
-            cpu_line = _norm(L.split(":",1)[1].strip())
+            cpu_line = _norm(L.split(":", 1)[1].strip())
             break
 
     host = model_id or "Apple Mac"
     return host, cpu_line, gpu_name
 
+
 # ---------- Linux ----------
 def _linux_host():
-    vendor = _norm(_read("/sys/class/dmi/id/sys_vendor") or _read("/sys/class/dmi/id/board_vendor"))
+    vendor = _norm(
+        _read("/sys/class/dmi/id/sys_vendor") or _read("/sys/class/dmi/id/board_vendor")
+    )
     product = _norm(_read("/sys/class/dmi/id/product_name"))
     version = _norm(_read("/sys/class/dmi/id/product_version"))
     if not (vendor or product):
@@ -118,7 +144,7 @@ def _linux_host():
         maybe = []
         for line in hc.splitlines():
             if "Hardware Model" in line or "Chassis" in line:
-                maybe.append(_norm(line.split(":",1)[-1]))
+                maybe.append(_norm(line.split(":", 1)[-1]))
         host = _join_unique(*maybe) or "Linux Machine"
     else:
         host = _join_unique(vendor, product, version)
@@ -135,7 +161,7 @@ def _linux_host():
             mem = "".join(ch for ch in first[1] if ch.isdigit())
             if mem:
                 # memory.total в MiB
-                gpu_mem_gb = round(int(mem)/1024, 2)
+                gpu_mem_gb = round(int(mem) / 1024, 2)
 
     # фолбэк ROCm
     if not gpu_name:
@@ -159,7 +185,7 @@ def _linux_host():
         if cpu_name:
             for line in cpu_name.splitlines():
                 if line.lower().startswith("model name:"):
-                    cpu_name = _norm(line.split(":",1)[1].strip())
+                    cpu_name = _norm(line.split(":", 1)[1].strip())
                     break
     except Exception:
         pass
@@ -168,16 +194,24 @@ def _linux_host():
 
     return host, cpu_name, gpu_name, gpu_mem_gb
 
+
 # ---------- Windows ----------
 def _win_host():
-    name = _run('powershell -NoProfile -Command "Get-CimInstance Win32_ComputerSystemProduct | Select-Object -ExpandProperty Name"')
+    name = _run(
+        'powershell -NoProfile -Command "Get-CimInstance Win32_ComputerSystemProduct | Select-Object -ExpandProperty Name"'
+    )
     host = _norm(name) or "Windows PC"
-    cpu = _run('powershell -NoProfile -Command "Get-CimInstance Win32_Processor | Select-Object -ExpandProperty Name"')
+    cpu = _run(
+        'powershell -NoProfile -Command "Get-CimInstance Win32_Processor | Select-Object -ExpandProperty Name"'
+    )
     cpu = _norm(cpu.splitlines()[0] if cpu else "")
     # GPU
-    gpu = _run('powershell -NoProfile -Command "Get-CimInstance Win32_VideoController | Select-Object -ExpandProperty Name"')
+    gpu = _run(
+        'powershell -NoProfile -Command "Get-CimInstance Win32_VideoController | Select-Object -ExpandProperty Name"'
+    )
     gpu = _norm(gpu.splitlines()[0] if gpu else "")
     return host, cpu, gpu
+
 
 # ---------- public API ----------
 def get_device_info():
@@ -249,6 +283,7 @@ def get_device_info():
             del info[k]
 
     return info
+
 
 # Пример:
 if __name__ == "__main__":

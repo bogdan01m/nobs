@@ -17,13 +17,13 @@
 ---
 
 ## 🚀 Overview
-**NoBS (Neural NetwOrks Benchmark Stash)** is an open-source benchmark suite  
+**NoBS (Neural NetwOrks Benchmark Stash)** is an open-source benchmark suite
 for evaluating *real AI hardware performance* — not synthetic FLOPS or polished demos.
 
 It’s a collection of reproducible tests and community-submitted results for:
-- 🧩 Embeddings  
+- 🧩 Embeddings
 - 💬 LLM inference
-- 👁️ VLM inference 
+- 👁️ VLM inference
 - 🎨 Diffusion image generation
 
 ---
@@ -32,7 +32,7 @@ It’s a collection of reproducible tests and community-submitted results for:
 
 > *"We don’t measure synthetic FLOPS. We measure how your GPU cries in real life."*
 
-NOBS was built by engineers tired of meaningless benchmark charts.  
+NOBS was built by engineers tired of meaningless benchmark charts.
 No synthetic kernels, no fake workloads — just **real models, real data, and honest numbers**.
 
 ---

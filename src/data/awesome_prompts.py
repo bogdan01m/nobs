@@ -1,3 +1,4 @@
 from datasets import load_dataset
 
-dataset = load_dataset("fka/awesome-chatgpt-prompts")
+_dataset = load_dataset("fka/awesome-chatgpt-prompts")
+dataset = _dataset["train"]
