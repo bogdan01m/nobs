@@ -1,0 +1,80 @@
+{
+  "timestamp": "2025-10-19T16:45:08.734556",
+  "device_info": {
+    "platform": "Darwin",
+    "device": "mps",
+    "ram_gb": 36.0,
+    "processor": "Apple M4 Max (14)",
+    "gpu_name": "Apple M4 Max (32 cores)",
+    "gpu_memory_gb": "shared with system RAM",
+    "host": "Mac16,6"
+  },
+  "tasks": [
+    {
+      "task": "embeddings",
+      "dataset_size": 100,
+      "models": {
+        "thenlper/gte-large": {
+          "model_name": "thenlper/gte-large",
+          "batch_size": 16,
+          "max_seq_length": 512,
+          "embedding_dimension": 1024,
+          "device": "mps:0",
+          "dtype": "torch.float32",
+          "actual_dataset_size": 100,
+          "num_runs": 3,
+          "runs": [
+            {
+              "run": 1,
+              "encoding_time_seconds": 2.99,
+              "rows_per_second": 33.45
+            },
+            {
+              "run": 2,
+              "encoding_time_seconds": 2.85,
+              "rows_per_second": 35.08
+            },
+            {
+              "run": 3,
+              "encoding_time_seconds": 2.85,
+              "rows_per_second": 35.04
+            }
+          ],
+          "median_encoding_time_seconds": 2.85,
+          "median_rows_per_second": 35.04
+        },
+        "nomic-ai/modernbert-embed-base": {
+          "model_name": "nomic-ai/modernbert-embed-base",
+          "batch_size": 16,
+          "max_seq_length": 8192,
+          "embedding_dimension": 768,
+          "device": "mps:0",
+          "dtype": "torch.float32",
+          "actual_dataset_size": 100,
+          "num_runs": 3,
+          "runs": [
+            {
+              "run": 1,
+              "encoding_time_seconds": 2.8,
+              "rows_per_second": 35.75
+            },
+            {
+              "run": 2,
+              "encoding_time_seconds": 2.79,
+              "rows_per_second": 35.8
+            },
+            {
+              "run": 3,
+              "encoding_time_seconds": 2.79,
+              "rows_per_second": 35.82
+            }
+          ],
+          "median_encoding_time_seconds": 2.79,
+          "median_rows_per_second": 35.8
+        }
+      },
+      "task_score": 638.2979
+    }
+  ],
+  "total_score": 638.2979
+}

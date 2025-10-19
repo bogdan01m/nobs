@@ -1,4 +1,4 @@
-# NOBS — Neural NetwOrks Benchmark Stash
+# NoBS benchmark
 
 [![CUDA](https://img.shields.io/badge/CUDA-Supported-76B900?style=flat&logo=nvidia&logoColor=white)](https://developer.nvidia.com/cuda-zone)
 [![MPS](https://img.shields.io/badge/MPS-Optimized-000000?style=flat&logo=apple&logoColor=white)](https://developer.apple.com/metal/)
@@ -6,24 +6,24 @@
 [![Open Source](https://img.shields.io/badge/Open%20Source-Benchmark-2ECC71?style=flat&logo=github&logoColor=white)](https://github.com/bogdanminko/nobs)
 <div align="center">
 
-### 🎯 A collection of honest, reproducible AI hardware benchmarks
+### 📚 A collection of AI hardware benchmarks
 
-**Real workloads. Real results. No-Bullshit.**
+**No magic scores. No FLOPS. No AI TOPS. No-BullShit.**
 
-*Compare M4 Max, RTX 4060, A100 and other hardware on LLM, diffusion, and embedding tasks*
+*Compare M4 Max, RTX 4060, A100 and other hardware on different AI tasks*
 
 </div>
 
 ---
 
 ## 🚀 Overview
-**NOBS (Neural NetwOrks Benchmark Stash)** is an open-source benchmark suite  
+**NoBS (Neural NetwOrks Benchmark Stash)** is an open-source benchmark suite  
 for evaluating *real AI hardware performance* — not synthetic FLOPS or polished demos.
 
-It’s a stash of reproducible tests and community-submitted results for:
+It’s a collection of reproducible tests and community-submitted results for:
 - 🧩 Embeddings  
 - 💬 LLM inference
-- 👁️ VLM / Vision-Language tasks  
+- 👁️ VLM inference 
 - 🎨 Diffusion image generation
 
 ---
@@ -38,12 +38,7 @@ No synthetic kernels, no fake workloads — just **real models, real data, and h
 ---
 
 ## ⚡ Quick Start
-
-### 1. Install
-```bash
-uv add nobs
-
-## Run Localy
+### 1. Run via UV - python package manager
 ```sh
-uv run python -m src.tasks.embeddings.runner
+uv run main.py
 ```
