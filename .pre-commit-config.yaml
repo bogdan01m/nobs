@@ -31,13 +31,3 @@ repos:
       - id: bandit
         args: [--severity-level, high, --confidence-level, high, --skip, B101, -r]
         files: ^(src/|main\.py)
-
-  - repo: local
-    hooks:
-      - id: generate-results-table
-        name: Generate benchmark results table
-        entry: uv run python src/generate_results_table.py
-        language: system
-        files: ^results/report_.*\.json$
-        pass_filenames: false
-        always_run: false
