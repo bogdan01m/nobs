@@ -43,7 +43,7 @@ It's a collection of reproducible tests and community-submitted results for:
 
 ## Philosophy
 
-> *"We don’t measure synthetic Scores. We measure how your GPU cries in real life."*
+> *"We don’t measure synthetic FLOPS. We measure how your GPU cries in real life."*
 
 NoBS was built to understand how different devices — from everyday laptops and PCs to large inference giants — actually perform on real AI tasks.
 
