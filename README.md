@@ -30,7 +30,7 @@
 ---
 
 ## Overview
-**NoBS (Neural NetwOrks Benchmark Stash)** is an open-source benchmark suite
+**NoBS** is an open-source benchmark suite
 for evaluating *real AI hardware performance* — not synthetic FLOPS or polished demos.
 
 It's a collection of reproducible tests and community-submitted results for:
@@ -55,29 +55,29 @@ NoBS was built to understand how different devices — from everyday laptops and
 
 ### 🏆 Overall Ranking
 
-| Rank | Device | CPU | RAM | GPU | VRAM | Embeddings | LLM | Total Score |
-|------|--------|-----|-----|-----|------|------------|-----|-------------|
-| 🥇 1 | Mac16,6 | Apple M4 Max (14) | 36 GB | Apple M4 Max (32 cores) | shared with system RAM | 637.17 | 157.84 | **795.01** |
-| 🥈 2 | ASUSTeK COMPUTER INC. ASUS Vivobook Pro 15 N6506MV_N6506MV 1.0 | Intel(R) Core(TM) Ultra 9 185H (16) | 23 GB | NVIDIA GeForce RTX 4060 Laptop GPU | 8 GB | 539.73 | 26.42 | **566.15** |
+| Rank | Device | Platform | CPU | RAM | GPU | VRAM | Embeddings | LLM | Total Score |
+|------|--------|----------|-----|-----|-----|------|------------|-----|-------------|
+| 🥇 1 | Mac16,6 | 🍏 macOS | Apple M4 Max (14) | 36 GB | Apple M4 Max (32 cores) | shared with system RAM | 637.17 | 157.84 | **795.01** |
+| 🥈 2 | ASUSTeK COMPUTER INC. ASUS Vivobook Pro 15 N6506MV_N6506MV 1.0 | 🐧 Linux | Intel(R) Core(TM) Ultra 9 185H (16) | 23 GB | NVIDIA GeForce RTX 4060 Laptop GPU | 8 GB | 539.73 | 26.42 | **566.15** |
 
 
 ### 📊 By GPU Vendor
 
 <details open>
-<summary><b>🍎 Apple</b> (1 device)</summary>
+<summary><b>⚫ Apple</b> (1 device)</summary>
 
-| Rank | Device | CPU | RAM | GPU | VRAM | Embeddings | LLM | Total Score |
-|------|--------|-----|-----|-----|------|------------|-----|-------------|
-| 🥇 1 | Mac16,6 | Apple M4 Max (14) | 36 GB | Apple M4 Max (32 cores) | shared with system RAM | 637.17 | 157.84 | **795.01** |
+| Rank | Device | Platform | CPU | RAM | GPU | VRAM | Embeddings | LLM | Total Score |
+|------|--------|----------|-----|-----|-----|------|------------|-----|-------------|
+| 🥇 1 | Mac16,6 | 🍏 macOS | Apple M4 Max (14) | 36 GB | Apple M4 Max (32 cores) | shared with system RAM | 637.17 | 157.84 | **795.01** |
 
 </details>
 
 <details open>
 <summary><b>🟢 NVIDIA</b> (1 device)</summary>
 
-| Rank | Device | CPU | RAM | GPU | VRAM | Embeddings | LLM | Total Score |
-|------|--------|-----|-----|-----|------|------------|-----|-------------|
-| 🥇 1 | ASUSTeK COMPUTER INC. ASUS Vivobook Pro 15 N6506MV_N6506MV 1.0 | Intel(R) Core(TM) Ultra 9 185H (16) | 23 GB | NVIDIA GeForce RTX 4060 Laptop GPU | 8 GB | 539.73 | 26.42 | **566.15** |
+| Rank | Device | Platform | CPU | RAM | GPU | VRAM | Embeddings | LLM | Total Score |
+|------|--------|----------|-----|-----|-----|------|------------|-----|-------------|
+| 🥇 1 | ASUSTeK COMPUTER INC. ASUS Vivobook Pro 15 N6506MV_N6506MV 1.0 | 🐧 Linux | Intel(R) Core(TM) Ultra 9 185H (16) | 23 GB | NVIDIA GeForce RTX 4060 Laptop GPU | 8 GB | 539.73 | 26.42 | **566.15** |
 
 </details>
 
@@ -203,9 +203,20 @@ We welcome contributions! Whether it's adding new benchmarks, supporting new mod
    # Run benchmarks to ensure they work
    uv run python main.py
 
+   # Update benchmark results tables (if you modified results)
+   make
+
    # Run code quality checks manually (optional - pre-commit will run them automatically)
-   pre-commit run --all-files
+   make format
    ```
+
+   **Available Makefile commands:**
+   - `make` — Generate benchmark results tables (default)
+   - `make generate` — Generate benchmark results tables
+   - `make format` — Run pre-commit hooks on all files
+   - `make lint` — Run ruff linter only
+   - `make clean` — Clean Python cache files
+   - `make help` — Show all available commands
 
 4. **Commit your changes**
    ```sh
