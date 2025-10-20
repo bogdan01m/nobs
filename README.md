@@ -55,10 +55,10 @@ NoBS was built to understand how different devices — from everyday laptops and
 
 ### 🏆 Overall Ranking
 
-| Rank | Device | CPU | GPU | RAM | Embeddings | LLM | Total Score |
-|------|--------|-----|-----|-----|------------|-----|-------------|
-| 🥇 1 | Mac16,6 | Apple M4 Max (14) | Apple M4 Max (32 cores) | 36 GB | 637.17 | 157.84 | **795.01** |
-| 🥈 2 | ASUSTeK COMPUTER INC. ASUS Vivobook Pro 15 N6506MV_N6506MV 1.0 | Intel(R) Core(TM) Ultra 9 185H (16) | NVIDIA GeForce RTX 4060 Laptop GPU | 23 GB | 539.73 | 26.42 | **566.15** |
+| Rank | Device | CPU | RAM | GPU | VRAM | Embeddings | LLM | Total Score |
+|------|--------|-----|-----|-----|------|------------|-----|-------------|
+| 🥇 1 | Mac16,6 | Apple M4 Max (14) | 36 GB | Apple M4 Max (32 cores) | shared with system RAM | 637.17 | 157.84 | **795.01** |
+| 🥈 2 | ASUSTeK COMPUTER INC. ASUS Vivobook Pro 15 N6506MV_N6506MV 1.0 | Intel(R) Core(TM) Ultra 9 185H (16) | 23 GB | NVIDIA GeForce RTX 4060 Laptop GPU | 8 GB | 539.73 | 26.42 | **566.15** |
 
 
 ### 📊 By GPU Vendor
@@ -66,18 +66,18 @@ NoBS was built to understand how different devices — from everyday laptops and
 <details open>
 <summary><b>🍎 Apple</b> (1 device)</summary>
 
-| Rank | Device | CPU | GPU | RAM | Embeddings | LLM | Total Score |
-|------|--------|-----|-----|-----|------------|-----|-------------|
-| 🥇 1 | Mac16,6 | Apple M4 Max (14) | Apple M4 Max (32 cores) | 36 GB | 637.17 | 157.84 | **795.01** |
+| Rank | Device | CPU | RAM | GPU | VRAM | Embeddings | LLM | Total Score |
+|------|--------|-----|-----|-----|------|------------|-----|-------------|
+| 🥇 1 | Mac16,6 | Apple M4 Max (14) | 36 GB | Apple M4 Max (32 cores) | shared with system RAM | 637.17 | 157.84 | **795.01** |
 
 </details>
 
 <details open>
 <summary><b>🟢 NVIDIA</b> (1 device)</summary>
 
-| Rank | Device | CPU | GPU | RAM | Embeddings | LLM | Total Score |
-|------|--------|-----|-----|-----|------------|-----|-------------|
-| 🥇 1 | ASUSTeK COMPUTER INC. ASUS Vivobook Pro 15 N6506MV_N6506MV 1.0 | Intel(R) Core(TM) Ultra 9 185H (16) | NVIDIA GeForce RTX 4060 Laptop GPU | 23 GB | 539.73 | 26.42 | **566.15** |
+| Rank | Device | CPU | RAM | GPU | VRAM | Embeddings | LLM | Total Score |
+|------|--------|-----|-----|-----|------|------------|-----|-------------|
+| 🥇 1 | ASUSTeK COMPUTER INC. ASUS Vivobook Pro 15 N6506MV_N6506MV 1.0 | Intel(R) Core(TM) Ultra 9 185H (16) | 23 GB | NVIDIA GeForce RTX 4060 Laptop GPU | 8 GB | 539.73 | 26.42 | **566.15** |
 
 </details>
 

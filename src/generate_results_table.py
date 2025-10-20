@@ -52,8 +52,8 @@ def generate_summary_table(results: list[dict[str, Any]]) -> str:
     scored_results.sort(key=lambda x: x["total_score"], reverse=True)
 
     lines = [
-        "| Rank | Device | CPU | GPU | RAM | Embeddings | LLM | Total Score |",
-        "|------|--------|-----|-----|-----|------------|-----|-------------|",
+        "| Rank | Device | CPU | RAM | GPU | VRAM | Embeddings | LLM | Total Score |",
+        "|------|--------|-----|-----|-----|------|------------|-----|-------------|",
     ]
 
     for rank, item in enumerate(scored_results, 1):
@@ -65,13 +65,20 @@ def generate_summary_table(results: list[dict[str, Any]]) -> str:
         llm_str = f"{item['llm_score']:.2f}" if item["llm_score"] else "-"
         total_str = f"{item['total_score']:.2f}" if item["total_score"] > 0 else "-"
 
+        # Format GPU memory
+        gpu_mem = device_info.get("gpu_memory_gb", "N/A")
+        if isinstance(gpu_mem, (int, float)):
+            vram_str = f"{gpu_mem:.0f} GB"
+        else:
+            vram_str = str(gpu_mem)
+
         # Add medal emoji for top 3
         rank_emoji = {1: "🥇", 2: "🥈", 3: "🥉"}.get(rank, "")
         rank_str = f"{rank_emoji} {rank}" if rank_emoji else str(rank)
 
         lines.append(
             f"| {rank_str} | {device_info['host']} | {device_info['processor']} | "
-            f"{device_info['gpu_name']} | {device_info['ram_gb']:.0f} GB | "
+            f"{device_info['ram_gb']:.0f} GB | {device_info['gpu_name']} | {vram_str} | "
             f"{emb_str} | {llm_str} | **{total_str}** |"
         )
 
@@ -251,16 +258,18 @@ def generate_gpu_grouped_tables(results: list[dict[str, Any]]) -> str:
         items = vendor_groups[vendor]
 
         # Start collapsible section (open by default)
+        sections.append("<details open>")
         sections.append(
-            f'<details open>\n<summary><b>{emoji} {vendor}</b> ({len(items)} device{"s" if len(items) > 1 else ""})</summary>\n'
+            f'<summary><b>{emoji} {vendor}</b> ({len(items)} device{"s" if len(items) > 1 else ""})</summary>'
         )
+        sections.append("")  # Empty line after summary
 
         # Table header
         sections.append(
-            "| Rank | Device | CPU | GPU | RAM | Embeddings | LLM | Total Score |"
+            "| Rank | Device | CPU | RAM | GPU | VRAM | Embeddings | LLM | Total Score |"
         )
         sections.append(
-            "|------|--------|-----|-----|-----|------------|-----|-------------|"
+            "|------|--------|-----|-----|-----|------|------------|-----|-------------|"
         )
 
         # Table rows
@@ -275,17 +284,26 @@ def generate_gpu_grouped_tables(results: list[dict[str, Any]]) -> str:
             llm_str = f"{item['llm_score']:.2f}" if item["llm_score"] else "-"
             total_str = f"{item['total_score']:.2f}" if item["total_score"] > 0 else "-"
 
+            # Format GPU memory
+            gpu_mem = device_info.get("gpu_memory_gb", "N/A")
+            if isinstance(gpu_mem, (int, float)):
+                vram_str = f"{gpu_mem:.0f} GB"
+            else:
+                vram_str = str(gpu_mem)
+
             # Add medal emoji for top 3 within vendor
             rank_emoji = {1: "🥇", 2: "🥈", 3: "🥉"}.get(rank, "")
             rank_str = f"{rank_emoji} {rank}" if rank_emoji else str(rank)
 
             sections.append(
                 f"| {rank_str} | {device_info['host']} | {device_info['processor']} | "
-                f"{device_info['gpu_name']} | {device_info['ram_gb']:.0f} GB | "
+                f"{device_info['ram_gb']:.0f} GB | {device_info['gpu_name']} | {vram_str} | "
                 f"{emb_str} | {llm_str} | **{total_str}** |"
             )
 
-        sections.append("\n</details>\n")
+        sections.append("")  # Empty line before closing tag
+        sections.append("</details>")
+        sections.append("")  # Empty line after section
 
     return "\n".join(sections)
 
