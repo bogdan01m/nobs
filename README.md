@@ -16,6 +16,19 @@
 
 ---
 
+## Table of Contents
+
+- [Overview](#overview)
+- [Philosophy](#philosophy)
+- [Quick Start](#-quick-start)
+- [Contributing](#-contributing)
+- [Benchmark Results](#benchmark-results)
+  - [Overall Ranking](#-overall-ranking)
+  - [By GPU Vendor](#-by-gpu-vendor)
+  - [Detailed Performance](#-detailed-performance)
+
+---
+
 ## Overview
 **NoBS (Neural NetwOrks Benchmark Stash)** is an open-source benchmark suite
 for evaluating *real AI hardware performance* — not synthetic FLOPS or polished demos.
