@@ -8,18 +8,20 @@ from pathlib import Path
 from src.device_info import get_device_info
 from src.tasks.text_embeddings.runner import run_embeddings_benchmark
 from src.tasks.llms.runner import run_llms_benchmark
+from src.tasks.vlms.runner import run_vlms_benchmark
 from src.lm_studio_setup import setup_lm_studio, cleanup_lm_studio
+from src.settings import LLM_MODEL_NAME, LLM_BASE_URL, VLM_MODEL_NAME, VLM_BASE_URL
 
 
 def save_report(results: dict, device_info: dict):
     """
-    Сохраняет отчет в папку results/
+    Stores run results in dir: results/
 
     Args:
-        results: Результаты бенчмарка
-        device_info: Информация об устройстве
+        results: bench results
+        device_info: device results
     """
-    # Создаем папку results
+    # create `results`
     results_dir = Path("results")
     results_dir.mkdir(exist_ok=True)
 
@@ -51,7 +53,7 @@ def save_report(results: dict, device_info: dict):
 
 def main():
     """
-    Главная функция для запуска всех бенчмарков
+    Func to start bench run
     """
     # Получаем информацию об устройстве
     device_info = get_device_info()
@@ -120,7 +122,7 @@ def main():
             print("Please enter 'y' or 'n'")
 
         if auto_setup == "y":
-            if not setup_lm_studio():
+            if not setup_lm_studio(LLM_MODEL_NAME, LLM_BASE_URL):
                 print("✗ LM Studio setup failed. Skipping LLM benchmark.")
             else:
                 llm_was_setup = True
@@ -140,15 +142,76 @@ def main():
     else:
         print("Skipping LLM benchmark.")
 
-    # Cleanup LM Studio если был auto-setup
+    # Cleanup LM Studio после LLM
     if llm_was_setup:
         print()
         cleanup_lm_studio()
+        llm_was_setup = False  # Сброс флага
 
-    # Сохраняем результаты без total_score
+    # Спрашиваем про VLM бенчмарк
+    print("\n" + "=" * 50)
+    print("VLM (Vision-Language Model) Benchmark")
+    print("=" * 50)
+    print("This benchmark requires LM Studio with a VLM model.")
+    print("Dataset: Hallucination_COCO (3 questions with images)")
+    print()
+    print("Default settings (configure in .env):")
+    print(f"  VLM_MODEL_NAME={VLM_MODEL_NAME}")
+    print("  VLM_BASE_URL=http://127.0.0.1:1234/v1")
+    print("=" * 50)
+
+    while True:
+        run_vlm = input("\nRun VLM benchmark? (y/n): ").strip().lower()
+        if run_vlm in ["y", "n"]:
+            break
+        print("Please enter 'y' or 'n'")
+
+    vlm_was_setup = False  # Флаг для VLM cleanup
+
+    if run_vlm == "y":
+        # Автоматическая настройка VLM модели
+        print()
+        print("Auto-setup will:")
+        print("  1. Download VLM model (if not already downloaded)")
+        print("  2. Start LM Studio server")
+        print("  3. Load VLM model into memory")
+        print("  4. Verify model is ready")
+
+        while True:
+            auto_setup_vlm = (
+                input("\nAuto-setup VLM model and server? (y/n): ").strip().lower()
+            )
+            if auto_setup_vlm in ["y", "n"]:
+                break
+            print("Please enter 'y' or 'n'")
+
+        if auto_setup_vlm == "y":
+            if not setup_lm_studio(VLM_MODEL_NAME, VLM_BASE_URL):
+                print("✗ LM Studio setup failed. Skipping VLM benchmark.")
+            else:
+                vlm_was_setup = True
+                print("\n" + "=" * 50)
+                print("Starting VLM Benchmark...")
+                print("=" * 50)
+                print()
+                vlm_results = run_vlms_benchmark()
+                all_task_results.append(vlm_results)
+        else:
+            print("\n" + "=" * 50)
+            print("Starting VLM Benchmark...")
+            print("=" * 50)
+            print()
+            vlm_results = run_vlms_benchmark()
+            all_task_results.append(vlm_results)
+    else:
+        print("Skipping VLM benchmark.")
+
+    # Cleanup LM Studio после VLM
+    if vlm_was_setup:
+        print()
+        cleanup_lm_studio()
+
     final_results = {"tasks": all_task_results}
-
-    # Сохраняем отчет
     report_path = save_report(final_results, device_info)
 
     print()
@@ -157,11 +220,11 @@ def main():
     print("=" * 50)
     print(f"Results saved to: {report_path}")
     print()
-    print("Task Scores:")
+    print("Task Times:")
     for task in all_task_results:
         task_name = task.get("task", "unknown")
-        task_score = task.get("task_score", "N/A")
-        print(f"  {task_name}: {task_score}")
+        total_time = task.get("total_time_seconds", "N/A")
+        print(f"  {task_name}: {total_time}s")
     print("=" * 50)
 
 

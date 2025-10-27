@@ -210,3 +210,6 @@ __marimo__/
 .DS_Store
 .AppleDouble
 .LSOverride
+
+# Project-specific
+/logs/

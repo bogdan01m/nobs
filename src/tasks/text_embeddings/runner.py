@@ -1,6 +1,5 @@
 from src.data.imdb_data import dataset
 from .executor import run_model_with_repeats
-from src.score import calculate_score
 
 
 def run_embeddings_benchmark() -> dict:
@@ -34,16 +33,15 @@ def run_embeddings_benchmark() -> dict:
         num_runs=3,
     )
 
-    # Calculate task score using median times
+    # Calculate total time as main metric
     total_median_time = sum(
         model_result["median_encoding_time_seconds"]
         for model_result in results["models"].values()
     )
-    print(total_median_time)
-    results["task_score"] = calculate_score(total_median_time, num_tasks=1)
+    results["total_time_seconds"] = round(total_median_time, 2)
 
     print(f"\n{'='*60}")
-    print(f"FINAL TASK SCORE: {results['task_score']}")
+    print(f"TOTAL TIME: {results['total_time_seconds']} seconds")
     print(f"{'='*60}")
 
     return results

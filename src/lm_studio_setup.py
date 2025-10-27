@@ -1,7 +1,6 @@
 import subprocess
 import time
 import requests
-from src.settings import LLM_MODEL_NAME, LLM_BASE_URL
 
 
 def check_lms_cli():
@@ -94,7 +93,7 @@ def load_model(model_name: str):
         return False
 
 
-def ping_model(base_url: str, max_retries: int = 10):
+def ping_model(base_url: str, model_name: str, max_retries: int = 10):
     """Проверяет, что модель готова к работе"""
     print("Verifying model is ready...")
 
@@ -109,7 +108,7 @@ def ping_model(base_url: str, max_retries: int = 10):
                 test_response = requests.post(
                     f"{base_url}/chat/completions",
                     json={
-                        "model": LLM_MODEL_NAME,
+                        "model": model_name,
                         "messages": [{"role": "user", "content": "Hello"}],
                         "max_tokens": 10,
                     },
@@ -196,9 +195,13 @@ def cleanup_lm_studio():
     return success
 
 
-def setup_lm_studio():
+def setup_lm_studio(model_name: str, base_url: str):
     """
     Полная настройка LM Studio: проверка, загрузка модели, запуск сервера
+
+    Args:
+        model_name: Название модели для загрузки (например, "qwen/qwen3-vl-8b")
+        base_url: URL для API (например, "http://127.0.0.1:1234/v1")
 
     Returns:
         bool: True если все успешно, False если есть ошибки
@@ -219,10 +222,10 @@ def setup_lm_studio():
 
     # Шаг 2: Проверка/загрузка модели
     print("Step 2: Checking if model is downloaded...")
-    print(f"Model: {LLM_MODEL_NAME}")
-    if not is_model_downloaded(LLM_MODEL_NAME):
+    print(f"Model: {model_name}")
+    if not is_model_downloaded(model_name):
         print("Model not found, downloading...")
-        if not download_model(LLM_MODEL_NAME):
+        if not download_model(model_name):
             return False
     else:
         print("✓ Model already downloaded")
@@ -239,8 +242,8 @@ def setup_lm_studio():
 
     # Шаг 4: Загрузка модели в память
     print("Step 4: Loading model...")
-    if not is_model_loaded(LLM_MODEL_NAME):
-        if not load_model(LLM_MODEL_NAME):
+    if not is_model_loaded(model_name):
+        if not load_model(model_name):
             return False
     else:
         print("✓ Model already loaded")
@@ -248,7 +251,7 @@ def setup_lm_studio():
 
     # Шаг 5: Проверка готовности
     print("Step 5: Verifying model is ready...")
-    if not ping_model(LLM_BASE_URL):
+    if not ping_model(base_url, model_name):
         return False
     print()
 
@@ -261,4 +264,6 @@ def setup_lm_studio():
 
 
 if __name__ == "__main__":
-    setup_lm_studio()
+    from src.settings import LLM_MODEL_NAME, LLM_BASE_URL
+
+    setup_lm_studio(LLM_MODEL_NAME, LLM_BASE_URL)

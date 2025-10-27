@@ -4,6 +4,10 @@ import json
 from pathlib import Path
 from typing import Any
 
+from plot_llm_metrics import plot_llm_performance
+from plot_embeddings_metrics import plot_embeddings_performance
+from plot_vlm_metrics import plot_vlm_performance
+
 
 def load_results(results_dir: Path = Path("results")) -> list[dict[str, Any]]:
     """Load all result JSON files from the results directory."""
@@ -20,50 +24,61 @@ def generate_summary_table(results: list[dict[str, Any]]) -> str:
     if not results:
         return "_No benchmark results available yet._\n"
 
-    # Calculate scores for each result
-    scored_results = []
+    # Calculate times for each result
+    time_results = []
     for result in results:
         device_info = result["device_info"]
         tasks = result["tasks"]
 
-        # Extract scores
-        embeddings_score = next(
-            (t["task_score"] for t in tasks if t["task"] == "embeddings"), None
+        # Extract times
+        embeddings_time = next(
+            (t["total_time_seconds"] for t in tasks if t["task"] == "embeddings"), None
         )
-        llm_score = next((t["task_score"] for t in tasks if t["task"] == "llms"), None)
+        llm_time = next(
+            (t["total_time_seconds"] for t in tasks if t["task"] == "llms"), None
+        )
+        vlm_time = next(
+            (t["total_time_seconds"] for t in tasks if t["task"] == "vlms"), None
+        )
 
-        # Calculate total
-        total_score = 0
-        if embeddings_score:
-            total_score += embeddings_score
-        if llm_score:
-            total_score += llm_score
+        # Calculate total time
+        total_time = 0
+        if embeddings_time:
+            total_time += embeddings_time
+        if llm_time:
+            total_time += llm_time
+        if vlm_time:
+            total_time += vlm_time
 
-        scored_results.append(
+        time_results.append(
             {
                 "result": result,
-                "embeddings_score": embeddings_score,
-                "llm_score": llm_score,
-                "total_score": total_score,
+                "embeddings_time": embeddings_time,
+                "llm_time": llm_time,
+                "vlm_time": vlm_time,
+                "total_time": total_time,
             }
         )
 
-    # Sort by total score (highest first)
-    scored_results.sort(key=lambda x: x["total_score"], reverse=True)
+    # Sort by total time (lowest first - faster is better)
+    time_results.sort(
+        key=lambda x: x["total_time"] if x["total_time"] > 0 else float("inf")
+    )
 
     lines = [
-        "| Rank | Device | Platform | CPU | RAM | GPU | VRAM | Embeddings | LLM | Total Score |",
-        "|------|--------|----------|-----|-----|-----|------|------------|-----|-------------|",
+        "| Rank | Device | Platform | CPU | RAM | GPU | VRAM | Embeddings (s) | LLM (s) | VLM (s) | Total Time (s) |",
+        "|------|--------|----------|-----|-----|-----|------|----------------|---------|---------|----------------|",
     ]
 
-    for rank, item in enumerate(scored_results, 1):
+    for rank, item in enumerate(time_results, 1):
         result = item["result"]
         device_info = result["device_info"]
 
         # Format values
-        emb_str = f"{item['embeddings_score']:.2f}" if item["embeddings_score"] else "-"
-        llm_str = f"{item['llm_score']:.2f}" if item["llm_score"] else "-"
-        total_str = f"{item['total_score']:.2f}" if item["total_score"] > 0 else "-"
+        emb_str = f"{item['embeddings_time']:.2f}" if item["embeddings_time"] else "-"
+        llm_str = f"{item['llm_time']:.2f}" if item["llm_time"] else "-"
+        vlm_str = f"{item['vlm_time']:.2f}" if item["vlm_time"] else "-"
+        total_str = f"{item['total_time']:.2f}" if item["total_time"] > 0 else "-"
 
         # Format GPU memory
         gpu_mem = device_info.get("gpu_memory_gb", "N/A")
@@ -89,7 +104,7 @@ def generate_summary_table(results: list[dict[str, Any]]) -> str:
             f"| {rank_str} | {device_info['host']} | {platform_str} | "
             f"{device_info['processor']} | {device_info['ram_gb']:.0f} GB | "
             f"{device_info['gpu_name']} | {vram_str} | "
-            f"{emb_str} | {llm_str} | **{total_str}** |"
+            f"{emb_str} | {llm_str} | {vlm_str} | **{total_str}** |"
         )
 
     return "\n".join(lines) + "\n"
@@ -128,10 +143,21 @@ def generate_embeddings_table(results: list[dict[str, Any]]) -> str:
             for model_name in sorted(all_models):
                 if model_name in embeddings_task["models"]:
                     model_data = embeddings_task["models"][model_name]
+
+                    # Format rows/sec with std
+                    rps_median = model_data["median_rows_per_second"]
+                    rps_std = model_data.get("std_rows_per_second", 0)
+                    rps_str = f"{rps_median:.2f} ± {rps_std:.2f}"
+
+                    # Format time with std
+                    time_median = model_data["median_encoding_time_seconds"]
+                    time_std = model_data.get("std_encoding_time_seconds", 0)
+                    time_str = f"{time_median:.2f} ± {time_std:.2f}"
+
                     lines.append(
                         f"| {device} | {model_name} | "
-                        f"{model_data['median_rows_per_second']:.2f} | "
-                        f"{model_data['median_encoding_time_seconds']:.2f} | "
+                        f"{rps_str} | "
+                        f"{time_str} | "
                         f"{model_data['embedding_dimension']} | "
                         f"{model_data['batch_size']} |"
                     )
@@ -168,11 +194,81 @@ def generate_llm_table(results: list[dict[str, Any]]) -> str:
             input_tokens = first_run.get("total_input_tokens", "-")
             output_tokens = first_run.get("total_output_tokens", "-")
 
+            # Format tokens/sec with std
+            tps_median = model_data["final_50p_tokens_per_sec"]
+            tps_std = model_data.get("final_std_tokens_per_sec", 0)
+            tps_str = f"{tps_median:.2f} ± {tps_std:.2f}"
+
+            # Format TTFT with std
+            ttft_median = model_data["final_50p_ttft_s"]
+            ttft_std = model_data.get("final_std_ttft_s", 0)
+            ttft_str = f"{ttft_median:.2f} ± {ttft_std:.2f}"
+
+            # Format latency with std
+            lat_median = model_data["final_50p_latency_s"]
+            lat_std = model_data.get("final_std_latency_s", 0)
+            lat_str = f"{lat_median:.2f} ± {lat_std:.2f}"
+
             lines.append(
                 f"| {device} | {model_data['model_name']} | "
-                f"{model_data['final_median_tokens_per_sec']:.2f} | "
-                f"{model_data['final_median_ttft_s']:.2f} | "
-                f"{model_data['final_median_latency_s']:.2f} | "
+                f"{tps_str} | "
+                f"{ttft_str} | "
+                f"{lat_str} | "
+                f"{input_tokens} | {output_tokens} |"
+            )
+
+    return "\n".join(lines) + "\n"
+
+
+def generate_vlm_table(results: list[dict[str, Any]]) -> str:
+    """Generate detailed VLM inference performance table."""
+    if not results:
+        return ""
+
+    has_vlm_results = any(
+        any(t["task"] == "vlms" for t in result["tasks"]) for result in results
+    )
+
+    if not has_vlm_results:
+        return ""
+
+    lines = [
+        "#### VLM Inference (3 questions from Hallucination_COCO)\n",
+        "| Device | Model | Tokens/sec | TTFT (s) | Latency (s) | Input Tokens | Output Tokens |",
+        "|--------|-------|------------|----------|-------------|--------------|---------------|",
+    ]
+
+    for result in results:
+        device = result["device_info"]["host"]
+        vlm_task = next((t for t in result["tasks"] if t["task"] == "vlms"), None)
+
+        if vlm_task and "model" in vlm_task:
+            model_data = vlm_task["model"]
+            # Get token counts from first run
+            first_run = model_data["runs"][0] if model_data["runs"] else {}
+            input_tokens = first_run.get("total_input_tokens", "-")
+            output_tokens = first_run.get("total_output_tokens", "-")
+
+            # Format tokens/sec with std
+            tps_median = model_data.get("final_50p_tokens_per_sec")
+            tps_std = model_data.get("final_std_tokens_per_sec", 0)
+            tps_str = f"{tps_median:.2f} ± {tps_std:.2f}" if tps_median else "N/A"
+
+            # Format TTFT with std
+            ttft_median = model_data.get("final_50p_ttft_s")
+            ttft_std = model_data.get("final_std_ttft_s", 0)
+            ttft_str = f"{ttft_median:.2f} ± {ttft_std:.2f}" if ttft_median else "N/A"
+
+            # Format latency with std
+            lat_median = model_data.get("final_50p_latency_s")
+            lat_std = model_data.get("final_std_latency_s", 0)
+            lat_str = f"{lat_median:.2f} ± {lat_std:.2f}" if lat_median else "N/A"
+
+            lines.append(
+                f"| {device} | {model_data['model_name']} | "
+                f"{tps_str} | "
+                f"{ttft_str} | "
+                f"{lat_str} | "
                 f"{input_tokens} | {output_tokens} |"
             )
 
@@ -211,25 +307,27 @@ def generate_gpu_grouped_tables(results: list[dict[str, Any]]) -> str:
     if not results:
         return ""
 
-    # Calculate scores and group by vendor
+    # Calculate times and group by vendor
     vendor_groups: dict[str, list[dict[str, Any]]] = {}
 
     for result in results:
         device_info = result["device_info"]
         tasks = result["tasks"]
 
-        # Extract scores
-        embeddings_score = next(
-            (t["task_score"] for t in tasks if t["task"] == "embeddings"), None
+        # Extract times
+        embeddings_time = next(
+            (t["total_time_seconds"] for t in tasks if t["task"] == "embeddings"), None
         )
-        llm_score = next((t["task_score"] for t in tasks if t["task"] == "llms"), None)
+        llm_time = next(
+            (t["total_time_seconds"] for t in tasks if t["task"] == "llms"), None
+        )
 
         # Calculate total
-        total_score = 0
-        if embeddings_score:
-            total_score += embeddings_score
-        if llm_score:
-            total_score += llm_score
+        total_time = 0
+        if embeddings_time:
+            total_time += embeddings_time
+        if llm_time:
+            total_time += llm_time
 
         vendor = get_gpu_vendor(device_info["gpu_name"])
 
@@ -239,15 +337,17 @@ def generate_gpu_grouped_tables(results: list[dict[str, Any]]) -> str:
         vendor_groups[vendor].append(
             {
                 "result": result,
-                "embeddings_score": embeddings_score,
-                "llm_score": llm_score,
-                "total_score": total_score,
+                "embeddings_time": embeddings_time,
+                "llm_time": llm_time,
+                "total_time": total_time,
             }
         )
 
-    # Sort each vendor group by score
+    # Sort each vendor group by time (lowest first - faster is better)
     for vendor in vendor_groups:
-        vendor_groups[vendor].sort(key=lambda x: x["total_score"], reverse=True)
+        vendor_groups[vendor].sort(
+            key=lambda x: x["total_time"] if x["total_time"] > 0 else float("inf")
+        )
 
     # Vendor emojis
     vendor_emojis = {
@@ -276,10 +376,10 @@ def generate_gpu_grouped_tables(results: list[dict[str, Any]]) -> str:
 
         # Table header
         sections.append(
-            "| Rank | Device | Platform | CPU | RAM | GPU | VRAM | Embeddings | LLM | Total Score |"
+            "| Rank | Device | Platform | CPU | RAM | GPU | VRAM | Embeddings (s) | LLM (s) | Total Time (s) |"
         )
         sections.append(
-            "|------|--------|----------|-----|-----|-----|------|------------|-----|-------------|"
+            "|------|--------|----------|-----|-----|-----|------|----------------|---------|----------------|"
         )
 
         # Table rows
@@ -289,10 +389,10 @@ def generate_gpu_grouped_tables(results: list[dict[str, Any]]) -> str:
 
             # Format values
             emb_str = (
-                f"{item['embeddings_score']:.2f}" if item["embeddings_score"] else "-"
+                f"{item['embeddings_time']:.2f}" if item["embeddings_time"] else "-"
             )
-            llm_str = f"{item['llm_score']:.2f}" if item["llm_score"] else "-"
-            total_str = f"{item['total_score']:.2f}" if item["total_score"] > 0 else "-"
+            llm_str = f"{item['llm_time']:.2f}" if item["llm_time"] else "-"
+            total_str = f"{item['total_time']:.2f}" if item["total_time"] > 0 else "-"
 
             # Format GPU memory
             gpu_mem = device_info.get("gpu_memory_gb", "N/A")
@@ -350,17 +450,91 @@ def generate_full_results_section(results_dir: Path = Path("results")) -> str:
         generate_embeddings_table(results),
     ]
 
+    # Generate embeddings performance plot if embeddings results exist
+    has_embeddings_results = any(
+        any(t["task"] == "embeddings" for t in result["tasks"]) for result in results
+    )
+    if has_embeddings_results:
+        try:
+            # Generate the plot
+            plot_embeddings_performance(results_dir)
+
+            # Add plot to README
+            sections.append("\n#### Embeddings Performance Visualization\n")
+            sections.append(
+                "![Embeddings Performance Profile](results/embeddings_performance.png)\n"
+            )
+            sections.append(
+                "*Throughput comparison for different embedding models across hardware. "
+                "Higher values indicate better performance.*\n"
+            )
+        except Exception as e:
+            print(f"⚠️  Failed to generate embeddings plot: {e}")
+
     # Add LLM table if available
     llm_table = generate_llm_table(results)
     if llm_table:
         sections.append("\n" + llm_table)
 
+    # Add VLM table if available
+    vlm_table = generate_vlm_table(results)
+    if vlm_table:
+        sections.append("\n" + vlm_table)
+
+    # Generate LLM performance plots if LLM results exist
+    has_llm_results = any(
+        any(t["task"] == "llms" for t in result["tasks"]) for result in results
+    )
+    if has_llm_results:
+        try:
+            # Generate the plots
+            plot_llm_performance(results_dir)
+
+            # Add plots to README
+            sections.append("\n#### LLM Performance Visualization\n")
+            sections.append("![LLM TTFT Performance](results/llm_ttft.png)\n")
+            sections.append(
+                "*Time To First Token (TTFT) - Lower is better. "
+                "Measures response latency.*\n\n"
+            )
+            sections.append("![LLM Throughput Performance](results/llm_tps.png)\n")
+            sections.append(
+                "*Tokens Per Second (TPS) - Higher is better. "
+                "Measures generation throughput.*\n"
+            )
+        except Exception as e:
+            print(f"⚠️  Failed to generate LLM plots: {e}")
+
+    # Generate VLM performance plots if VLM results exist
+    has_vlm_results = any(
+        any(t["task"] == "vlms" for t in result["tasks"]) for result in results
+    )
+    if has_vlm_results:
+        try:
+            # Generate the plots
+            plot_vlm_performance(results_dir)
+
+            # Add plots to README
+            sections.append("\n#### VLM Performance Visualization\n")
+            sections.append("![VLM TTFT Performance](results/vlm_ttft.png)\n")
+            sections.append(
+                "*Time To First Token (TTFT) - Lower is better. "
+                "Measures response latency.*\n\n"
+            )
+            sections.append("![VLM Throughput Performance](results/vlm_tps.png)\n")
+            sections.append(
+                "*Tokens Per Second (TPS) - Higher is better. "
+                "Measures generation throughput.*\n"
+            )
+        except Exception as e:
+            print(f"⚠️  Failed to generate VLM plots: {e}")
+
     # Add notes
     sections.extend(
         [
             "\n---\n",
-            "_All metrics are median values across 3 runs. ",
-            "Scores calculated as: `num_tasks * 3600 / total_time_seconds`._\n",
+            "_All metrics are shown as median ± standard deviation across 3 runs. ",
+            "Lower times are better (faster performance)._\n",
         ]
     )
 

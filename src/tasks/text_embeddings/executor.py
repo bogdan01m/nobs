@@ -1,7 +1,7 @@
 import time
 from sentence_transformers import SentenceTransformer
 from src.memory_cleaner import clear_memory
-from statistics import median
+from statistics import median, stdev
 
 
 def run_single_model(
@@ -110,12 +110,26 @@ def run_model_with_repeats(
             }
         )
 
-    # Calculate median
-    median_time = median([r["encoding_time_seconds"] for r in runs])
-    median_rps = median([r["rows_per_second"] for r in runs])
+    # Calculate median and std deviation
+    encoding_times = [r["encoding_time_seconds"] for r in runs]
+    rows_per_sec = [r["rows_per_second"] for r in runs]
+
+    median_time = median(encoding_times)
+    std_time = stdev(encoding_times) if len(encoding_times) > 1 else 0.0
+
+    median_rps = median(rows_per_sec)
+    std_rps = stdev(rows_per_sec) if len(rows_per_sec) > 1 else 0.0
 
     # Take metadata from last run (all runs have the same metadata)
     last_run = run_result
+
+    # Print summary
+    print(f"\n{'='*60}")
+    print("BENCHMARK COMPLETE")
+    print(f"{'='*60}")
+    print(f"Median Encoding Time: {median_time:.2f} ± {std_time:.2f}s")
+    print(f"Median Rows/sec: {median_rps:.2f} ± {std_rps:.2f}")
+    print(f"{'='*60}")
 
     return {
         "model_name": model_name,
@@ -128,5 +142,7 @@ def run_model_with_repeats(
         "num_runs": num_runs,
         "runs": runs,
         "median_encoding_time_seconds": round(median_time, 2),
+        "std_encoding_time_seconds": round(std_time, 2),
         "median_rows_per_second": round(median_rps, 2),
+        "std_rows_per_second": round(std_rps, 2),
     }

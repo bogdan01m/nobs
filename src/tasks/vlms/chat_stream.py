@@ -1,17 +1,41 @@
-# --- добавлено: импорт таймера ---
 import time
-
+import base64
+from io import BytesIO
+from PIL import Image
 from openai import OpenAI
-from src.settings import LLM_API_KEY, LLM_MODEL_NAME, LLM_BASE_URL
+from src.settings import VLM_API_KEY, VLM_MODEL_NAME, VLM_BASE_URL
 
-client = OpenAI(api_key=LLM_API_KEY, base_url=LLM_BASE_URL)
+client = OpenAI(api_key=VLM_API_KEY, base_url=VLM_BASE_URL)
 
 
-def stream_with_results(prompt: str):
+def stream_with_results(prompt: str, image=None):
     t0_stream = time.perf_counter()
+    # For VLM, need to pass image as base64 (LM Studio requirement)
+    if image:
+        # image can be a PIL Image object or a path string
+        if isinstance(image, str):
+            img = Image.open(image)
+        else:
+            img = image
+
+        # Convert to base64
+        buffered = BytesIO()
+        img.save(buffered, format="PNG")
+        image_b64 = base64.b64encode(buffered.getvalue()).decode("utf-8")
+
+        content: list[dict[str, object]] | str = [
+            {"type": "text", "text": prompt},
+            {
+                "type": "image_url",
+                "image_url": {"url": f"data:image/png;base64,{image_b64}"},
+            },
+        ]
+    else:
+        content = prompt
+
     stream = client.chat.completions.create(
-        model=LLM_MODEL_NAME,
-        messages=[{"role": "user", "content": prompt}],
+        model=VLM_MODEL_NAME,
+        messages=[{"role": "user", "content": content}],
         max_completion_tokens=2048,
         temperature=0,
         top_p=0.95,

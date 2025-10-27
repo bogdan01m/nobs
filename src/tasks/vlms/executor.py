@@ -4,12 +4,13 @@ from statistics import median, stdev
 from tqdm import tqdm
 
 
-def run_single_model(prompts: list):
+def run_single_model(prompts: list, images: list | None = None):
     """
-    Runs a list of prompts through the LLM and collects metrics
+    Runs a list of prompts through the VLM and collects metrics
 
     Args:
-        prompts: List of prompts to send to the LLM
+        prompts: List of prompts to send to the VLM
+        images: Optional list of PIL Images (one per prompt). If None, runs text-only.
 
     Returns:
         dict: Aggregated benchmark results including latency and token metrics
@@ -20,9 +21,21 @@ def run_single_model(prompts: list):
     total_input_tokens = 0
     total_output_tokens = 0
 
-    for prompt in tqdm(prompts, desc="Running prompts", unit="prompt"):
-        # Run the model with streaming
-        result = stream_with_results(prompt)
+    # If images is None or empty, run text-only
+    if not images:
+        images = [None] * len(prompts)
+
+    # Ensure images matches prompts length
+    if len(images) != len(prompts):
+        raise ValueError(
+            f"Number of images ({len(images)}) must match number of prompts ({len(prompts)})"
+        )
+
+    for prompt, image in tqdm(
+        zip(prompts, images), desc="Running prompts", unit="prompt", total=len(prompts)
+    ):
+        # Run the model with streaming (with or without image)
+        result = stream_with_results(prompt, image=image)
 
         # Collect metrics
         all_latencies.append(result["total_latency_s"])
@@ -52,13 +65,16 @@ def run_single_model(prompts: list):
     }
 
 
-def run_model_with_repeats(model_name: str, prompts: list, num_runs: int = 3):
+def run_model_with_repeats(
+    model_name: str, prompts: list, images: list | None = None, num_runs: int = 3
+):
     """
     Runs model multiple times for statistical significance
 
     Args:
-        model_name: LLM model name
+        model_name: VLM model name
         prompts: List of prompts to run
+        images: Optional list of PIL Images (one per prompt). If None, runs text-only.
         num_runs: Number of times to repeat the full prompt set (default 3)
 
     Returns:
@@ -67,12 +83,14 @@ def run_model_with_repeats(model_name: str, prompts: list, num_runs: int = 3):
     print(f"\n{'='*60}")
     print(f"BENCHMARKING: {model_name}")
     print(f"Number of prompts: {len(prompts)}")
+    print(f"With images: {images is not None and len(images) > 0}")
     print(f"Number of runs: {num_runs}")
     print(f"{'='*60}")
 
     # Warmup run (not counted in results)
     print("\n🔥 WARMUP RUN (not counted)")
-    _ = run_single_model(prompts=[prompts[0]])
+    warmup_images = [images[0]] if images else None
+    _ = run_single_model(prompts=[prompts[0]], images=warmup_images)
     clear_memory()
 
     # Collect metrics from all runs
@@ -86,7 +104,7 @@ def run_model_with_repeats(model_name: str, prompts: list, num_runs: int = 3):
         print(f"RUN {run_idx + 1}/{num_runs}")
         print(f"{'='*60}")
 
-        result = run_single_model(prompts=prompts)
+        result = run_single_model(prompts=prompts, images=images)
 
         all_run_results.append(
             {
