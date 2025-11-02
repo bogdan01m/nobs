@@ -37,34 +37,54 @@ def generate_summary_table(results: list[dict[str, Any]]) -> str:
         device_info = result["device_info"]
         tasks = result["tasks"]
 
-        # Extract times - sum all tasks of each type (handles BOTH backend case)
+        # Extract times - separate by backend
         embeddings_time = next(
             (t["total_time_seconds"] for t in tasks if t["task"] == "embeddings"), None
         )
 
-        # Sum ALL llm task times (in case of BOTH backend)
-        llm_times = [t["total_time_seconds"] for t in tasks if t["task"] == "llms"]
-        llm_time = sum(llm_times) if llm_times else None
+        # Separate LLM times by backend
+        llm_lm_studio_time = None
+        llm_ollama_time = None
+        for t in tasks:
+            if t["task"] == "llms":
+                backend = t.get("backend", "").upper()
+                if backend == "LM_STUDIO":
+                    llm_lm_studio_time = t["total_time_seconds"]
+                elif backend == "OLLAMA":
+                    llm_ollama_time = t["total_time_seconds"]
 
-        # Sum ALL vlm task times (in case of BOTH backend)
-        vlm_times = [t["total_time_seconds"] for t in tasks if t["task"] == "vlms"]
-        vlm_time = sum(vlm_times) if vlm_times else None
+        # Separate VLM times by backend
+        vlm_lm_studio_time = None
+        vlm_ollama_time = None
+        for t in tasks:
+            if t["task"] == "vlms":
+                backend = t.get("backend", "").upper()
+                if backend == "LM_STUDIO":
+                    vlm_lm_studio_time = t["total_time_seconds"]
+                elif backend == "OLLAMA":
+                    vlm_ollama_time = t["total_time_seconds"]
 
         # Calculate total time
         total_time = 0
         if embeddings_time:
             total_time += embeddings_time
-        if llm_time:
-            total_time += llm_time
-        if vlm_time:
-            total_time += vlm_time
+        if llm_lm_studio_time:
+            total_time += llm_lm_studio_time
+        if llm_ollama_time:
+            total_time += llm_ollama_time
+        if vlm_lm_studio_time:
+            total_time += vlm_lm_studio_time
+        if vlm_ollama_time:
+            total_time += vlm_ollama_time
 
         time_results.append(
             {
                 "result": result,
                 "embeddings_time": embeddings_time,
-                "llm_time": llm_time,
-                "vlm_time": vlm_time,
+                "llm_lm_studio_time": llm_lm_studio_time,
+                "llm_ollama_time": llm_ollama_time,
+                "vlm_lm_studio_time": vlm_lm_studio_time,
+                "vlm_ollama_time": vlm_ollama_time,
                 "total_time": total_time,
             }
         )
@@ -75,8 +95,8 @@ def generate_summary_table(results: list[dict[str, Any]]) -> str:
     )
 
     lines = [
-        "| Rank | Device | Platform | CPU | RAM | GPU | VRAM | Embeddings (s) | LLM (s) | VLM (s) | Total Time (s) |",
-        "|------|--------|----------|-----|-----|-----|------|----------------|---------|---------|----------------|",
+        "| Rank | Device | Platform | CPU | RAM | GPU | VRAM | Embeddings, sts (s) | LLM, lms (s) | LLM, ollama (s) | VLM, lms (s) | VLM, ollama (s) | Total Time (s) |",
+        "|------|--------|----------|-----|-----|-----|------|----------------|-----------------|--------------|-----------------|--------------|----------------|",
     ]
 
     for rank, item in enumerate(time_results, 1):
@@ -85,8 +105,18 @@ def generate_summary_table(results: list[dict[str, Any]]) -> str:
 
         # Format values
         emb_str = f"{item['embeddings_time']:.2f}" if item["embeddings_time"] else "-"
-        llm_str = f"{item['llm_time']:.2f}" if item["llm_time"] else "-"
-        vlm_str = f"{item['vlm_time']:.2f}" if item["vlm_time"] else "-"
+        llm_lms_str = (
+            f"{item['llm_lm_studio_time']:.2f}" if item["llm_lm_studio_time"] else "-"
+        )
+        llm_ollama_str = (
+            f"{item['llm_ollama_time']:.2f}" if item["llm_ollama_time"] else "-"
+        )
+        vlm_lms_str = (
+            f"{item['vlm_lm_studio_time']:.2f}" if item["vlm_lm_studio_time"] else "-"
+        )
+        vlm_ollama_str = (
+            f"{item['vlm_ollama_time']:.2f}" if item["vlm_ollama_time"] else "-"
+        )
         total_str = f"{item['total_time']:.2f}" if item["total_time"] > 0 else "-"
 
         # Format GPU memory
@@ -113,8 +143,99 @@ def generate_summary_table(results: list[dict[str, Any]]) -> str:
             f"| {rank_str} | {device_info['host']} | {platform_str} | "
             f"{device_info['processor']} | {device_info['ram_gb']:.0f} GB | "
             f"{device_info['gpu_name']} | {vram_str} | "
-            f"{emb_str} | {llm_str} | {vlm_str} | **{total_str}** |"
+            f"{emb_str} | {llm_lms_str} | {llm_ollama_str} | {vlm_lms_str} | {vlm_ollama_str} | **{total_str}** |"
         )
+    lines.append("")
+    lines.append("*sts - sentence transformers*\n")
+    lines.append("*lms - lm stuido*\n")
+    lines.append("*ollama - ollama*\n")
+    return "\n".join(lines) + "\n"
+
+
+def generate_power_metrics_table(results: list[dict[str, Any]]) -> str:
+    """Generate power metrics table for all devices."""
+    if not results:
+        return ""
+
+    # Check if any result has power metrics
+    has_power_metrics = any("power_metrics" in result for result in results)
+    if not has_power_metrics:
+        return ""
+
+    lines = [
+        "### ⚡ Power Metrics\n",
+        "| Device | CPU Usage (p50/p95) | RAM Used (p50/p95) | GPU Usage (p50/p95) | GPU Temp (p50/p95) | Battery Drain (p50/p95) | GPU Power (p50/p95) | CPU Power (p50/p95) |",
+        "|--------|---------------------|--------------------|--------------------|--------------------|-----------------------|--------------------|--------------------|",
+    ]
+
+    for result in results:
+        device = result["device_info"]["host"]
+        power = result.get("power_metrics", {})
+
+        if not power:
+            continue
+
+        # CPU Usage
+        cpu_p50 = power.get("cpu_utilization_percent_p50", "N/A")
+        cpu_p95 = power.get("cpu_utilization_percent_p95", "N/A")
+        cpu_usage = f"{cpu_p50:.1f}% / {cpu_p95:.1f}%" if cpu_p50 != "N/A" else "N/A"
+
+        # RAM Usage
+        ram_p50 = power.get("ram_used_gb_p50", "N/A")
+        ram_p95 = power.get("ram_used_gb_p95", "N/A")
+        ram_usage = f"{ram_p50:.1f}GB / {ram_p95:.1f}GB" if ram_p50 != "N/A" else "N/A"
+
+        # GPU Usage
+        gpu_util_p50 = power.get("gpu_utilization_percent_p50", "N/A")
+        gpu_util_p95 = power.get("gpu_utilization_percent_p95", "N/A")
+        gpu_usage = (
+            f"{gpu_util_p50:.1f}% / {gpu_util_p95:.1f}%"
+            if gpu_util_p50 != "N/A"
+            else "N/A"
+        )
+
+        # GPU Temperature
+        gpu_temp_p50 = power.get("gpu_temperature_c_p50", "N/A")
+        gpu_temp_p95 = power.get("gpu_temperature_c_p95", "N/A")
+        gpu_temp = (
+            f"{gpu_temp_p50:.1f}°C / {gpu_temp_p95:.1f}°C"
+            if gpu_temp_p50 != "N/A"
+            else "N/A"
+        )
+
+        # Battery Drain
+        battery_p50 = power.get("battery_drain_rate_w_p50", "N/A")
+        battery_p95 = power.get("battery_drain_rate_w_p95", "N/A")
+        battery_drain = (
+            f"{battery_p50:.1f}W / {battery_p95:.1f}W"
+            if battery_p50 != "N/A"
+            else "N/A"
+        )
+
+        # GPU Power
+        gpu_power_p50 = power.get("gpu_power_w_p50", "N/A")
+        gpu_power_p95 = power.get("gpu_power_w_p95", "N/A")
+        gpu_power = (
+            f"{gpu_power_p50:.1f}W / {gpu_power_p95:.1f}W"
+            if gpu_power_p50 != "N/A"
+            else "N/A"
+        )
+
+        # CPU Power
+        cpu_power_p50 = power.get("cpu_power_w_p50", "N/A")
+        cpu_power_p95 = power.get("cpu_power_w_p95", "N/A")
+        cpu_power = (
+            f"{cpu_power_p50:.1f}W / {cpu_power_p95:.1f}W"
+            if cpu_power_p50 != "N/A"
+            else "N/A"
+        )
+
+        lines.append(
+            f"| {device} | {cpu_usage} | {ram_usage} | {gpu_usage} | {gpu_temp} | {battery_drain} | {gpu_power} | {cpu_power} |"
+        )
+
+    lines.append("")
+    lines.append("*p50 = median, p95 = 95th percentile*\n")
 
     return "\n".join(lines) + "\n"
 
@@ -588,6 +709,12 @@ def generate_full_results_section(results_dir: Path = Path("results")) -> str:
         generate_summary_table(results),
     ]
 
+    # Add power metrics table if available
+    power_metrics_section = generate_power_metrics_table(results)
+    if power_metrics_section:
+        sections.append("\n")
+        sections.append(power_metrics_section)
+
     has_embeddings_results = any(
         any(t["task"] == "embeddings" for t in result["tasks"]) for result in results
     )
@@ -716,7 +843,7 @@ def generate_full_results_section(results_dir: Path = Path("results")) -> str:
     sections.extend(
         [
             "\n---\n",
-            "_All metrics are shown as median ± standard deviation across 3 runs. ",
+            "_All metrics are shown as median �� standard deviation across 3 runs. ",
             "Lower times are better (faster performance)._\n",
         ]
     )

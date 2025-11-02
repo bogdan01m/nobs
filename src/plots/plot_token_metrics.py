@@ -191,10 +191,6 @@ def plot_ttft_vs_input_tokens(devices_data: dict, output_path: Path | None = Non
         pad=20,
     )
 
-    # Grid
-    ax.grid(True, alpha=0.3, linestyle="--", linewidth=0.5, axis="both")
-    ax.set_axisbelow(True)
-
     # Legend
     ax.legend(
         loc="upper left",
@@ -212,7 +208,6 @@ def plot_ttft_vs_input_tokens(devices_data: dict, output_path: Path | None = Non
     # Create output directory if needed
     output_path.parent.mkdir(parents=True, exist_ok=True)
     plt.savefig(output_path, dpi=300, bbox_inches="tight")
-    plt.savefig(output_path.with_suffix(".svg"), format="svg", bbox_inches="tight")
     print(f"✅ TTFT plot saved to {output_path}")
     plt.close()
 
@@ -297,10 +292,6 @@ def plot_tg_vs_output_tokens(devices_data: dict, output_path: Path | None = None
         pad=20,
     )
 
-    # Grid
-    ax.grid(True, alpha=0.3, linestyle="--", linewidth=0.5, axis="both")
-    ax.set_axisbelow(True)
-
     # Legend
     ax.legend(
         loc="upper left",
@@ -318,7 +309,6 @@ def plot_tg_vs_output_tokens(devices_data: dict, output_path: Path | None = None
     # Create output directory if needed
     output_path.parent.mkdir(parents=True, exist_ok=True)
     plt.savefig(output_path, dpi=300, bbox_inches="tight")
-    plt.savefig(output_path.with_suffix(".svg"), format="svg", bbox_inches="tight")
     print(f"✅ Generation time plot saved to {output_path}")
     plt.close()
 

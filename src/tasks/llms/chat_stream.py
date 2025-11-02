@@ -4,13 +4,22 @@ import time
 from openai import OpenAI
 from src.settings import LLM_API_KEY, LLM_MODEL_NAME, LLM_BASE_URL
 
-client = OpenAI(api_key=LLM_API_KEY, base_url=LLM_BASE_URL)
 
+def stream_with_results(
+    prompt: str, model_name: str | None = None, base_url: str | None = None
+):
+    # Use provided values or fallback to settings
+    if model_name is None:
+        model_name = LLM_MODEL_NAME
+    if base_url is None:
+        base_url = LLM_BASE_URL
 
-def stream_with_results(prompt: str):
+    # Create client with appropriate base_url
+    client = OpenAI(api_key=LLM_API_KEY, base_url=base_url)
+
     t0_stream = time.perf_counter()
     stream = client.chat.completions.create(
-        model=LLM_MODEL_NAME,
+        model=model_name,
         messages=[{"role": "user", "content": prompt}],
         max_completion_tokens=2048,
         temperature=0,

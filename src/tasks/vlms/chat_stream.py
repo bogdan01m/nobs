@@ -5,10 +5,19 @@ from PIL import Image
 from openai import OpenAI
 from src.settings import VLM_API_KEY, VLM_MODEL_NAME, VLM_BASE_URL
 
-client = OpenAI(api_key=VLM_API_KEY, base_url=VLM_BASE_URL)
 
+def stream_with_results(
+    prompt: str, image=None, model_name: str | None = None, base_url: str | None = None
+):
+    # Use provided values or fallback to settings
+    if model_name is None:
+        model_name = VLM_MODEL_NAME
+    if base_url is None:
+        base_url = VLM_BASE_URL
 
-def stream_with_results(prompt: str, image=None):
+    # Create client with appropriate base_url
+    client = OpenAI(api_key=VLM_API_KEY, base_url=base_url)
+
     t0_stream = time.perf_counter()
     # For VLM, need to pass image as base64 (LM Studio requirement)
     if image:
@@ -34,7 +43,7 @@ def stream_with_results(prompt: str, image=None):
         content = prompt
 
     stream = client.chat.completions.create(
-        model=VLM_MODEL_NAME,
+        model=model_name,
         messages=[{"role": "user", "content": content}],
         max_completion_tokens=2048,
         temperature=0,

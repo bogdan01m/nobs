@@ -4,13 +4,20 @@ from statistics import median, stdev
 from tqdm import tqdm
 
 
-def run_single_model(prompts: list, images: list | None = None):
+def run_single_model(
+    prompts: list,
+    images: list | None = None,
+    model_name: str | None = None,
+    base_url: str | None = None,
+):
     """
     Runs a list of prompts through the VLM and collects metrics
 
     Args:
         prompts: List of prompts to send to the VLM
         images: Optional list of PIL Images (one per prompt). If None, runs text-only.
+        model_name: Model name to use (passed to chat_stream)
+        base_url: API base URL (passed to chat_stream)
 
     Returns:
         dict: Aggregated benchmark results including latency and token metrics,
@@ -37,7 +44,9 @@ def run_single_model(prompts: list, images: list | None = None):
         zip(prompts, images), desc="Running prompts", unit="prompt", total=len(prompts)
     ):
         # Run the model with streaming (with or without image)
-        result = stream_with_results(prompt, image=image)
+        result = stream_with_results(
+            prompt, image=image, model_name=model_name, base_url=base_url
+        )
 
         # Collect metrics
         all_latencies.append(result["total_latency_s"])
@@ -81,7 +90,11 @@ def run_single_model(prompts: list, images: list | None = None):
 
 
 def run_model_with_repeats(
-    model_name: str, prompts: list, images: list | None = None, num_runs: int = 3
+    model_name: str,
+    prompts: list,
+    images: list | None = None,
+    num_runs: int = 3,
+    base_url: str | None = None,
 ):
     """
     Runs model multiple times for statistical significance
@@ -91,6 +104,7 @@ def run_model_with_repeats(
         prompts: List of prompts to run
         images: Optional list of PIL Images (one per prompt). If None, runs text-only.
         num_runs: Number of times to repeat the full prompt set (default 3)
+        base_url: API base URL (optional, defaults to settings)
 
     Returns:
         dict: Aggregated results with median latency across all runs
@@ -105,7 +119,12 @@ def run_model_with_repeats(
     # Warmup run (not counted in results)
     print("\n🔥 WARMUP RUN (not counted)")
     warmup_images = [images[0]] if images else None
-    _ = run_single_model(prompts=[prompts[0]], images=warmup_images)
+    _ = run_single_model(
+        prompts=[prompts[0]],
+        images=warmup_images,
+        model_name=model_name,
+        base_url=base_url,
+    )
     clear_memory()
 
     # Collect metrics from all runs
@@ -120,7 +139,9 @@ def run_model_with_repeats(
         print(f"RUN {run_idx + 1}/{num_runs}")
         print(f"{'='*60}")
 
-        result = run_single_model(prompts=prompts, images=images)
+        result = run_single_model(
+            prompts=prompts, images=images, model_name=model_name, base_url=base_url
+        )
 
         all_run_results.append(
             {

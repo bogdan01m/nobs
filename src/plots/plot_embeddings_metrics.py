@@ -130,8 +130,8 @@ def plot_embeddings_performance(
     ax.set_xticklabels(sorted_gpus, rotation=20, ha="right")
 
     # Grid
-    ax.grid(True, alpha=0.3, linestyle="--", linewidth=0.5, axis="y")
-    ax.set_axisbelow(True)
+    # ax.grid(True, alpha=0.3, linestyle="--", linewidth=0.5, axis="y")
+    # ax.set_axisbelow(True)
 
     # Legend
     ax.legend(
@@ -151,7 +151,6 @@ def plot_embeddings_performance(
     # Save
     output_path.parent.mkdir(parents=True, exist_ok=True)
     plt.savefig(output_path, dpi=300, bbox_inches="tight")
-    plt.savefig(output_path.with_suffix(".svg"), format="svg", bbox_inches="tight")
     print(f"✅ Embeddings performance plot saved to {output_path}")
     plt.close()
 

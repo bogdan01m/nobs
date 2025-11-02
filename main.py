@@ -361,7 +361,10 @@ def main():
                             print(f"Starting LLM Benchmark on {backend['backend']}...")
                             print("=" * 50)
                             print()
-                            llm_results = run_llms_benchmark()
+                            llm_results = run_llms_benchmark(
+                                model_name=backend["model_name"],
+                                base_url=backend["base_url"],
+                            )
 
                             # Add backend info to results
                             llm_results["backend"] = backend["backend"]
@@ -411,7 +414,10 @@ def main():
                             print(f"Starting VLM Benchmark on {backend['backend']}...")
                             print("=" * 50)
                             print()
-                            vlm_results = run_vlms_benchmark()
+                            vlm_results = run_vlms_benchmark(
+                                model_name=backend["model_name"],
+                                base_url=backend["base_url"],
+                            )
 
                             # Add backend info to results
                             vlm_results["backend"] = backend["backend"]

@@ -157,15 +157,22 @@ def stop_all_models():
             ["ollama", "ps"], capture_output=True, text=True, check=True
         )
 
-        # Если есть запущенные модели, останавливаем их
-        if result.stdout.strip():
-            subprocess.run(["ollama", "stop"], check=True)
+        # Парсим вывод ollama ps и останавливаем каждую модель
+        lines = result.stdout.strip().split("\n")
+        if len(lines) > 1:  # Есть модели (первая строка - заголовок)
+            # Пропускаем заголовок и обрабатываем каждую модель
+            for line in lines[1:]:
+                if line.strip():
+                    # Первая колонка - это имя модели
+                    model_name = line.split()[0]
+                    print(f"Stopping model: {model_name}")
+                    subprocess.run(["ollama", "stop", model_name], check=True)
             print("✓ All models stopped")
         else:
             print("✓ No models were running")
         return True
-    except subprocess.CalledProcessError:
-        print("✗ Failed to stop models")
+    except subprocess.CalledProcessError as e:
+        print(f"✗ Failed to stop models: {e}")
         return False
 
 

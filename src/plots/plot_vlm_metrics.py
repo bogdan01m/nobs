@@ -163,7 +163,6 @@ def plot_vlm_performance(
     plt.tight_layout()
     output_path_ttft.parent.mkdir(parents=True, exist_ok=True)
     plt.savefig(output_path_ttft, dpi=300, bbox_inches="tight")
-    plt.savefig(output_path_ttft.with_suffix(".svg"), format="svg", bbox_inches="tight")
     scope_msg = (
         f" for backend {backend_filter.replace('_', ' ')}" if backend_filter else ""
     )
@@ -220,7 +219,6 @@ def plot_vlm_performance(
     plt.tight_layout()
     output_path_tps.parent.mkdir(parents=True, exist_ok=True)
     plt.savefig(output_path_tps, dpi=300, bbox_inches="tight")
-    plt.savefig(output_path_tps.with_suffix(".svg"), format="svg", bbox_inches="tight")
     print(f"✅ VLM TPS plot saved to {output_path_tps}{scope_msg}")
     plt.close()
 

@@ -317,6 +317,145 @@ def generate_runs_from_details(
     return runs
 
 
+def generate_power_metrics(device_config: dict[str, Any], total_benchmark_time: float) -> dict[str, Any]:
+    """Generate synthetic power metrics based on device type and benchmark duration."""
+    platform = device_config.get("platform", "Linux")
+    device = device_config.get("device", "cuda")
+    ram_gb = device_config.get("ram_gb", 32.0)
+    gpu_memory_gb = device_config.get("gpu_memory_gb", 16)
+
+    # Calculate duration and samples (sampling every ~1 second)
+    duration = round(total_benchmark_time, 1)
+    num_samples = int(duration) + random.randint(-2, 5)
+
+    # Base CPU/RAM metrics (common for all platforms)
+    cpu_util_p50 = random.uniform(35.0, 65.0)
+    cpu_util_p95 = cpu_util_p50 * random.uniform(1.3, 1.8)
+
+    ram_used_p50 = ram_gb * random.uniform(0.45, 0.75)
+    ram_used_p95 = ram_gb * random.uniform(0.65, 0.85)
+
+    metrics = {
+        "duration_seconds": duration,
+        "num_samples": num_samples,
+        "cpu_utilization_percent_p50": round(cpu_util_p50, 1),
+        "cpu_utilization_percent_p95": round(cpu_util_p95, 1),
+        "ram_used_gb_p50": round(ram_used_p50, 1),
+        "ram_used_gb_p95": round(ram_used_p95, 1),
+    }
+
+    # GPU-specific metrics
+    if device == "cuda":
+        # NVIDIA GPU metrics
+        gpu_util_p50 = random.uniform(75.0, 95.0)
+        gpu_util_p95 = min(100.0, gpu_util_p50 * random.uniform(1.05, 1.1))
+
+        vram_used_p50 = gpu_memory_gb * random.uniform(0.5, 0.75)
+        vram_used_p95 = gpu_memory_gb * random.uniform(0.7, 0.9)
+
+        gpu_temp_p50 = random.uniform(65.0, 75.0)
+        gpu_temp_p95 = random.uniform(78.0, 85.0)
+
+        gpu_power_p50 = random.uniform(120.0, 180.0)
+        gpu_power_p95 = random.uniform(180.0, 220.0)
+
+        metrics.update({
+            "gpu_utilization_percent_p50": round(gpu_util_p50, 1),
+            "gpu_utilization_percent_p95": round(gpu_util_p95, 1),
+            "gpu_vram_used_gb_p50": round(vram_used_p50, 1),
+            "gpu_vram_used_gb_p95": round(vram_used_p95, 1),
+            "gpu_temperature_c_p50": round(gpu_temp_p50, 1),
+            "gpu_temperature_c_p95": round(gpu_temp_p95, 1),
+            "gpu_power_w_p50": round(gpu_power_p50, 1),
+            "gpu_power_w_p95": round(gpu_power_p95, 1),
+        })
+
+    elif device == "mps":
+        # Apple Silicon metrics
+        gpu_util_p50 = random.uniform(60.0, 85.0)
+        gpu_util_p95 = min(100.0, gpu_util_p50 * random.uniform(1.1, 1.2))
+
+        # MPS shares memory with system
+        gpu_temp_p50 = random.uniform(45.0, 55.0)
+        gpu_temp_p95 = random.uniform(55.0, 65.0)
+
+        # Battery drain for laptops
+        battery_drain_p50 = random.uniform(15.0, 30.0)
+        battery_drain_p95 = random.uniform(30.0, 45.0)
+
+        # macOS powermetrics (sudo required)
+        gpu_power_p50 = random.uniform(15.0, 35.0)
+        gpu_power_p95 = random.uniform(30.0, 50.0)
+
+        cpu_power_p50 = random.uniform(8.0, 18.0)
+        cpu_power_p95 = random.uniform(15.0, 28.0)
+
+        metrics.update({
+            "gpu_utilization_percent_p50": round(gpu_util_p50, 1),
+            "gpu_utilization_percent_p95": round(gpu_util_p95, 1),
+            "gpu_temperature_c_p50": round(gpu_temp_p50, 1),
+            "gpu_temperature_c_p95": round(gpu_temp_p95, 1),
+            "battery_drain_rate_w_p50": round(battery_drain_p50, 1),
+            "battery_drain_rate_w_p95": round(battery_drain_p95, 1),
+            "gpu_power_w_p50": round(gpu_power_p50, 1),
+            "gpu_power_w_p95": round(gpu_power_p95, 1),
+            "cpu_power_w_p50": round(cpu_power_p50, 1),
+            "cpu_power_w_p95": round(cpu_power_p95, 1),
+        })
+
+    elif device == "rocm":
+        # AMD GPU metrics
+        gpu_util_p50 = random.uniform(70.0, 90.0)
+        gpu_util_p95 = min(100.0, gpu_util_p50 * random.uniform(1.05, 1.15))
+
+        vram_used_p50 = gpu_memory_gb * random.uniform(0.45, 0.7)
+        vram_used_p95 = gpu_memory_gb * random.uniform(0.65, 0.85)
+
+        gpu_temp_p50 = random.uniform(60.0, 70.0)
+        gpu_temp_p95 = random.uniform(72.0, 82.0)
+
+        gpu_power_p50 = random.uniform(180.0, 250.0)
+        gpu_power_p95 = random.uniform(250.0, 320.0)
+
+        metrics.update({
+            "gpu_utilization_percent_p50": round(gpu_util_p50, 1),
+            "gpu_utilization_percent_p95": round(gpu_util_p95, 1),
+            "gpu_vram_used_gb_p50": round(vram_used_p50, 1),
+            "gpu_vram_used_gb_p95": round(vram_used_p95, 1),
+            "gpu_temperature_c_p50": round(gpu_temp_p50, 1),
+            "gpu_temperature_c_p95": round(gpu_temp_p95, 1),
+            "gpu_power_w_p50": round(gpu_power_p50, 1),
+            "gpu_power_w_p95": round(gpu_power_p95, 1),
+        })
+
+    elif device == "openvino":
+        # Intel Arc GPU metrics
+        gpu_util_p50 = random.uniform(65.0, 80.0)
+        gpu_util_p95 = min(100.0, gpu_util_p50 * random.uniform(1.1, 1.25))
+
+        vram_used_p50 = gpu_memory_gb * random.uniform(0.4, 0.65)
+        vram_used_p95 = gpu_memory_gb * random.uniform(0.6, 0.8)
+
+        gpu_temp_p50 = random.uniform(55.0, 65.0)
+        gpu_temp_p95 = random.uniform(68.0, 78.0)
+
+        gpu_power_p50 = random.uniform(90.0, 140.0)
+        gpu_power_p95 = random.uniform(140.0, 190.0)
+
+        metrics.update({
+            "gpu_utilization_percent_p50": round(gpu_util_p50, 1),
+            "gpu_utilization_percent_p95": round(gpu_util_p95, 1),
+            "gpu_vram_used_gb_p50": round(vram_used_p50, 1),
+            "gpu_vram_used_gb_p95": round(vram_used_p95, 1),
+            "gpu_temperature_c_p50": round(gpu_temp_p50, 1),
+            "gpu_temperature_c_p95": round(gpu_temp_p95, 1),
+            "gpu_power_w_p50": round(gpu_power_p50, 1),
+            "gpu_power_w_p95": round(gpu_power_p95, 1),
+        })
+
+    return metrics
+
+
 def generate_embeddings_models(device_config: dict[str, Any]) -> tuple[dict[str, Any], float]:
     """Create synthetic embedding metrics for multiple models."""
     models: dict[str, Any] = {}
@@ -428,6 +567,12 @@ def create_synthetic_result(device_config: dict[str, Any]) -> dict[str, Any]:
             }
         )
 
+    # Calculate total benchmark time for power metrics
+    total_benchmark_time = sum(task.get("total_time_seconds", 0.0) for task in tasks)
+
+    # Generate power metrics
+    power_metrics = generate_power_metrics(device_config, total_benchmark_time)
+
     return {
         "timestamp": datetime.now().isoformat(),
         "device_info": {
@@ -440,6 +585,7 @@ def create_synthetic_result(device_config: dict[str, Any]) -> dict[str, Any]:
             "host": device_config["host"],
         },
         "tasks": tasks,
+        "power_metrics": power_metrics,
     }
 
 
@@ -474,10 +620,19 @@ def main() -> None:
         embeddings_task = next(t for t in result["tasks"] if t["task"] == "embeddings")
         llm_tasks = [t for t in result["tasks"] if t["task"] == "llms"]
         vlm_tasks = [t for t in result["tasks"] if t["task"] == "vlms"]
+        power = result["power_metrics"]
 
         print(f"\n  Created: {filename}")
         print(f"    Device: {device['gpu_name']} ({device['platform']})")
         print(f"    Embedding models: {len(embeddings_task['models'])}")
+        print(f"    Power Metrics:")
+        print(f"      CPU Usage: {power['cpu_utilization_percent_p50']:.1f}% (p50) / {power['cpu_utilization_percent_p95']:.1f}% (p95)")
+        if "gpu_utilization_percent_p50" in power:
+            print(f"      GPU Usage: {power['gpu_utilization_percent_p50']:.1f}% (p50) / {power['gpu_utilization_percent_p95']:.1f}% (p95)")
+        if "gpu_power_w_p50" in power:
+            print(f"      GPU Power: {power['gpu_power_w_p50']:.1f}W (p50) / {power['gpu_power_w_p95']:.1f}W (p95)")
+        if "cpu_power_w_p50" in power:
+            print(f"      CPU Power: {power['cpu_power_w_p50']:.1f}W (p50) / {power['cpu_power_w_p95']:.1f}W (p95)")
 
     print(f"\nDone! Generated {len(DEVICES)} synthetic result files in {RESULTS_DIR}/")
     print("\nNext steps:")

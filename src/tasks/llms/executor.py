@@ -4,12 +4,16 @@ from statistics import median, stdev
 from tqdm import tqdm
 
 
-def run_single_model(prompts: list):
+def run_single_model(
+    prompts: list, model_name: str | None = None, base_url: str | None = None
+):
     """
     Runs a list of prompts through the LLM and collects metrics
 
     Args:
         prompts: List of prompts to send to the LLM
+        model_name: Model name to use (passed to chat_stream)
+        base_url: API base URL (passed to chat_stream)
 
     Returns:
         dict: Aggregated benchmark results including latency and token metrics,
@@ -24,7 +28,7 @@ def run_single_model(prompts: list):
 
     for prompt in tqdm(prompts, desc="Running prompts", unit="prompt"):
         # Run the model with streaming
-        result = stream_with_results(prompt)
+        result = stream_with_results(prompt, model_name=model_name, base_url=base_url)
 
         # Collect metrics
         all_latencies.append(result["total_latency_s"])
@@ -67,7 +71,9 @@ def run_single_model(prompts: list):
     }
 
 
-def run_model_with_repeats(model_name: str, prompts: list, num_runs: int = 3):
+def run_model_with_repeats(
+    model_name: str, prompts: list, num_runs: int = 3, base_url: str | None = None
+):
     """
     Runs model multiple times for statistical significance
 
@@ -75,6 +81,7 @@ def run_model_with_repeats(model_name: str, prompts: list, num_runs: int = 3):
         model_name: LLM model name
         prompts: List of prompts to run
         num_runs: Number of times to repeat the full prompt set (default 3)
+        base_url: API base URL (optional, defaults to settings)
 
     Returns:
         dict: Aggregated results with median latency across all runs
@@ -87,7 +94,7 @@ def run_model_with_repeats(model_name: str, prompts: list, num_runs: int = 3):
 
     # Warmup run (not counted in results)
     print("\n🔥 WARMUP RUN (not counted)")
-    _ = run_single_model(prompts=[prompts[0]])
+    _ = run_single_model(prompts=[prompts[0]], model_name=model_name, base_url=base_url)
     clear_memory()
 
     # Collect metrics from all runs
@@ -102,7 +109,9 @@ def run_model_with_repeats(model_name: str, prompts: list, num_runs: int = 3):
         print(f"RUN {run_idx + 1}/{num_runs}")
         print(f"{'='*60}")
 
-        result = run_single_model(prompts=prompts)
+        result = run_single_model(
+            prompts=prompts, model_name=model_name, base_url=base_url
+        )
 
         all_run_results.append(
             {

@@ -3,13 +3,21 @@ from .executor import run_model_with_repeats
 from src.settings import VLM_MODEL_NAME
 
 
-def run_vlms_benchmark():
+def run_vlms_benchmark(model_name: str | None = None, base_url: str | None = None):
     """
     Runs full VLM benchmark using Hallucination COCO dataset
+
+    Args:
+        model_name: Model name to use (defaults to VLM_MODEL_NAME from settings)
+        base_url: API base URL (defaults to VLM_BASE_URL from settings)
 
     Returns:
         dict: Results with median latency as main metric
     """
+    # Use provided model_name or fallback to settings
+    if model_name is None:
+        model_name = VLM_MODEL_NAME
+
     # Load first 3 questions and images from hallucination_coco dataset
     questions = dataset["question"][:3]
     images = dataset["image"][:3]  # PIL Image objects
@@ -19,7 +27,11 @@ def run_vlms_benchmark():
 
     # Run benchmark with 3 repeats per question
     model_results = run_model_with_repeats(
-        model_name=VLM_MODEL_NAME, prompts=questions, images=images, num_runs=3
+        model_name=model_name,
+        prompts=questions,
+        images=images,
+        num_runs=3,
+        base_url=base_url,
     )
 
     # Use median latency as main metric

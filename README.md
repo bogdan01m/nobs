@@ -3,6 +3,7 @@
 # La Perf
 [![CUDA](https://img.shields.io/badge/CUDA-Supported-76B900?style=flat&logo=nvidia&logoColor=white)](https://developer.nvidia.com/cuda-zone)
 [![MPS](https://img.shields.io/badge/MPS-Optimized-000000?style=flat&logo=apple&logoColor=white)](https://developer.apple.com/metal/)
+[![MLX](https://img.shields.io/badge/MLX-Accelerated-FF6B35?style=flat&logo=apple&logoColor=white)](https://github.com/ml-explore/mlx)
 [![AI Performance](https://img.shields.io/badge/AI-Performance-FF6B6B?style=flat&logo=tensorflow&logoColor=white)](https://github.com/bogdanminko/nobs)
 [![Open Source](https://img.shields.io/badge/Open%20Source-Benchmark-2ECC71?style=flat&logo=github&logoColor=white)](https://github.com/bogdanminko/nobs)
 ### La Perf — a local AI performance benchmark
@@ -29,26 +30,42 @@ It’s designed for **AI/ML engineers** who prefer to run workloads locally — 
 ---
 
 ## Overview
-**laperf** is an open-source benchmark suite
-for evaluating *real AI hardware performance* — not synthetic FLOPS or polished demos.
-
 ### Tasks
-Nobs is a collection of reproducible tests and community-submitted results for :
+La Perf is a collection of reproducible tests and community-submitted results for :
 - #### 🧩 **Embeddings** — ✅ Ready (sentence-transformers, [IMDB dataset](https://huggingface.co/datasets/stanfordnlp/imdb))
    sts models:
    - [thenlper/gte-large](https://huggingface.co/thenlper/gte-large)
    - [modernbert-embed-base](https://huggingface.co/nomic-ai/modernbert-embed-base)
 - #### 💬 **LLM inference** — ✅ Ready (LM Studio and Ollama, [Awesome Prompts dataset](https://huggingface.co/datasets/fka/awesome-chatgpt-prompts))
    llm models:
-   - [gpt-oss-20b](https://huggingface.co/openai/gpt-oss-20b) quantization: mxfp4
+   - [gpt-oss-20b](https://huggingface.co/openai/gpt-oss-20b)\
+   *quantization: mxfp4*
 - #### 👁️ **VLM inference** — ✅ Ready (LM Studio and Ollama, [Hallucination_COCO dataset](https://huggingface.co/datasets/DogNeverSleep/Hallucination_COCO))
    vlm models:
-   - []
+   - [qqwen3-vl-8b](https://huggingface.co/Qwen/Qwen3-VL-8B-Instruct)\
+   *quantization: mlx-4bit(lmstudio, macos only), q4_k_m(ollama, all)*
 - #### 🎨 **Diffusion image generation** — 📋 Planned
 - #### 🗣️ **Speach to Text** - 📋 Planned (whisper)
 - #### 🔬 **Classic ML** — 📋 Planned (scikit-learn, XGBoost, LightGBM, Catboost)
 
-**NOTE for mac-users**: If it's possible prefer to use lmstudio with `mlx` backend, which gives 10-20% more performance then `gguf`. If you run ollama (by default benchmarks runs both lmstudio and ollama) then you'll see a difference between `mlx` and `gguf` formats.
+**Note For mac-users**: If it's possible prefer to use lmstudio with `mlx` backend, which gives 10-20% more performance then `gguf`. If you run ollama (by default benchmarks runs both lmstudio and ollama) then you'll see a difference between `mlx` and `gguf` formats.
+
+The `MLX` backend makes the benchmark harder to maintain, but it provides a more realistic performance view, since it’s easy to convert a `safetensors` model into an `mlx` x-bit model.
+
+### Requirements
+
+Laperf is compatible with **Linux**, **macOS**, and **Windows**.
+For embedding tasks, **8 GB of RAM** is usually enough — sometimes even **4 GB** will work.
+It’s designed to run anywhere the **`uv` package manager** is installed.
+
+For LLM or VLM benchmarks, make sure you have **at least 16 GB of RAM** available.
+
+Please note that this project is still in its early stages — some features like **power metrics** and **GPU power tracking** may not yet work on all devices.
+
+It’s recommended to use a GPU from **NVIDIA**, **AMD**, **Intel**, or **Apple**, since AI workloads run significantly faster on GPUs.
+Make sure to enable **full GPU offload** in tools like **LM Studio** or **Ollama** for optimal performance.
+
+For embedding tasks, Laperf **automatically detects your available device** and runs computations accordingly.
 
 ---
 
@@ -62,17 +79,39 @@ NoBS was built to understand how different devices — from everyday laptops and
 
 ## Benchmark Results
 
-> **Last Updated**: 2025-11-02
+> **Last Updated**: 2025-11-03
 
 ### 🏆 Overall Ranking
 
-| Rank | Device | Platform | CPU | RAM | GPU | VRAM | Embeddings (s) | LLM (s) | VLM (s) | Total Time (s) |
-|------|--------|----------|-----|-----|-----|------|----------------|---------|---------|----------------|
-| 🥇 1 | Mac16,10 | 🍏 macOS | Apple M4 Max (14 cores) | 36 GB | Apple M4 Max (40 cores) | shared with system RAM | 8.56 | 115.88 | 85.06 | **209.50** |
-| 🥈 2 | RTX4060Ti-PC | 🐧 Linux | Intel Core i7-13700K | 32 GB | NVIDIA RTX 4060 Ti | 16 GB | 9.99 | 128.56 | 81.74 | **220.29** |
-| 🥉 3 | Arc-A770-Lab | 🐧 Linux | Intel Core Ultra 7 165H | 48 GB | Intel Arc A770 | 16 GB | 12.22 | 235.28 | - | **247.50** |
-| 4 | Radeon-Workstation | 🪟 Windows | AMD Ryzen 9 7950X | 64 GB | AMD Radeon RX 7900 XTX | 24 GB | 9.64 | 250.99 | 91.75 | **352.38** |
-| 5 | Mac14,7 | 🍏 macOS | Apple M2 (8 cores) | 24 GB | Apple M2 (10 cores) | shared with system RAM | 12.13 | 211.87 | 132.94 | **356.94** |
+| Rank | Device | Platform | CPU | RAM | GPU | VRAM | Embeddings, sts (s) | LLM, lms (s) | LLM, ollama (s) | VLM, lms (s) | VLM, ollama (s) | Total Time (s) |
+|------|--------|----------|-----|-----|-----|------|----------------|-----------------|--------------|-----------------|--------------|----------------|
+| 🥇 1 | Mac16,10 | 🍏 macOS | Apple M4 Max (14 cores) | 36 GB | Apple M4 Max (40 cores) | shared with system RAM | 8.56 | 115.88 | - | 85.06 | - | **209.50** |
+| 🥈 2 | RTX4060Ti-PC | 🐧 Linux | Intel Core i7-13700K | 32 GB | NVIDIA RTX 4060 Ti | 16 GB | 10.50 | - | 127.28 | - | 84.87 | **222.65** |
+| 🥉 3 | Arc-A770-Lab | 🐧 Linux | Intel Core Ultra 7 165H | 48 GB | Intel Arc A770 | 16 GB | 13.20 | - | 240.57 | - | - | **253.77** |
+| 4 | Mac14,7 | 🍏 macOS | Apple M2 (8 cores) | 24 GB | Apple M2 (10 cores) | shared with system RAM | 12.31 | 207.98 | - | 132.51 | - | **352.80** |
+| 5 | Radeon-Workstation | 🪟 Windows | AMD Ryzen 9 7950X | 64 GB | AMD Radeon RX 7900 XTX | 24 GB | 10.11 | 140.85 | 139.79 | 100.28 | - | **391.03** |
+
+*sts - sentence transformers*
+
+*lms - lm stuido*
+
+*ollama - ollama*
+
+
+
+
+### ⚡ Power Metrics
+
+| Device | CPU Usage (p50/p95) | RAM Used (p50/p95) | GPU Usage (p50/p95) | GPU Temp (p50/p95) | Battery Drain (p50/p95) | GPU Power (p50/p95) | CPU Power (p50/p95) |
+|--------|---------------------|--------------------|--------------------|--------------------|-----------------------|--------------------|--------------------|
+| Arc-A770-Lab | 60.8% / 101.1% | 22.8GB / 38.5GB | 72.4% / 90.5% | 57.4°C / 70.8°C | N/A | 104.7W / 169.7W | N/A |
+| Mac14,7 | 52.7% / 92.4% | 11.5GB / 17.6GB | 82.8% / 94.1% | 51.3°C / 62.6°C | 27.7W / 38.1W | 18.2W / 40.5W | 11.4W / 17.6W |
+| Mac16,10 | 36.3% / 61.2% | 25.1GB / 25.7GB | 60.0% / 71.6% | 51.3°C / 58.5°C | 29.2W / 30.4W | 23.1W / 48.2W | 9.7W / 17.8W |
+| RTX4060Ti-PC | 51.4% / 77.5% | 21.8GB / 24.3GB | 87.2% / 94.0% | 69.7°C / 78.6°C | N/A | 127.7W / 204.8W | N/A |
+| Radeon-Workstation | 40.8% / 70.1% | 35.2GB / 52.6GB | 76.0% / 83.2% | 65.5°C / 73.2°C | N/A | 186.0W / 305.7W | N/A |
+
+*p50 = median, p95 = 95th percentile*
+
 
 
 #### Embeddings Performance Visualization
@@ -88,21 +127,21 @@ NoBS was built to understand how different devices — from everyday laptops and
 
 | Device | Model | Rows/sec | Time (s) | Embedding Dim | Batch Size |
 |--------|-------|----------|----------|---------------|------------|
-| Arc-A770-Lab | nomic-ai/nomic-embed-text-v1.5 | 142.27 ± 12.22 | 5.16 ± 0.39 | 768 | 24 |
-| Arc-A770-Lab | text-embedding-3-large | 180.92 ± 21.01 | 4.15 ± 0.27 | 3072 | 16 |
-| Arc-A770-Lab | text-embedding-3-small | 349.04 ± 17.43 | 2.90 ± 0.25 | 1536 | 32 |
-| Mac14,7 | nomic-ai/nomic-embed-text-v1.5 | 151.85 ± 14.73 | 4.77 ± 0.34 | 768 | 24 |
-| Mac14,7 | text-embedding-3-large | 236.12 ± 19.00 | 4.60 ± 0.47 | 3072 | 16 |
-| Mac14,7 | text-embedding-3-small | 325.82 ± 14.32 | 2.76 ± 0.18 | 1536 | 32 |
+| Arc-A770-Lab | nomic-ai/nomic-embed-text-v1.5 | 125.97 ± 5.07 | 6.57 ± 0.57 | 768 | 24 |
+| Arc-A770-Lab | text-embedding-3-large | 181.42 ± 8.94 | 3.99 ± 0.39 | 3072 | 16 |
+| Arc-A770-Lab | text-embedding-3-small | 278.90 ± 13.47 | 2.64 ± 0.17 | 1536 | 32 |
+| Mac14,7 | nomic-ai/nomic-embed-text-v1.5 | 171.45 ± 13.05 | 5.28 ± 0.49 | 768 | 24 |
+| Mac14,7 | text-embedding-3-large | 248.66 ± 13.93 | 4.71 ± 0.56 | 3072 | 16 |
+| Mac14,7 | text-embedding-3-small | 385.18 ± 33.24 | 2.32 ± 0.25 | 1536 | 32 |
 | Mac16,10 | nomic-ai/nomic-embed-text-v1.5 | 220.49 ± 15.86 | 4.02 ± 0.38 | 768 | 24 |
 | Mac16,10 | text-embedding-3-large | 281.46 ± 31.40 | 2.69 ± 0.26 | 3072 | 16 |
 | Mac16,10 | text-embedding-3-small | 425.60 ± 50.04 | 1.85 ± 0.27 | 1536 | 32 |
-| RTX4060Ti-PC | nomic-ai/nomic-embed-text-v1.5 | 171.67 ± 7.23 | 5.34 ± 0.48 | 768 | 24 |
-| RTX4060Ti-PC | text-embedding-3-large | 269.83 ± 27.46 | 2.84 ± 0.38 | 3072 | 16 |
-| RTX4060Ti-PC | text-embedding-3-small | 388.34 ± 44.31 | 1.80 ± 0.20 | 1536 | 32 |
-| Radeon-Workstation | nomic-ai/nomic-embed-text-v1.5 | 196.82 ± 18.14 | 4.26 ± 0.31 | 768 | 24 |
-| Radeon-Workstation | text-embedding-3-large | 231.25 ± 16.41 | 3.13 ± 0.41 | 3072 | 16 |
-| Radeon-Workstation | text-embedding-3-small | 406.83 ± 46.62 | 2.24 ± 0.30 | 1536 | 32 |
+| RTX4060Ti-PC | nomic-ai/nomic-embed-text-v1.5 | 197.21 ± 16.52 | 4.59 ± 0.41 | 768 | 24 |
+| RTX4060Ti-PC | text-embedding-3-large | 272.31 ± 31.78 | 3.86 ± 0.50 | 3072 | 16 |
+| RTX4060Ti-PC | text-embedding-3-small | 434.32 ± 32.45 | 2.06 ± 0.29 | 1536 | 32 |
+| Radeon-Workstation | nomic-ai/nomic-embed-text-v1.5 | 156.04 ± 10.13 | 5.02 ± 0.43 | 768 | 24 |
+| Radeon-Workstation | text-embedding-3-large | 251.63 ± 22.39 | 2.98 ± 0.39 | 3072 | 16 |
+| Radeon-Workstation | text-embedding-3-small | 426.15 ± 30.92 | 2.11 ± 0.19 | 1536 | 32 |
 
 ![Embeddings Performance Profile](results/plots/embeddings_performance.png)
 
@@ -118,17 +157,17 @@ NoBS was built to understand how different devices — from everyday laptops and
 
 | Device | Model | Tokens/sec | TTFT (s) | Latency (s) | Input Tokens | Output Tokens |
 |--------|-------|------------|----------|-------------|--------------|---------------|
-| Mac14,7 | nous-hermes-llama2-13b | 75.03 ± 3.55 | 3.43 ± 1.56 | 19.46 ± 6.16 | 5915 | 12286 |
+| Mac14,7 | nous-hermes-llama2-13b | 69.62 ± 5.44 | 3.47 ± 1.46 | 17.55 ± 7.31 | 5849 | 12873 |
 | Mac16,10 | granite-coder-34b | 160.72 ± 11.77 | 1.62 ± 0.58 | 6.03 ± 2.53 | 9769 | 13303 |
-| Radeon-Workstation | mixtral-8x7b-instruct | 119.73 ± 8.88 | 1.49 ± 1.06 | 9.04 ± 3.00 | 6043 | 12851 |
+| Radeon-Workstation | mixtral-8x7b-instruct | 115.66 ± 7.36 | 1.40 ± 1.05 | 10.03 ± 3.96 | 5676 | 14184 |
 
 **OLLAMA**
 
 | Device | Model | Tokens/sec | TTFT (s) | Latency (s) | Input Tokens | Output Tokens |
 |--------|-------|------------|----------|-------------|--------------|---------------|
-| Arc-A770-Lab | phi3:mini-4k | 68.32 ± 5.63 | 4.54 ± 1.69 | 17.65 ± 6.56 | 8345 | 12702 |
-| RTX4060Ti-PC | llama3:13b-instruct | 126.76 ± 6.38 | 2.17 ± 0.73 | 8.85 ± 3.25 | 8081 | 12895 |
-| Radeon-Workstation | mistral:7b-instruct | 106.79 ± 7.38 | 3.15 ± 1.04 | 10.54 ± 4.73 | 6566 | 8673 |
+| Arc-A770-Lab | phi3:mini-4k | 72.07 ± 5.20 | 4.61 ± 1.41 | 17.41 ± 7.08 | 9047 | 13372 |
+| RTX4060Ti-PC | llama3:13b-instruct | 127.45 ± 9.33 | 1.98 ± 0.74 | 7.95 ± 3.16 | 6551 | 13000 |
+| Radeon-Workstation | mistral:7b-instruct | 105.45 ± 5.08 | 1.67 ± 1.15 | 13.59 ± 3.97 | 4679 | 13310 |
 
 ![LLM TTFT vs Input Tokens](results/plots/llm_ttft_vs_input_tokens.png)
 
@@ -158,15 +197,15 @@ NoBS was built to understand how different devices — from everyday laptops and
 
 | Device | Model | Tokens/sec | TTFT (s) | Latency (s) | Input Tokens | Output Tokens |
 |--------|-------|------------|----------|-------------|--------------|---------------|
-| Mac14,7 | llava:7b | 55.16 ± 3.65 | 4.70 ± 1.53 | 17.23 ± 3.51 | 4053 | 5936 |
+| Mac14,7 | llava:7b | 52.40 ± 2.90 | 5.86 ± 1.62 | 15.56 ± 4.31 | 5045 | 4506 |
 | Mac16,10 | minicpm-v:8b | 105.73 ± 8.11 | 2.38 ± 0.49 | 6.98 ± 3.00 | 5202 | 6566 |
-| Radeon-Workstation | llava:13b | 72.16 ± 4.65 | 3.45 ± 0.80 | 8.70 ± 3.26 | 5317 | 4482 |
+| Radeon-Workstation | llava:13b | 73.85 ± 7.32 | 3.33 ± 1.06 | 10.50 ± 3.19 | 5016 | 4755 |
 
 **OLLAMA**
 
 | Device | Model | Tokens/sec | TTFT (s) | Latency (s) | Input Tokens | Output Tokens |
 |--------|-------|------------|----------|-------------|--------------|---------------|
-| RTX4060Ti-PC | minicpm-v:8b | 84.37 ± 5.38 | 3.06 ± 1.15 | 10.32 ± 3.19 | 5198 | 4365 |
+| RTX4060Ti-PC | minicpm-v:8b | 80.82 ± 5.12 | 3.43 ± 1.19 | 10.40 ± 3.62 | 5873 | 4726 |
 
 ![VLM TTFT vs Input Tokens](results/plots/vlm_ttft_vs_input_tokens.png)
 
@@ -189,7 +228,7 @@ NoBS was built to understand how different devices — from everyday laptops and
 
 ---
 
-_All metrics are shown as median ± standard deviation across 3 runs.
+_All metrics are shown as median �� standard deviation across 3 runs.
 Lower times are better (faster performance)._
 
 ## ⚡ Quick Start
