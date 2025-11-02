@@ -519,6 +519,39 @@ def generate_token_metric_visualizations(
     plots: dict[str, dict[str, Path]] = {}
     plots_dir = results_dir / "plots"
 
+    # Build device_gpu_mapping from result files
+    device_gpu_mapping: dict[str, str] = {}
+    for result_file in sorted(results_dir.glob("report_*.json")):
+        try:
+            with open(result_file) as f:
+                data = json.load(f)
+            device_info = data.get("device_info", {})
+            host = device_info.get("host")
+            gpu_name = device_info.get("gpu_name", "Unknown GPU")
+
+            # Match the device_label format from collect_prompt_details_by_task
+            for task in data.get("tasks", []):
+                if task.get("task") not in {"llms", "vlms"}:
+                    continue
+
+                backend_name = (task.get("backend") or "UNKNOWN").upper()
+                backend_display = {
+                    "LM_STUDIO": "LM Studio",
+                    "OLLAMA": "Ollama",
+                }.get(backend_name, backend_name.title())
+
+                parts = []
+                if host:
+                    parts.append(host)
+                if gpu_name:
+                    parts.append(gpu_name)
+                parts.append(backend_display)
+                device_label = " | ".join(parts)
+
+                device_gpu_mapping[device_label] = gpu_name
+        except Exception:
+            continue
+
     for task_type, devices in prompt_details.items():
         if not devices:
             continue
@@ -528,8 +561,8 @@ def generate_token_metric_visualizations(
         tg_path = plots_dir / f"{prefix}_tg_vs_output_tokens.png"
 
         try:
-            plot_ttft_vs_input_tokens(devices, ttft_path)
-            plot_tg_vs_output_tokens(devices, tg_path)
+            plot_ttft_vs_input_tokens(devices, device_gpu_mapping, ttft_path)
+            plot_tg_vs_output_tokens(devices, device_gpu_mapping, tg_path)
             plots[task_type] = {"ttft": ttft_path, "tg": tg_path}
         except Exception as exc:
             print(f"⚠️  Failed to generate {task_type.upper()} token plots: {exc}")
@@ -729,42 +762,28 @@ def generate_full_results_section(results_dir: Path = Path("results")) -> str:
     if has_llm_results or has_vlm_results:
         token_plots = generate_token_metric_visualizations(results_dir)
 
-    # Generate embeddings performance plot if embeddings results exist
-    if has_embeddings_results:
-        try:
-            # Generate the plot
-            plot_embeddings_performance(results_dir)
-
-            # Add plot to README
-            sections.append("\n#### Embeddings Performance Visualization\n")
-            sections.append(
-                "![Embeddings Performance Profile](results/plots/embeddings_performance.png)\n"
-            )
-            sections.append(
-                "*Throughput comparison for different embedding models across hardware. "
-                "Higher values indicate better performance.*\n"
-            )
-        except Exception as e:
-            print(f"⚠️  Failed to generate embeddings plot: {e}")
-
     # Embeddings section
     embeddings_section = generate_embeddings_table(results)
     if embeddings_section:
-        sections.append("\n### 📈 Embeddings\n")
+        sections.append("\n### Embeddings\n")
         sections.append(embeddings_section)
         if has_embeddings_results:
-            sections.append(
-                "![Embeddings Performance Profile](results/plots/embeddings_performance.png)\n"
-            )
-            sections.append(
-                "*Throughput comparison for different embedding models across hardware. "
-                "Higher values indicate better performance.*\n"
-            )
+            try:
+                plot_embeddings_performance(results_dir)
+                sections.append(
+                    "![Embeddings Performance Profile](results/plots/embeddings_performance.png)\n"
+                )
+                sections.append(
+                    "*Throughput comparison for different embedding models across hardware. "
+                    "Higher values indicate better performance.*\n"
+                )
+            except Exception as e:
+                print(f"⚠️  Failed to generate embeddings plot: {e}")
 
     # LLM section
     llm_table = generate_llm_table(results)
     if llm_table:
-        sections.append("\n### 🧠 LLMs\n")
+        sections.append("\n### LLMs\n")
         sections.append(llm_table)
         llm_token_plots = token_plots.get("llms")
         if llm_token_plots:
@@ -802,7 +821,7 @@ def generate_full_results_section(results_dir: Path = Path("results")) -> str:
     # VLM section
     vlm_table = generate_vlm_table(results)
     if vlm_table:
-        sections.append("\n### 👁️ VLMs\n")
+        sections.append("\n### VLMs\n")
         sections.append(vlm_table)
         vlm_token_plots = token_plots.get("vlms")
         if vlm_token_plots:

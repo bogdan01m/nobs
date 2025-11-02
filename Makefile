@@ -9,6 +9,11 @@ generate:
 	@uv run python src/generate_results_table.py
 	@echo "✨ Done! Run 'make format' to run pre-commit hooks."
 
+bench:
+	@echo "🆕 Starting La Perf benchmark"
+	@uv run python main.py
+	@echo "✨ Done! Run 'make' to update results in README.md"
+
 # Run pre-commit hooks on all files
 format:
 	@echo "🔧 Running pre-commit hooks..."

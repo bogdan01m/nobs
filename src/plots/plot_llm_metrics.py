@@ -3,24 +3,9 @@
 import json
 from pathlib import Path
 from typing import Any
-
 import matplotlib.pyplot as plt
 import numpy as np
-
-
-def get_gpu_vendor_color(gpu_name: str) -> str:
-    """Determine GPU vendor color for consistent visualization."""
-    gpu_lower = gpu_name.lower()
-    if any(x in gpu_lower for x in ["apple", "m1", "m2", "m3", "m4"]):
-        return "#808080"  # Blue for Apple
-    elif any(x in gpu_lower for x in ["nvidia", "rtx", "gtx", "tesla", "a100"]):
-        return "#76B900"  # NVIDIA Green
-    elif any(x in gpu_lower for x in ["amd", "radeon", "rx"]):
-        return "#ED1C24"  # AMD Red
-    elif any(x in gpu_lower for x in ["intel", "arc", "uhd"]):
-        return "#2E86AB"  # Orange for Intel
-    else:
-        return "#F77F00"  # Gray for Other
+from .vendor_color import get_gpu_vendor_color
 
 
 def load_results(results_dir: Path = Path("results")) -> list[dict[str, Any]]:

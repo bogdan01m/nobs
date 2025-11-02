@@ -8,10 +8,10 @@ This script reads JSON benchmark results and creates plots showing:
 
 import json
 from pathlib import Path
-
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 import numpy as np
+from .vendor_color import get_gpu_vendor_color
 
 # Get project root directory (2 levels up from src/plots/)
 PROJECT_ROOT = Path(__file__).parent.parent.parent
@@ -111,12 +111,15 @@ def load_prompt_details(result_file: str):
     }
 
 
-def plot_ttft_vs_input_tokens(devices_data: dict, output_path: Path | None = None):
+def plot_ttft_vs_input_tokens(
+    devices_data: dict, device_gpu_mapping: dict, output_path: Path | None = None
+):
     """
     Plot Time To First Token vs Input Tokens for multiple devices.
 
     Args:
         devices_data: Dict mapping device_label to list of prompt details
+        device_gpu_mapping: Dict mapping device_label to GPU name for color selection
         output_path: Path to save the plot (defaults to results/plots/ttft_vs_input_tokens.png)
     """
     if output_path is None:
@@ -144,9 +147,13 @@ def plot_ttft_vs_input_tokens(devices_data: dict, output_path: Path | None = Non
         input_tokens = np.array([x[0] for x in filtered])
         ttft_times = np.array([x[1] for x in filtered])
 
-        # Get color and marker for this device
-        color = get_color(idx)
+        # Get vendor-based color and marker for this device
+        gpu_name = device_gpu_mapping.get(device_label, "Unknown GPU")
+        vendor_color = get_gpu_vendor_color(gpu_name)
         marker = get_marker(idx)
+
+        # For multiple devices of same vendor, adjust hue slightly
+        color = mpl.colors.to_rgba(vendor_color)
 
         # Scatter plot
         ax.scatter(
@@ -212,12 +219,15 @@ def plot_ttft_vs_input_tokens(devices_data: dict, output_path: Path | None = Non
     plt.close()
 
 
-def plot_tg_vs_output_tokens(devices_data: dict, output_path: Path | None = None):
+def plot_tg_vs_output_tokens(
+    devices_data: dict, device_gpu_mapping: dict, output_path: Path | None = None
+):
     """
     Plot Text Generation Time vs Output Tokens for multiple devices.
 
     Args:
         devices_data: Dict mapping device_label to list of prompt details
+        device_gpu_mapping: Dict mapping device_label to GPU name for color selection
         output_path: Path to save the plot (defaults to results/plots/tg_vs_output_tokens.png)
     """
     if output_path is None:
@@ -245,9 +255,13 @@ def plot_tg_vs_output_tokens(devices_data: dict, output_path: Path | None = None
         output_tokens = np.array([x[0] for x in filtered])
         tg_times = np.array([x[1] for x in filtered])
 
-        # Get color and marker for this device
-        color = get_color(idx)
+        # Get vendor-based color and marker for this device
+        gpu_name = device_gpu_mapping.get(device_label, "Unknown GPU")
+        vendor_color = get_gpu_vendor_color(gpu_name)
         marker = get_marker(idx)
+
+        # For multiple devices of same vendor, adjust hue slightly
+        color = mpl.colors.to_rgba(vendor_color)
 
         # Scatter plot
         ax.scatter(
@@ -326,13 +340,18 @@ def main():
 
     # Group prompt details by device
     devices_data: dict[str, list] = {}
+    device_gpu_mapping: dict[str, str] = {}  # Map device_label to GPU name
 
     for result_file in result_files:
         print(f"Loading: {result_file.name}")
         data = load_prompt_details(str(result_file))
 
         device_label = data["device_label"]
+        gpu_name = data["gpu_name"]
         prompt_details = data["prompt_details"]
+
+        # Store GPU name for color mapping
+        device_gpu_mapping[device_label] = gpu_name
 
         # Aggregate data for this device (append if device already exists)
         if device_label not in devices_data:
@@ -354,9 +373,9 @@ def main():
     print(f"\nTotal prompt details: {total_details}")
     print("\nGenerating plots...")
 
-    # Create plots with device grouping
-    plot_ttft_vs_input_tokens(devices_data)
-    plot_tg_vs_output_tokens(devices_data)
+    # Create plots with device grouping and vendor-based colors
+    plot_ttft_vs_input_tokens(devices_data, device_gpu_mapping)
+    plot_tg_vs_output_tokens(devices_data, device_gpu_mapping)
 
     print(f"\nDone! Plots saved to {RESULTS_DIR}/")
 

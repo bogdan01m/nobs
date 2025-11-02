@@ -21,6 +21,7 @@ It’s designed for **AI/ML engineers** who prefer to run workloads locally — 
 - [Overview](#overview)
 - [Philosophy](#philosophy)
 - [Benchmark Results](#benchmark-results)
+  - [Power metrics](#⚡-power-metrics)
   - [Embeddings](#embeddings)
   - [LLMs](#llms)
   - [VLMs](#vlms)
@@ -38,12 +39,16 @@ La Perf is a collection of reproducible tests and community-submitted results fo
    - [modernbert-embed-base](https://huggingface.co/nomic-ai/modernbert-embed-base)
 - #### 💬 **LLM inference** — ✅ Ready (LM Studio and Ollama, [Awesome Prompts dataset](https://huggingface.co/datasets/fka/awesome-chatgpt-prompts))
    llm models:
-   - [gpt-oss-20b](https://huggingface.co/openai/gpt-oss-20b)\
-   *quantization: mxfp4*
+   - **LM Studio**: [gpt-oss-20b](https://lmstudio.ai/models/openai/gpt-oss-20b)
+     - *macOS*: `mlx-community/gpt-oss-20b-MXFP4-Q8` (MLX MXFP4-Q8)
+     - *Other platforms*: `lmstudio-community/gpt-oss-20b-GGUF` (GGUF)
+   - **Ollama**: [gpt-oss-20b](https://ollama.com/library/gpt-oss:20b)
 - #### 👁️ **VLM inference** — ✅ Ready (LM Studio and Ollama, [Hallucination_COCO dataset](https://huggingface.co/datasets/DogNeverSleep/Hallucination_COCO))
    vlm models:
-   - [qqwen3-vl-8b](https://huggingface.co/Qwen/Qwen3-VL-8B-Instruct)\
-   *quantization: mlx-4bit(lmstudio, macos only), q4_k_m(ollama, all)*
+   - **LM Studio**: [Qwen3-VL-8B-Instruct](https://huggingface.co/Qwen/Qwen3-VL-8B-Instruct)
+     - *macOS*: `lmstudio-community/Qwen3-VL-8B-Instruct-MLX-8bit` (MLX 8-bit)
+     - *Other platforms*: `lmstudio-community/Qwen3-VL-8B-Instruct-GGUF-Q8_0` (GGUF Q8_0)
+   - **Ollama**: `qwen3-vl:8b`
 - #### 🎨 **Diffusion image generation** — 📋 Planned
 - #### 🗣️ **Speach to Text** - 📋 Planned (whisper)
 - #### 🔬 **Classic ML** — 📋 Planned (scikit-learn, XGBoost, LightGBM, Catboost)
@@ -87,9 +92,6 @@ NoBS was built to understand how different devices — from everyday laptops and
 |------|--------|----------|-----|-----|-----|------|----------------|-----------------|--------------|-----------------|--------------|----------------|
 | 🥇 1 | Mac16,10 | 🍏 macOS | Apple M4 Max (14 cores) | 36 GB | Apple M4 Max (40 cores) | shared with system RAM | 8.56 | 115.88 | - | 85.06 | - | **209.50** |
 | 🥈 2 | RTX4060Ti-PC | 🐧 Linux | Intel Core i7-13700K | 32 GB | NVIDIA RTX 4060 Ti | 16 GB | 10.50 | - | 127.28 | - | 84.87 | **222.65** |
-| 🥉 3 | Arc-A770-Lab | 🐧 Linux | Intel Core Ultra 7 165H | 48 GB | Intel Arc A770 | 16 GB | 13.20 | - | 240.57 | - | - | **253.77** |
-| 4 | Mac14,7 | 🍏 macOS | Apple M2 (8 cores) | 24 GB | Apple M2 (10 cores) | shared with system RAM | 12.31 | 207.98 | - | 132.51 | - | **352.80** |
-| 5 | Radeon-Workstation | 🪟 Windows | AMD Ryzen 9 7950X | 64 GB | AMD Radeon RX 7900 XTX | 24 GB | 10.11 | 140.85 | 139.79 | 100.28 | - | **391.03** |
 
 *sts - sentence transformers*
 
@@ -104,51 +106,32 @@ NoBS was built to understand how different devices — from everyday laptops and
 
 | Device | CPU Usage (p50/p95) | RAM Used (p50/p95) | GPU Usage (p50/p95) | GPU Temp (p50/p95) | Battery Drain (p50/p95) | GPU Power (p50/p95) | CPU Power (p50/p95) |
 |--------|---------------------|--------------------|--------------------|--------------------|-----------------------|--------------------|--------------------|
-| Arc-A770-Lab | 60.8% / 101.1% | 22.8GB / 38.5GB | 72.4% / 90.5% | 57.4°C / 70.8°C | N/A | 104.7W / 169.7W | N/A |
-| Mac14,7 | 52.7% / 92.4% | 11.5GB / 17.6GB | 82.8% / 94.1% | 51.3°C / 62.6°C | 27.7W / 38.1W | 18.2W / 40.5W | 11.4W / 17.6W |
 | Mac16,10 | 36.3% / 61.2% | 25.1GB / 25.7GB | 60.0% / 71.6% | 51.3°C / 58.5°C | 29.2W / 30.4W | 23.1W / 48.2W | 9.7W / 17.8W |
 | RTX4060Ti-PC | 51.4% / 77.5% | 21.8GB / 24.3GB | 87.2% / 94.0% | 69.7°C / 78.6°C | N/A | 127.7W / 204.8W | N/A |
-| Radeon-Workstation | 40.8% / 70.1% | 35.2GB / 52.6GB | 76.0% / 83.2% | 65.5°C / 73.2°C | N/A | 186.0W / 305.7W | N/A |
 
 *p50 = median, p95 = 95th percentile*
 
 
 
-#### Embeddings Performance Visualization
-
-![Embeddings Performance Profile](results/plots/embeddings_performance.png)
-
-*Throughput comparison for different embedding models across hardware. Higher values indicate better performance.*
-
-
-### 📈 Embeddings
+### Embeddings
 
 #### Text Embeddings (100 IMDB samples)
 
 | Device | Model | Rows/sec | Time (s) | Embedding Dim | Batch Size |
 |--------|-------|----------|----------|---------------|------------|
-| Arc-A770-Lab | nomic-ai/nomic-embed-text-v1.5 | 125.97 ± 5.07 | 6.57 ± 0.57 | 768 | 24 |
-| Arc-A770-Lab | text-embedding-3-large | 181.42 ± 8.94 | 3.99 ± 0.39 | 3072 | 16 |
-| Arc-A770-Lab | text-embedding-3-small | 278.90 ± 13.47 | 2.64 ± 0.17 | 1536 | 32 |
-| Mac14,7 | nomic-ai/nomic-embed-text-v1.5 | 171.45 ± 13.05 | 5.28 ± 0.49 | 768 | 24 |
-| Mac14,7 | text-embedding-3-large | 248.66 ± 13.93 | 4.71 ± 0.56 | 3072 | 16 |
-| Mac14,7 | text-embedding-3-small | 385.18 ± 33.24 | 2.32 ± 0.25 | 1536 | 32 |
 | Mac16,10 | nomic-ai/nomic-embed-text-v1.5 | 220.49 ± 15.86 | 4.02 ± 0.38 | 768 | 24 |
 | Mac16,10 | text-embedding-3-large | 281.46 ± 31.40 | 2.69 ± 0.26 | 3072 | 16 |
 | Mac16,10 | text-embedding-3-small | 425.60 ± 50.04 | 1.85 ± 0.27 | 1536 | 32 |
 | RTX4060Ti-PC | nomic-ai/nomic-embed-text-v1.5 | 197.21 ± 16.52 | 4.59 ± 0.41 | 768 | 24 |
 | RTX4060Ti-PC | text-embedding-3-large | 272.31 ± 31.78 | 3.86 ± 0.50 | 3072 | 16 |
 | RTX4060Ti-PC | text-embedding-3-small | 434.32 ± 32.45 | 2.06 ± 0.29 | 1536 | 32 |
-| Radeon-Workstation | nomic-ai/nomic-embed-text-v1.5 | 156.04 ± 10.13 | 5.02 ± 0.43 | 768 | 24 |
-| Radeon-Workstation | text-embedding-3-large | 251.63 ± 22.39 | 2.98 ± 0.39 | 3072 | 16 |
-| Radeon-Workstation | text-embedding-3-small | 426.15 ± 30.92 | 2.11 ± 0.19 | 1536 | 32 |
 
 ![Embeddings Performance Profile](results/plots/embeddings_performance.png)
 
 *Throughput comparison for different embedding models across hardware. Higher values indicate better performance.*
 
 
-### 🧠 LLMs
+### LLMs
 
 #### LLM Inference (3 prompts from awesome-chatgpt-prompts)
 
@@ -157,17 +140,13 @@ NoBS was built to understand how different devices — from everyday laptops and
 
 | Device | Model | Tokens/sec | TTFT (s) | Latency (s) | Input Tokens | Output Tokens |
 |--------|-------|------------|----------|-------------|--------------|---------------|
-| Mac14,7 | nous-hermes-llama2-13b | 69.62 ± 5.44 | 3.47 ± 1.46 | 17.55 ± 7.31 | 5849 | 12873 |
 | Mac16,10 | granite-coder-34b | 160.72 ± 11.77 | 1.62 ± 0.58 | 6.03 ± 2.53 | 9769 | 13303 |
-| Radeon-Workstation | mixtral-8x7b-instruct | 115.66 ± 7.36 | 1.40 ± 1.05 | 10.03 ± 3.96 | 5676 | 14184 |
 
 **OLLAMA**
 
 | Device | Model | Tokens/sec | TTFT (s) | Latency (s) | Input Tokens | Output Tokens |
 |--------|-------|------------|----------|-------------|--------------|---------------|
-| Arc-A770-Lab | phi3:mini-4k | 72.07 ± 5.20 | 4.61 ± 1.41 | 17.41 ± 7.08 | 9047 | 13372 |
 | RTX4060Ti-PC | llama3:13b-instruct | 127.45 ± 9.33 | 1.98 ± 0.74 | 7.95 ± 3.16 | 6551 | 13000 |
-| Radeon-Workstation | mistral:7b-instruct | 105.45 ± 5.08 | 1.67 ± 1.15 | 13.59 ± 3.97 | 4679 | 13310 |
 
 ![LLM TTFT vs Input Tokens](results/plots/llm_ttft_vs_input_tokens.png)
 
@@ -188,7 +167,7 @@ NoBS was built to understand how different devices — from everyday laptops and
 *Token Generation per second (TG) - Higher is better. Measures token generation.*
 
 
-### 👁️ VLMs
+### VLMs
 
 #### VLM Inference (3 questions from Hallucination_COCO)
 
@@ -197,9 +176,7 @@ NoBS was built to understand how different devices — from everyday laptops and
 
 | Device | Model | Tokens/sec | TTFT (s) | Latency (s) | Input Tokens | Output Tokens |
 |--------|-------|------------|----------|-------------|--------------|---------------|
-| Mac14,7 | llava:7b | 52.40 ± 2.90 | 5.86 ± 1.62 | 15.56 ± 4.31 | 5045 | 4506 |
 | Mac16,10 | minicpm-v:8b | 105.73 ± 8.11 | 2.38 ± 0.49 | 6.98 ± 3.00 | 5202 | 6566 |
-| Radeon-Workstation | llava:13b | 73.85 ± 7.32 | 3.33 ± 1.06 | 10.50 ± 3.19 | 5016 | 4755 |
 
 **OLLAMA**
 
@@ -256,7 +233,7 @@ uv run python main.py
 
 This will:
 1. Auto-detect your hardware (CUDA/MPS/CPU)
-2. Run all available benchmarks (currently: embeddings)
+2. Run all available benchmarks
 3. Save results to `results/report_{your_device}.json`
 
 #### Run specific benchmarks
