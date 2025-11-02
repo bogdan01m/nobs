@@ -1,20 +1,19 @@
-# NoBS benchmark
+<div align="center">
 
+# La Perf
 [![CUDA](https://img.shields.io/badge/CUDA-Supported-76B900?style=flat&logo=nvidia&logoColor=white)](https://developer.nvidia.com/cuda-zone)
 [![MPS](https://img.shields.io/badge/MPS-Optimized-000000?style=flat&logo=apple&logoColor=white)](https://developer.apple.com/metal/)
 [![AI Performance](https://img.shields.io/badge/AI-Performance-FF6B6B?style=flat&logo=tensorflow&logoColor=white)](https://github.com/bogdanminko/nobs)
 [![Open Source](https://img.shields.io/badge/Open%20Source-Benchmark-2ECC71?style=flat&logo=github&logoColor=white)](https://github.com/bogdanminko/nobs)
-<div align="center">
-
-### 📚 A collection of AI hardware benchmarks
-
-**No magic scores. No-BullShit.**
-
-*Compare M1 Air, M4 Max, RTX 3060, RTX 4060, A100 and other hardware on different AI tasks*
+### La Perf — a local AI performance benchmark
+for comparing AI performance across different devices.
 
 </div>
 
 ---
+The goal of this project is to create an all-in-one source of information you need **before buying your next laptop or PC for local AI tasks**.
+
+It’s designed for **AI/ML engineers** who prefer to run workloads locally — and for **AI enthusiasts** who want to understand real-world device performance.
 
 ## Table of Contents
 
@@ -30,7 +29,7 @@
 ---
 
 ## Overview
-**NoBS** is an open-source benchmark suite
+**laperf** is an open-source benchmark suite
 for evaluating *real AI hardware performance* — not synthetic FLOPS or polished demos.
 
 ### Tasks
@@ -40,14 +39,16 @@ Nobs is a collection of reproducible tests and community-submitted results for :
    - [thenlper/gte-large](https://huggingface.co/thenlper/gte-large)
    - [modernbert-embed-base](https://huggingface.co/nomic-ai/modernbert-embed-base)
 - #### 💬 **LLM inference** — ✅ Ready (LM Studio and Ollama, [Awesome Prompts dataset](https://huggingface.co/datasets/fka/awesome-chatgpt-prompts))
-   llm model:
+   llm models:
    - [gpt-oss-20b](https://huggingface.co/openai/gpt-oss-20b) quantization: mxfp4
 - #### 👁️ **VLM inference** — ✅ Ready (LM Studio and Ollama, [Hallucination_COCO dataset](https://huggingface.co/datasets/DogNeverSleep/Hallucination_COCO))
+   vlm models:
+   - []
 - #### 🎨 **Diffusion image generation** — 📋 Planned
 - #### 🗣️ **Speach to Text** - 📋 Planned (whisper)
 - #### 🔬 **Classic ML** — 📋 Planned (scikit-learn, XGBoost, LightGBM, Catboost)
 
-[!NOTE]: If it's possible prefer to use lmstudio with `mlx` backend, which gives 10-20% more performance then `gguf`. If you run ollama (by default benchmarks runs both lmstudio and ollama) then you'll see a difference between `mlx` and `gguf` formats.
+**NOTE for mac-users**: If it's possible prefer to use lmstudio with `mlx` backend, which gives 10-20% more performance then `gguf`. If you run ollama (by default benchmarks runs both lmstudio and ollama) then you'll see a difference between `mlx` and `gguf` formats.
 
 ---
 
@@ -250,8 +251,8 @@ We welcome contributions! Whether it's adding new benchmarks, supporting new mod
 
 1. **Fork and clone the repository**
    ```sh
-   git clone https://github.com/YOUR_USERNAME/nobs.git
-   cd nobs
+   git clone https://github.com/YOUR_USERNAME/laperf.git
+   cd laperf
    ```
 
 2. **Install dependencies including dev tools**
@@ -337,5 +338,7 @@ See [CLAUDE.md](CLAUDE.md) for detailed instructions on:
 - Creating new benchmark categories
 - Data loading patterns
 - Memory management best practices
+
+Tip: Add CLAUDE.md when working with your AI coding assistant — it helps provide full project context.
 
 ---
