@@ -1,0 +1,444 @@
+{
+  "timestamp": "2025-11-02T18:45:25.196111",
+  "device_info": {
+    "platform": "Windows",
+    "device": "rocm",
+    "ram_gb": 64.0,
+    "processor": "AMD Ryzen 9 7950X",
+    "gpu_name": "AMD Radeon RX 7900 XTX",
+    "gpu_memory_gb": 24,
+    "host": "Radeon-Workstation"
+  },
+  "tasks": [
+    {
+      "task": "embeddings",
+      "dataset": "imdb-100",
+      "num_samples": 100,
+      "models": {
+        "text-embedding-3-large": {
+          "median_rows_per_second": 231.25,
+          "std_rows_per_second": 16.41,
+          "median_encoding_time_seconds": 3.13,
+          "std_encoding_time_seconds": 0.41,
+          "embedding_dimension": 3072,
+          "batch_size": 16
+        },
+        "text-embedding-3-small": {
+          "median_rows_per_second": 406.83,
+          "std_rows_per_second": 46.62,
+          "median_encoding_time_seconds": 2.24,
+          "std_encoding_time_seconds": 0.3,
+          "embedding_dimension": 1536,
+          "batch_size": 32
+        },
+        "nomic-ai/nomic-embed-text-v1.5": {
+          "median_rows_per_second": 196.82,
+          "std_rows_per_second": 18.14,
+          "median_encoding_time_seconds": 4.26,
+          "std_encoding_time_seconds": 0.31,
+          "embedding_dimension": 768,
+          "batch_size": 24
+        }
+      },
+      "total_time_seconds": 9.64
+    },
+    {
+      "task": "llms",
+      "backend": "LM_STUDIO",
+      "dataset": "awesome-chatgpt-prompts",
+      "num_prompts": 15,
+      "model": {
+        "model_name": "mixtral-8x7b-instruct",
+        "num_prompts": 15,
+        "num_runs": 3,
+        "all_prompt_details": [
+          {
+            "ttft_s": 3.463,
+            "tg_s": 5.5752,
+            "input_tokens": 845,
+            "output_tokens": 676,
+            "tokens_per_sec": 121.2504,
+            "total_latency_s": 9.0383
+          },
+          {
+            "ttft_s": 3.6206,
+            "tg_s": 9.3076,
+            "input_tokens": 829,
+            "output_tokens": 1202,
+            "tokens_per_sec": 129.1422,
+            "total_latency_s": 12.9282
+          },
+          {
+            "ttft_s": 1.3835,
+            "tg_s": 5.4454,
+            "input_tokens": 240,
+            "output_tokens": 652,
+            "tokens_per_sec": 119.7334,
+            "total_latency_s": 6.8289
+          },
+          {
+            "ttft_s": 0.8326,
+            "tg_s": 2.7468,
+            "input_tokens": 122,
+            "output_tokens": 343,
+            "tokens_per_sec": 124.8741,
+            "total_latency_s": 3.5794
+          },
+          {
+            "ttft_s": 0.7894,
+            "tg_s": 7.2166,
+            "input_tokens": 83,
+            "output_tokens": 800,
+            "tokens_per_sec": 110.8554,
+            "total_latency_s": 8.006
+          },
+          {
+            "ttft_s": 3.6601,
+            "tg_s": 5.3969,
+            "input_tokens": 863,
+            "output_tokens": 607,
+            "tokens_per_sec": 112.4711,
+            "total_latency_s": 9.057
+          },
+          {
+            "ttft_s": 1.5134,
+            "tg_s": 4.5986,
+            "input_tokens": 273,
+            "output_tokens": 491,
+            "tokens_per_sec": 106.7715,
+            "total_latency_s": 6.112
+          },
+          {
+            "ttft_s": 1.1554,
+            "tg_s": 6.2128,
+            "input_tokens": 195,
+            "output_tokens": 829,
+            "tokens_per_sec": 133.4348,
+            "total_latency_s": 7.3682
+          },
+          {
+            "ttft_s": 1.4925,
+            "tg_s": 3.7575,
+            "input_tokens": 268,
+            "output_tokens": 412,
+            "tokens_per_sec": 109.6462,
+            "total_latency_s": 5.25
+          },
+          {
+            "ttft_s": 3.259,
+            "tg_s": 8.7836,
+            "input_tokens": 810,
+            "output_tokens": 934,
+            "tokens_per_sec": 106.3341,
+            "total_latency_s": 12.0426
+          },
+          {
+            "ttft_s": 2.4146,
+            "tg_s": 10.7305,
+            "input_tokens": 529,
+            "output_tokens": 1434,
+            "tokens_per_sec": 133.6373,
+            "total_latency_s": 13.1451
+          },
+          {
+            "ttft_s": 1.9007,
+            "tg_s": 8.5284,
+            "input_tokens": 391,
+            "output_tokens": 1020,
+            "tokens_per_sec": 119.6001,
+            "total_latency_s": 10.4291
+          },
+          {
+            "ttft_s": 0.8727,
+            "tg_s": 3.8982,
+            "input_tokens": 100,
+            "output_tokens": 483,
+            "tokens_per_sec": 123.9025,
+            "total_latency_s": 4.771
+          },
+          {
+            "ttft_s": 0.7323,
+            "tg_s": 9.3012,
+            "input_tokens": 81,
+            "output_tokens": 1021,
+            "tokens_per_sec": 109.7704,
+            "total_latency_s": 10.0336
+          },
+          {
+            "ttft_s": 1.3177,
+            "tg_s": 11.2556,
+            "input_tokens": 265,
+            "output_tokens": 1352,
+            "tokens_per_sec": 120.1183,
+            "total_latency_s": 12.5732
+          }
+        ],
+        "final_50p_latency_s": 9.0383,
+        "final_std_latency_s": 2.9978,
+        "final_50p_ttft_s": 1.4925,
+        "final_std_ttft_s": 1.0608,
+        "final_50p_tokens_per_sec": 119.7334,
+        "final_std_tokens_per_sec": 8.8771,
+        "runs": [
+          {
+            "total_input_tokens": 6043,
+            "total_output_tokens": 12851
+          },
+          {
+            "total_input_tokens": 5833,
+            "total_output_tokens": 12783
+          },
+          {
+            "total_input_tokens": 5954,
+            "total_output_tokens": 11234
+          }
+        ]
+      },
+      "total_time_seconds": 131.16
+    },
+    {
+      "task": "llms",
+      "backend": "OLLAMA",
+      "dataset": "awesome-chatgpt-prompts",
+      "num_prompts": 12,
+      "model": {
+        "model_name": "mistral:7b-instruct",
+        "num_prompts": 12,
+        "num_runs": 3,
+        "all_prompt_details": [
+          {
+            "ttft_s": 1.2245,
+            "tg_s": 1.0206,
+            "input_tokens": 149,
+            "output_tokens": 109,
+            "tokens_per_sec": 106.7983,
+            "total_latency_s": 2.2451
+          },
+          {
+            "ttft_s": 3.4945,
+            "tg_s": 14.0967,
+            "input_tokens": 829,
+            "output_tokens": 1505,
+            "tokens_per_sec": 106.7625,
+            "total_latency_s": 17.5912
+          },
+          {
+            "ttft_s": 3.0596,
+            "tg_s": 14.4164,
+            "input_tokens": 666,
+            "output_tokens": 1441,
+            "tokens_per_sec": 99.9559,
+            "total_latency_s": 17.4759
+          },
+          {
+            "ttft_s": 4.1387,
+            "tg_s": 6.9862,
+            "input_tokens": 819,
+            "output_tokens": 746,
+            "tokens_per_sec": 106.7813,
+            "total_latency_s": 11.125
+          },
+          {
+            "ttft_s": 1.3918,
+            "tg_s": 1.5006,
+            "input_tokens": 208,
+            "output_tokens": 153,
+            "tokens_per_sec": 101.9588,
+            "total_latency_s": 2.8925
+          },
+          {
+            "ttft_s": 1.6654,
+            "tg_s": 8.2993,
+            "input_tokens": 255,
+            "output_tokens": 819,
+            "tokens_per_sec": 98.6835,
+            "total_latency_s": 9.9647
+          },
+          {
+            "ttft_s": 2.8112,
+            "tg_s": 10.0314,
+            "input_tokens": 608,
+            "output_tokens": 1209,
+            "tokens_per_sec": 120.5214,
+            "total_latency_s": 12.8427
+          },
+          {
+            "ttft_s": 4.1285,
+            "tg_s": 1.7302,
+            "input_tokens": 880,
+            "output_tokens": 212,
+            "tokens_per_sec": 122.5307,
+            "total_latency_s": 5.8587
+          },
+          {
+            "ttft_s": 3.2396,
+            "tg_s": 8.3093,
+            "input_tokens": 620,
+            "output_tokens": 923,
+            "tokens_per_sec": 111.0802,
+            "total_latency_s": 11.5489
+          },
+          {
+            "ttft_s": 3.9504,
+            "tg_s": 2.7911,
+            "input_tokens": 787,
+            "output_tokens": 304,
+            "tokens_per_sec": 108.9194,
+            "total_latency_s": 6.7415
+          },
+          {
+            "ttft_s": 1.606,
+            "tg_s": 7.8044,
+            "input_tokens": 296,
+            "output_tokens": 832,
+            "tokens_per_sec": 106.6064,
+            "total_latency_s": 9.4104
+          },
+          {
+            "ttft_s": 3.3228,
+            "tg_s": 8.8107,
+            "input_tokens": 678,
+            "output_tokens": 1037,
+            "tokens_per_sec": 117.6971,
+            "total_latency_s": 12.1335
+          }
+        ],
+        "final_50p_latency_s": 10.5449,
+        "final_std_latency_s": 4.7309,
+        "final_50p_ttft_s": 3.1496,
+        "final_std_ttft_s": 1.0432,
+        "final_50p_tokens_per_sec": 106.7898,
+        "final_std_tokens_per_sec": 7.383,
+        "runs": [
+          {
+            "total_input_tokens": 6566,
+            "total_output_tokens": 8673
+          },
+          {
+            "total_input_tokens": 6523,
+            "total_output_tokens": 9841
+          },
+          {
+            "total_input_tokens": 6322,
+            "total_output_tokens": 9289
+          }
+        ]
+      },
+      "total_time_seconds": 119.83
+    },
+    {
+      "task": "vlms",
+      "backend": "LM_STUDIO",
+      "dataset": "Hallucination_COCO",
+      "num_prompts": 10,
+      "model": {
+        "model_name": "llava:13b",
+        "num_prompts": 10,
+        "num_runs": 3,
+        "all_prompt_details": [
+          {
+            "ttft_s": 2.0376,
+            "tg_s": 9.7989,
+            "input_tokens": 239,
+            "output_tokens": 684,
+            "tokens_per_sec": 69.8035,
+            "total_latency_s": 11.8365
+          },
+          {
+            "ttft_s": 3.7052,
+            "tg_s": 4.9883,
+            "input_tokens": 701,
+            "output_tokens": 428,
+            "tokens_per_sec": 85.7999,
+            "total_latency_s": 8.6936
+          },
+          {
+            "ttft_s": 4.0671,
+            "tg_s": 6.5848,
+            "input_tokens": 716,
+            "output_tokens": 481,
+            "tokens_per_sec": 73.0468,
+            "total_latency_s": 10.652
+          },
+          {
+            "ttft_s": 3.4043,
+            "tg_s": 2.6399,
+            "input_tokens": 571,
+            "output_tokens": 188,
+            "tokens_per_sec": 71.2139,
+            "total_latency_s": 6.0442
+          },
+          {
+            "ttft_s": 2.6269,
+            "tg_s": 4.6636,
+            "input_tokens": 373,
+            "output_tokens": 325,
+            "tokens_per_sec": 69.6879,
+            "total_latency_s": 7.2905
+          },
+          {
+            "ttft_s": 3.7337,
+            "tg_s": 10.8255,
+            "input_tokens": 615,
+            "output_tokens": 793,
+            "tokens_per_sec": 73.2531,
+            "total_latency_s": 14.5592
+          },
+          {
+            "ttft_s": 3.4988,
+            "tg_s": 5.2113,
+            "input_tokens": 566,
+            "output_tokens": 407,
+            "tokens_per_sec": 78.0988,
+            "total_latency_s": 8.7102
+          },
+          {
+            "ttft_s": 4.1093,
+            "tg_s": 2.4812,
+            "input_tokens": 702,
+            "output_tokens": 184,
+            "tokens_per_sec": 74.1573,
+            "total_latency_s": 6.5905
+          },
+          {
+            "ttft_s": 1.7372,
+            "tg_s": 2.0914,
+            "input_tokens": 212,
+            "output_tokens": 149,
+            "tokens_per_sec": 71.2434,
+            "total_latency_s": 3.8286
+          },
+          {
+            "ttft_s": 2.6104,
+            "tg_s": 10.9307,
+            "input_tokens": 419,
+            "output_tokens": 779,
+            "tokens_per_sec": 71.2671,
+            "total_latency_s": 13.5411
+          }
+        ],
+        "final_50p_latency_s": 8.7019,
+        "final_std_latency_s": 3.2616,
+        "final_50p_ttft_s": 3.4516,
+        "final_std_ttft_s": 0.7997,
+        "final_50p_tokens_per_sec": 72.1569,
+        "final_std_tokens_per_sec": 4.6473,
+        "runs": [
+          {
+            "total_input_tokens": 5317,
+            "total_output_tokens": 4482
+          },
+          {
+            "total_input_tokens": 4889,
+            "total_output_tokens": 4938
+          },
+          {
+            "total_input_tokens": 4782,
+            "total_output_tokens": 4948
+          }
+        ]
+      },
+      "total_time_seconds": 91.75
+    }
+  ]
+}

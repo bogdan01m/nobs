@@ -1,4 +1,4 @@
-"""Generate scientific performance profile plots for LLM benchmark metrics."""
+"""Generate scientific performance profile plots for VLM benchmark metrics."""
 
 import json
 from pathlib import Path
@@ -12,15 +12,15 @@ def get_gpu_vendor_color(gpu_name: str) -> str:
     """Determine GPU vendor color for consistent visualization."""
     gpu_lower = gpu_name.lower()
     if any(x in gpu_lower for x in ["apple", "m1", "m2", "m3", "m4"]):
-        return "#2E86AB"  # Blue for Apple
+        return "#808080"  # Blue for Apple
     elif any(x in gpu_lower for x in ["nvidia", "rtx", "gtx", "tesla", "a100"]):
         return "#76B900"  # NVIDIA Green
     elif any(x in gpu_lower for x in ["amd", "radeon", "rx"]):
         return "#ED1C24"  # AMD Red
     elif any(x in gpu_lower for x in ["intel", "arc", "uhd"]):
-        return "#F77F00"  # Orange for Intel
+        return "#2E86AB"  # Orange for Intel
     else:
-        return "#808080"  # Gray for Other
+        return "#F77F00"  # Gray for Other
 
 
 def load_results(results_dir: Path = Path("results")) -> list[dict[str, Any]]:
@@ -33,13 +33,14 @@ def load_results(results_dir: Path = Path("results")) -> list[dict[str, Any]]:
     return results
 
 
-def plot_llm_performance(
+def plot_vlm_performance(
     results_dir: Path = Path("results"),
-    output_path_ttft: Path = Path("results/llm_ttft.png"),
-    output_path_tps: Path = Path("results/llm_tps.png"),
+    output_path_ttft: Path = Path("results/plots/vlm_ttft.png"),
+    output_path_tps: Path = Path("results/plots/vlm_tps.png"),
+    backend_filter: str | None = None,
 ) -> None:
     """
-    Generate two scientific performance profile plots for LLM metrics.
+    Generate two scientific performance profile plots for VLM metrics.
 
     Plot 1: Time To First Token (TTFT) - lower is better
     Plot 2: Tokens Per Second (TPS) - higher is better
@@ -48,49 +49,68 @@ def plot_llm_performance(
     results = load_results(results_dir)
 
     if not results:
-        print("No results found to plot")
+        scope = f" for backend {backend_filter}" if backend_filter else ""
+        print(f"No results found to plot{scope}")
         return
 
-    # Extract LLM metrics
+    # Extract VLM metrics
     devices = []
     for result in results:
         device_info = result["device_info"]
-        llm_task = next((t for t in result["tasks"] if t["task"] == "llms"), None)
+        vlm_tasks = [t for t in result["tasks"] if t["task"] == "vlms" and "model" in t]
 
-        if llm_task and "model" in llm_task:
-            model_data = llm_task["model"]
+        for vlm_task in vlm_tasks:
+            backend = vlm_task.get("backend", "UNKNOWN")
+            if backend_filter and backend != backend_filter:
+                continue
+
+            model_data = vlm_task["model"]
+            ttft = model_data.get("final_50p_ttft_s")
+            tps = model_data.get("final_50p_tokens_per_sec")
+
+            if ttft is None or tps is None:
+                continue
+
             devices.append(
                 {
                     "gpu_name": device_info["gpu_name"],
                     "host": device_info["host"],
-                    "ttft": model_data["final_50p_ttft_s"],
-                    "tps": model_data["final_50p_tokens_per_sec"],
+                    "backend": backend,
+                    "ttft": ttft,
+                    "tps": tps,
                     "ttft_std": model_data.get("final_std_ttft_s", 0),
                     "tps_std": model_data.get("final_std_tokens_per_sec", 0),
                 }
             )
 
     if not devices:
-        print("No LLM results found to plot")
+        scope = (
+            f" for backend {backend_filter.replace('_', ' ')}" if backend_filter else ""
+        )
+        print(f"No VLM results found to plot{scope}")
         return
 
     # Sort by TPS (descending - higher is better)
     devices_sorted = sorted(devices, key=lambda x: x["tps"], reverse=True)
 
-    gpu_names = [d["gpu_name"] for d in devices_sorted]
+    x_labels = [
+        f"{d['host']} [{d['backend']}]" if backend_filter is None else d["host"]
+        for d in devices_sorted
+    ]
     ttft_values = [d["ttft"] for d in devices_sorted]
     ttft_std_values = [d["ttft_std"] for d in devices_sorted]
     tps_values = [d["tps"] for d in devices_sorted]
     tps_std_values = [d["tps_std"] for d in devices_sorted]
 
     # Get colors for each GPU
-    colors = [get_gpu_vendor_color(name) for name in gpu_names]
+    colors = [get_gpu_vendor_color(d["gpu_name"]) for d in devices_sorted]
 
     # Create figure with scientific style
     plt.style.use("seaborn-v0_8-paper")
 
     # X positions
-    x_pos = np.arange(len(gpu_names))
+    x_pos = np.arange(len(x_labels))
+    backend_label = f" ({backend_filter.replace('_', ' ')})" if backend_filter else ""
 
     # ===== PLOT 1: TTFT (lower is better) =====
     fig1, ax1 = plt.subplots(figsize=(10, 6), dpi=300)
@@ -111,13 +131,13 @@ def plot_llm_performance(
     ax1.set_xlabel("GPU Device (sorted by throughput)", fontsize=12, fontweight="bold")
     ax1.set_ylabel("Time To First Token (seconds)", fontsize=12, fontweight="bold")
     ax1.set_title(
-        "LLM Inference Performance: Time To First Token\n(Lower is Better)",
+        f"VLM Inference Performance: Time To First Token{backend_label}\n(Lower is Better)",
         fontsize=14,
         fontweight="bold",
         pad=20,
     )
     ax1.set_xticks(x_pos)
-    ax1.set_xticklabels(gpu_names, rotation=15, ha="right")
+    ax1.set_xticklabels(x_labels, rotation=15, ha="right")
     ax1.grid(True, alpha=0.3, linestyle="--", linewidth=0.5, axis="y")
     ax1.set_axisbelow(True)
     ax1.set_ylim(bottom=0)
@@ -141,10 +161,13 @@ def plot_llm_performance(
     bars1[best_idx].set_linewidth(2.5)
 
     plt.tight_layout()
-    output_path_ttft.parent.mkdir(exist_ok=True)
+    output_path_ttft.parent.mkdir(parents=True, exist_ok=True)
     plt.savefig(output_path_ttft, dpi=300, bbox_inches="tight")
     plt.savefig(output_path_ttft.with_suffix(".svg"), format="svg", bbox_inches="tight")
-    print(f"✅ LLM TTFT plot saved to {output_path_ttft}")
+    scope_msg = (
+        f" for backend {backend_filter.replace('_', ' ')}" if backend_filter else ""
+    )
+    print(f"✅ VLM TTFT plot saved to {output_path_ttft}{scope_msg}")
     plt.close()
 
     # ===== PLOT 2: TPS (higher is better) =====
@@ -166,13 +189,13 @@ def plot_llm_performance(
     ax2.set_xlabel("GPU Device (sorted by throughput)", fontsize=12, fontweight="bold")
     ax2.set_ylabel("Throughput (tokens/second)", fontsize=12, fontweight="bold")
     ax2.set_title(
-        "LLM Inference Performance: Throughput\n(Higher is Better)",
+        f"VLM Inference Performance: Throughput{backend_label}\n(Higher is Better)",
         fontsize=14,
         fontweight="bold",
         pad=20,
     )
     ax2.set_xticks(x_pos)
-    ax2.set_xticklabels(gpu_names, rotation=15, ha="right")
+    ax2.set_xticklabels(x_labels, rotation=15, ha="right")
     ax2.grid(True, alpha=0.3, linestyle="--", linewidth=0.5, axis="y")
     ax2.set_axisbelow(True)
     ax2.set_ylim(bottom=0)
@@ -195,12 +218,12 @@ def plot_llm_performance(
     bars2[0].set_linewidth(2.5)
 
     plt.tight_layout()
-    output_path_tps.parent.mkdir(exist_ok=True)
+    output_path_tps.parent.mkdir(parents=True, exist_ok=True)
     plt.savefig(output_path_tps, dpi=300, bbox_inches="tight")
     plt.savefig(output_path_tps.with_suffix(".svg"), format="svg", bbox_inches="tight")
-    print(f"✅ LLM TPS plot saved to {output_path_tps}")
+    print(f"✅ VLM TPS plot saved to {output_path_tps}{scope_msg}")
     plt.close()
 
 
 if __name__ == "__main__":
-    plot_llm_performance()
+    plot_vlm_performance()

@@ -1,7 +1,22 @@
 import time
+import torch
 from sentence_transformers import SentenceTransformer
-from src.memory_cleaner import clear_memory
+from src.system_info.memory_cleaner import clear_memory
 from statistics import median, stdev
+
+
+def sync_device(device_type: str):
+    """
+    Synchronize device operations to ensure accurate timing measurements.
+
+    Args:
+        device_type: Device type string (e.g., "cuda", "mps", "cpu")
+    """
+    if device_type.startswith("cuda"):
+        torch.cuda.synchronize()
+    elif device_type == "mps" and hasattr(torch.mps, "synchronize"):
+        torch.mps.synchronize()
+    # CPU doesn't need synchronization
 
 
 def run_single_model(
@@ -31,8 +46,16 @@ def run_single_model(
 
     # Encode texts with timing
     print("Encoding texts...")
+    device_type = str(model.device)
+
+    # Synchronize device before starting timer
+    sync_device(device_type)
     start_time = time.perf_counter()
+
     embeddings = model.encode(texts, show_progress_bar=True, batch_size=batch_size)
+
+    # Synchronize device before stopping timer
+    sync_device(device_type)
     encoding_time = time.perf_counter() - start_time
 
     print(f"Encoding completed in {encoding_time:.2f}s")

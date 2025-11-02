@@ -3,7 +3,6 @@
 import json
 from pathlib import Path
 from typing import Any
-
 import matplotlib.pyplot as plt
 import numpy as np
 
@@ -20,7 +19,7 @@ def load_results(results_dir: Path = Path("results")) -> list[dict[str, Any]]:
 
 def plot_embeddings_performance(
     results_dir: Path = Path("results"),
-    output_path: Path = Path("results/embeddings_performance.png"),
+    output_path: Path = Path("results/plots/embeddings_performance.png"),
 ) -> None:
     """
     Generate performance profile plot for embeddings metrics.
@@ -146,38 +145,11 @@ def plot_embeddings_performance(
 
     # Y-axis starts from 0 for better comparison
     ax.set_ylim(bottom=0)
-
-    # Add median line
-    all_rps = []
-    for gpu_models in devices_data.values():
-        for model_data in gpu_models.values():
-            all_rps.append(model_data["rps"])
-
-    if all_rps:
-        median_rps = np.median(all_rps)
-        ax.axhline(
-            median_rps,
-            color="gray",
-            linestyle=":",
-            alpha=0.5,
-            linewidth=1,
-            zorder=0,
-        )
-        # Add median label
-        ax.text(
-            len(sorted_gpus) - 0.3,
-            median_rps + 1,
-            f"Median: {median_rps:.1f}",
-            fontsize=9,
-            color="gray",
-            style="italic",
-        )
-
     # Tight layout
     plt.tight_layout()
 
     # Save
-    output_path.parent.mkdir(exist_ok=True)
+    output_path.parent.mkdir(parents=True, exist_ok=True)
     plt.savefig(output_path, dpi=300, bbox_inches="tight")
     plt.savefig(output_path.with_suffix(".svg"), format="svg", bbox_inches="tight")
     print(f"✅ Embeddings performance plot saved to {output_path}")

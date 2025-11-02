@@ -1,12 +1,19 @@
 """Generate markdown tables from benchmark results JSON files."""
 
 import json
+from collections import defaultdict
 from pathlib import Path
 from typing import Any
+from plots.plot_embeddings_metrics import plot_embeddings_performance
+from plots.plot_llm_metrics import plot_llm_performance
+from plots.plot_token_metrics import (
+    plot_tg_vs_output_tokens,
+    plot_ttft_vs_input_tokens,
+)
+from plots.plot_vlm_metrics import plot_vlm_performance
+import seaborn as sns
 
-from plot_llm_metrics import plot_llm_performance
-from plot_embeddings_metrics import plot_embeddings_performance
-from plot_vlm_metrics import plot_vlm_performance
+sns.set_style("darkgrid")
 
 
 def load_results(results_dir: Path = Path("results")) -> list[dict[str, Any]]:
@@ -30,16 +37,18 @@ def generate_summary_table(results: list[dict[str, Any]]) -> str:
         device_info = result["device_info"]
         tasks = result["tasks"]
 
-        # Extract times
+        # Extract times - sum all tasks of each type (handles BOTH backend case)
         embeddings_time = next(
             (t["total_time_seconds"] for t in tasks if t["task"] == "embeddings"), None
         )
-        llm_time = next(
-            (t["total_time_seconds"] for t in tasks if t["task"] == "llms"), None
-        )
-        vlm_time = next(
-            (t["total_time_seconds"] for t in tasks if t["task"] == "vlms"), None
-        )
+
+        # Sum ALL llm task times (in case of BOTH backend)
+        llm_times = [t["total_time_seconds"] for t in tasks if t["task"] == "llms"]
+        llm_time = sum(llm_times) if llm_times else None
+
+        # Sum ALL vlm task times (in case of BOTH backend)
+        vlm_times = [t["total_time_seconds"] for t in tasks if t["task"] == "vlms"]
+        vlm_time = sum(vlm_times) if vlm_times else None
 
         # Calculate total time
         total_time = 0
@@ -177,18 +186,43 @@ def generate_llm_table(results: list[dict[str, Any]]) -> str:
     if not has_llm_results:
         return ""
 
-    lines = [
-        "#### LLM Inference (3 prompts from awesome-chatgpt-prompts)\n",
-        "| Device | Model | Tokens/sec | TTFT (s) | Latency (s) | Input Tokens | Output Tokens |",
-        "|--------|-------|------------|----------|-------------|--------------|---------------|",
-    ]
+    # Collect all LLM tasks grouped by backend
+    backend_results: dict[str, list] = {"LM_STUDIO": [], "OLLAMA": [], "UNKNOWN": []}
 
     for result in results:
         device = result["device_info"]["host"]
-        llm_task = next((t for t in result["tasks"] if t["task"] == "llms"), None)
+        # Get ALL llm tasks (not just first)
+        llm_tasks = [t for t in result["tasks"] if t["task"] == "llms"]
 
-        if llm_task and "model" in llm_task:
-            model_data = llm_task["model"]
+        for llm_task in llm_tasks:
+            if "model" in llm_task:
+                backend = llm_task.get("backend", "UNKNOWN")
+                backend_results[backend].append({"device": device, "task": llm_task})
+
+    lines = ["#### LLM Inference (3 prompts from awesome-chatgpt-prompts)\n"]
+
+    # Process backends in order: LM_STUDIO, then OLLAMA
+    for backend_name in ["LM_STUDIO", "OLLAMA", "UNKNOWN"]:
+        backend_data = backend_results[backend_name]
+        if not backend_data:
+            continue
+
+        # Add backend header
+        backend_display = backend_name.replace("_", " ")
+        lines.append(f"\n**{backend_display}**\n")
+
+        # Table header
+        lines.extend(
+            [
+                "| Device | Model | Tokens/sec | TTFT (s) | Latency (s) | Input Tokens | Output Tokens |",
+                "|--------|-------|------------|----------|-------------|--------------|---------------|",
+            ]
+        )
+
+        for item in backend_data:
+            device = item["device"]
+            model_data = item["task"]["model"]
+
             # Get token counts from first run
             first_run = model_data["runs"][0] if model_data["runs"] else {}
             input_tokens = first_run.get("total_input_tokens", "-")
@@ -232,18 +266,43 @@ def generate_vlm_table(results: list[dict[str, Any]]) -> str:
     if not has_vlm_results:
         return ""
 
-    lines = [
-        "#### VLM Inference (3 questions from Hallucination_COCO)\n",
-        "| Device | Model | Tokens/sec | TTFT (s) | Latency (s) | Input Tokens | Output Tokens |",
-        "|--------|-------|------------|----------|-------------|--------------|---------------|",
-    ]
+    # Collect all VLM tasks grouped by backend
+    backend_results: dict[str, list] = {"LM_STUDIO": [], "OLLAMA": [], "UNKNOWN": []}
 
     for result in results:
         device = result["device_info"]["host"]
-        vlm_task = next((t for t in result["tasks"] if t["task"] == "vlms"), None)
+        # Get ALL vlm tasks (not just first)
+        vlm_tasks = [t for t in result["tasks"] if t["task"] == "vlms"]
 
-        if vlm_task and "model" in vlm_task:
-            model_data = vlm_task["model"]
+        for vlm_task in vlm_tasks:
+            if "model" in vlm_task:
+                backend = vlm_task.get("backend", "UNKNOWN")
+                backend_results[backend].append({"device": device, "task": vlm_task})
+
+    lines = ["#### VLM Inference (3 questions from Hallucination_COCO)\n"]
+
+    # Process backends in order: LM_STUDIO, then OLLAMA
+    for backend_name in ["LM_STUDIO", "OLLAMA", "UNKNOWN"]:
+        backend_data = backend_results[backend_name]
+        if not backend_data:
+            continue
+
+        # Add backend header
+        backend_display = backend_name.replace("_", " ")
+        lines.append(f"\n**{backend_display}**\n")
+
+        # Table header
+        lines.extend(
+            [
+                "| Device | Model | Tokens/sec | TTFT (s) | Latency (s) | Input Tokens | Output Tokens |",
+                "|--------|-------|------------|----------|-------------|--------------|---------------|",
+            ]
+        )
+
+        for item in backend_data:
+            device = item["device"]
+            model_data = item["task"]["model"]
+
             # Get token counts from first run
             first_run = model_data["runs"][0] if model_data["runs"] else {}
             input_tokens = first_run.get("total_input_tokens", "-")
@@ -273,6 +332,88 @@ def generate_vlm_table(results: list[dict[str, Any]]) -> str:
             )
 
     return "\n".join(lines) + "\n"
+
+
+def collect_prompt_details_by_task(
+    results_dir: Path,
+) -> dict[str, dict[str, list[dict[str, Any]]]]:
+    """Group prompt-level metrics by task type and device."""
+    task_device_map: dict[str, defaultdict[str, list[dict[str, Any]]]] = {}
+
+    for result_file in sorted(results_dir.glob("report_*.json")):
+        try:
+            with open(result_file) as f:
+                data = json.load(f)
+        except Exception as exc:
+            print(f"⚠️  Failed to read {result_file.name}: {exc}")
+            continue
+
+        device_info = data.get("device_info", {})
+        host = device_info.get("host")
+        gpu_name = device_info.get("gpu_name", "Unknown GPU")
+
+        for task in data.get("tasks", []):
+            task_type = task.get("task")
+            if task_type not in {"llms", "vlms"}:
+                continue
+
+            backend_name = (task.get("backend") or "UNKNOWN").upper()
+            backend_display = {
+                "LM_STUDIO": "LM Studio",
+                "OLLAMA": "Ollama",
+            }.get(backend_name, backend_name.title())
+
+            parts = []
+            if host:
+                parts.append(host)
+            if gpu_name:
+                parts.append(gpu_name)
+            parts.append(backend_display)
+            device_label = " | ".join(parts)
+
+            model_data = task.get("model") or {}
+            prompt_details = model_data.get("all_prompt_details") or []
+            if not prompt_details:
+                continue
+
+            device_map = task_device_map.setdefault(task_type, defaultdict(list))
+            device_map[device_label].extend(prompt_details)
+
+    aggregated: dict[str, dict[str, list[dict[str, Any]]]] = {}
+    for task_type, devices in task_device_map.items():
+        filtered_devices = {
+            device: details for device, details in devices.items() if details
+        }
+        if filtered_devices:
+            aggregated[task_type] = filtered_devices
+
+    return aggregated
+
+
+def generate_token_metric_visualizations(
+    results_dir: Path,
+) -> dict[str, dict[str, Path]]:
+    """Create TTFT and generation-time plots for LLM and VLM prompt details."""
+    prompt_details = collect_prompt_details_by_task(results_dir)
+    plots: dict[str, dict[str, Path]] = {}
+    plots_dir = results_dir / "plots"
+
+    for task_type, devices in prompt_details.items():
+        if not devices:
+            continue
+
+        prefix = "llm" if task_type == "llms" else "vlm"
+        ttft_path = plots_dir / f"{prefix}_ttft_vs_input_tokens.png"
+        tg_path = plots_dir / f"{prefix}_tg_vs_output_tokens.png"
+
+        try:
+            plot_ttft_vs_input_tokens(devices, ttft_path)
+            plot_tg_vs_output_tokens(devices, tg_path)
+            plots[task_type] = {"ttft": ttft_path, "tg": tg_path}
+        except Exception as exc:
+            print(f"⚠️  Failed to generate {task_type.upper()} token plots: {exc}")
+
+    return plots
 
 
 def get_gpu_vendor(gpu_name: str) -> str:
@@ -314,13 +455,14 @@ def generate_gpu_grouped_tables(results: list[dict[str, Any]]) -> str:
         device_info = result["device_info"]
         tasks = result["tasks"]
 
-        # Extract times
+        # Extract times - sum all tasks of each type (handles BOTH backend case)
         embeddings_time = next(
             (t["total_time_seconds"] for t in tasks if t["task"] == "embeddings"), None
         )
-        llm_time = next(
-            (t["total_time_seconds"] for t in tasks if t["task"] == "llms"), None
-        )
+
+        # Sum ALL llm task times (in case of BOTH backend)
+        llm_times = [t["total_time_seconds"] for t in tasks if t["task"] == "llms"]
+        llm_time = sum(llm_times) if llm_times else None
 
         # Calculate total
         total_time = 0
@@ -444,16 +586,23 @@ def generate_full_results_section(results_dir: Path = Path("results")) -> str:
         f"> **Last Updated**: {timestamp}\n",
         "### 🏆 Overall Ranking\n",
         generate_summary_table(results),
-        "\n### 📊 By GPU Vendor\n",
-        generate_gpu_grouped_tables(results),
-        "\n### 📈 Detailed Performance\n",
-        generate_embeddings_table(results),
     ]
 
-    # Generate embeddings performance plot if embeddings results exist
     has_embeddings_results = any(
         any(t["task"] == "embeddings" for t in result["tasks"]) for result in results
     )
+    has_llm_results = any(
+        any(t["task"] == "llms" for t in result["tasks"]) for result in results
+    )
+    has_vlm_results = any(
+        any(t["task"] == "vlms" for t in result["tasks"]) for result in results
+    )
+
+    token_plots: dict[str, dict[str, Path]] = {}
+    if has_llm_results or has_vlm_results:
+        token_plots = generate_token_metric_visualizations(results_dir)
+
+    # Generate embeddings performance plot if embeddings results exist
     if has_embeddings_results:
         try:
             # Generate the plot
@@ -462,7 +611,7 @@ def generate_full_results_section(results_dir: Path = Path("results")) -> str:
             # Add plot to README
             sections.append("\n#### Embeddings Performance Visualization\n")
             sections.append(
-                "![Embeddings Performance Profile](results/embeddings_performance.png)\n"
+                "![Embeddings Performance Profile](results/plots/embeddings_performance.png)\n"
             )
             sections.append(
                 "*Throughput comparison for different embedding models across hardware. "
@@ -471,60 +620,94 @@ def generate_full_results_section(results_dir: Path = Path("results")) -> str:
         except Exception as e:
             print(f"⚠️  Failed to generate embeddings plot: {e}")
 
-    # Add LLM table if available
+    # Embeddings section
+    embeddings_section = generate_embeddings_table(results)
+    if embeddings_section:
+        sections.append("\n### 📈 Embeddings\n")
+        sections.append(embeddings_section)
+        if has_embeddings_results:
+            sections.append(
+                "![Embeddings Performance Profile](results/plots/embeddings_performance.png)\n"
+            )
+            sections.append(
+                "*Throughput comparison for different embedding models across hardware. "
+                "Higher values indicate better performance.*\n"
+            )
+
+    # LLM section
     llm_table = generate_llm_table(results)
     if llm_table:
-        sections.append("\n" + llm_table)
+        sections.append("\n### 🧠 LLMs\n")
+        sections.append(llm_table)
+        llm_token_plots = token_plots.get("llms")
+        if llm_token_plots:
+            sections.append(
+                f"![LLM TTFT vs Input Tokens]({llm_token_plots['ttft'].as_posix()})\n"
+            )
+            sections.append(
+                "*Time To First Token across prompt lengths. Lower values mean faster first responses.*\n\n"
+            )
+            sections.append(
+                f"![LLM Generation Time vs Output Tokens]({llm_token_plots['tg'].as_posix()})\n"
+            )
+            sections.append(
+                "*Generation time growth relative to output length. Lower values reflect faster completions.*\n"
+            )
 
-    # Add VLM table if available
+        if has_llm_results:
+            try:
+                plot_llm_performance(results_dir)
+                sections.append("![LLM TTFT Performance](results/plots/llm_ttft.png)\n")
+                sections.append(
+                    "*Time To First Token (TTFT) - Lower is better. "
+                    "Measures response latency.*\n\n"
+                )
+                sections.append(
+                    "![LLM Throughput Performance](results/plots/llm_tps.png)\n"
+                )
+                sections.append(
+                    "*Token Generation per second (TG) - Higher is better. "
+                    "Measures token generation.*\n"
+                )
+            except Exception as e:
+                print(f"⚠️  Failed to generate LLM plots: {e}")
+
+    # VLM section
     vlm_table = generate_vlm_table(results)
     if vlm_table:
-        sections.append("\n" + vlm_table)
-
-    # Generate LLM performance plots if LLM results exist
-    has_llm_results = any(
-        any(t["task"] == "llms" for t in result["tasks"]) for result in results
-    )
-    if has_llm_results:
-        try:
-            # Generate the plots
-            plot_llm_performance(results_dir)
-
-            # Add plots to README
-            sections.append("\n#### LLM Performance Visualization\n")
-            sections.append("![LLM TTFT Performance](results/llm_ttft.png)\n")
+        sections.append("\n### 👁️ VLMs\n")
+        sections.append(vlm_table)
+        vlm_token_plots = token_plots.get("vlms")
+        if vlm_token_plots:
             sections.append(
-                "*Time To First Token (TTFT) - Lower is better. "
-                "Measures response latency.*\n\n"
+                f"![VLM TTFT vs Input Tokens]({vlm_token_plots['ttft'].as_posix()})\n"
             )
-            sections.append("![LLM Throughput Performance](results/llm_tps.png)\n")
             sections.append(
-                "*Tokens Per Second (TPS) - Higher is better. "
-                "Measures generation throughput.*\n"
+                "*TTFT behaviour for multimodal prompts. Lower values mean faster first visual-token outputs.*\n\n"
             )
-        except Exception as e:
-            print(f"⚠️  Failed to generate LLM plots: {e}")
+            sections.append(
+                f"![VLM Generation Time vs Output Tokens]({vlm_token_plots['tg'].as_posix()})\n"
+            )
+            sections.append(
+                "*Generation time vs output token count for multimodal responses. Lower values are faster.*\n"
+            )
 
-    # Generate VLM performance plots if VLM results exist
-    has_vlm_results = any(
-        any(t["task"] == "vlms" for t in result["tasks"]) for result in results
-    )
     if has_vlm_results:
         try:
             # Generate the plots
             plot_vlm_performance(results_dir)
 
-            # Add plots to README
-            sections.append("\n#### VLM Performance Visualization\n")
-            sections.append("![VLM TTFT Performance](results/vlm_ttft.png)\n")
+            sections.append("![VLM TTFT Performance](results/plots/vlm_ttft.png)\n")
             sections.append(
                 "*Time To First Token (TTFT) - Lower is better. "
                 "Measures response latency.*\n\n"
             )
-            sections.append("![VLM Throughput Performance](results/vlm_tps.png)\n")
             sections.append(
-                "*Tokens Per Second (TPS) - Higher is better. "
-                "Measures generation throughput.*\n"
+                "![VLM Throughput Performance](results/plots/vlm_tps.png)\n"
+            )
+            sections.append(
+                "*Token Generation per second (TG) - Higher is better. "
+                "Measures token generation.*\n"
             )
         except Exception as e:
             print(f"⚠️  Failed to generate VLM plots: {e}")

@@ -1,5 +1,5 @@
 from .chat_stream import stream_with_results
-from src.memory_cleaner import clear_memory
+from src.system_info.memory_cleaner import clear_memory
 from statistics import median, stdev
 from tqdm import tqdm
 
@@ -13,13 +13,15 @@ def run_single_model(prompts: list, images: list | None = None):
         images: Optional list of PIL Images (one per prompt). If None, runs text-only.
 
     Returns:
-        dict: Aggregated benchmark results including latency and token metrics
+        dict: Aggregated benchmark results including latency and token metrics,
+              plus detailed per-prompt metrics
     """
     all_latencies = []
     all_ttft = []
     all_tokens_per_sec = []
     total_input_tokens = 0
     total_output_tokens = 0
+    per_prompt_details = []
 
     # If images is None or empty, run text-only
     if not images:
@@ -48,6 +50,18 @@ def run_single_model(prompts: list, images: list | None = None):
         if result.get("output_tokens"):
             total_output_tokens += result["output_tokens"]
 
+        # Store detailed metrics for this prompt
+        per_prompt_details.append(
+            {
+                "ttft_s": result.get("ttft_s"),
+                "tg_s": result.get("tg_s"),
+                "input_tokens": result.get("input_tokens"),
+                "output_tokens": result.get("output_tokens"),
+                "tokens_per_sec": result.get("tokens_per_sec"),
+                "total_latency_s": result["total_latency_s"],
+            }
+        )
+
     # Calculate median metrics for this run
     median_latency = median(all_latencies)
     median_ttft = median(all_ttft) if all_ttft else None
@@ -62,6 +76,7 @@ def run_single_model(prompts: list, images: list | None = None):
         "total_input_tokens": total_input_tokens,
         "total_output_tokens": total_output_tokens,
         "num_prompts": len(prompts),
+        "per_prompt_details": per_prompt_details,
     }
 
 
@@ -98,6 +113,7 @@ def run_model_with_repeats(
     all_latencies = []
     all_ttft = []
     all_tokens_per_sec = []
+    all_prompt_details = []
 
     for run_idx in range(num_runs):
         print(f"\n{'='*60}")
@@ -114,6 +130,7 @@ def run_model_with_repeats(
                 "median_tokens_per_sec": result["median_tokens_per_sec"],
                 "total_input_tokens": result["total_input_tokens"],
                 "total_output_tokens": result["total_output_tokens"],
+                "per_prompt_details": result["per_prompt_details"],
             }
         )
 
@@ -123,6 +140,9 @@ def run_model_with_repeats(
             all_ttft.append(result["median_ttft_s"])
         if result["median_tokens_per_sec"]:
             all_tokens_per_sec.append(result["median_tokens_per_sec"])
+
+        # Collect all prompt details from all runs
+        all_prompt_details.extend(result["per_prompt_details"])
 
         clear_memory()
 
@@ -147,6 +167,7 @@ def run_model_with_repeats(
         "num_prompts": len(prompts),
         "num_runs": num_runs,
         "runs": all_run_results,
+        "all_prompt_details": all_prompt_details,
         "final_50p_latency_s": round(final_median_latency, 4),
         "final_std_latency_s": round(final_std_latency, 4),
         "final_50p_ttft_s": round(final_median_ttft, 4) if final_median_ttft else None,
