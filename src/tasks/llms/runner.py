@@ -1,6 +1,5 @@
 from src.data.awesome_prompts import dataset
 from .executor import run_model_with_repeats
-from src.settings import LLM_MODEL_NAME
 
 
 def run_llms_benchmark(model_name: str | None = None, base_url: str | None = None):
@@ -15,8 +14,6 @@ def run_llms_benchmark(model_name: str | None = None, base_url: str | None = Non
         dict: Results with median latency as main metric
     """
     # Use provided model_name or fallback to settings
-    if model_name is None:
-        model_name = LLM_MODEL_NAME
 
     # Load 10 prompts from awesome prompts dataset
     prompts = dataset["prompt"][:3]

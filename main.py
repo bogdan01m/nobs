@@ -13,10 +13,10 @@ from src.tasks.vlms.runner import run_vlms_benchmark
 from src.lm_studio_setup import setup_lm_studio, cleanup_lm_studio, check_lms_cli
 from src.ollama_setup import setup_ollama, cleanup_ollama, check_ollama_cli
 from src.settings import (
-    LLM_MODEL_NAME,
-    LLM_BASE_URL,
-    VLM_MODEL_NAME,
-    VLM_BASE_URL,
+    LMS_LLM_MODEL_NAME,
+    LMS_LLM_BASE_URL,
+    LMS_VLM_MODEL_NAME,
+    LMS_VLM_BASE_URL,
     LLM_BACKEND,
     VLM_BACKEND,
     OLLAMA_LLM_MODEL_NAME,
@@ -55,10 +55,12 @@ def select_backend(task_type: str):
             backends.append(
                 {
                     "backend": "LM_STUDIO",
-                    "model_name": LLM_MODEL_NAME
+                    "model_name": LMS_LLM_MODEL_NAME
                     if task_type == "llm"
-                    else VLM_MODEL_NAME,
-                    "base_url": LLM_BASE_URL if task_type == "llm" else VLM_BASE_URL,
+                    else LMS_VLM_MODEL_NAME,
+                    "base_url": LMS_LLM_BASE_URL
+                    if task_type == "llm"
+                    else LMS_VLM_BASE_URL,
                     "setup_func": setup_lm_studio,
                     "cleanup_func": cleanup_lm_studio,
                 }
@@ -100,10 +102,12 @@ def select_backend(task_type: str):
             return [
                 {
                     "backend": "LM_STUDIO",
-                    "model_name": LLM_MODEL_NAME
+                    "model_name": LMS_LLM_MODEL_NAME
                     if task_type == "llm"
-                    else VLM_MODEL_NAME,
-                    "base_url": LLM_BASE_URL if task_type == "llm" else VLM_BASE_URL,
+                    else LMS_VLM_MODEL_NAME,
+                    "base_url": LMS_LLM_BASE_URL
+                    if task_type == "llm"
+                    else LMS_VLM_BASE_URL,
                     "setup_func": setup_lm_studio,
                     "cleanup_func": cleanup_lm_studio,
                 }
@@ -142,10 +146,12 @@ def select_backend(task_type: str):
             return [
                 {
                     "backend": "LM_STUDIO",
-                    "model_name": LLM_MODEL_NAME
+                    "model_name": LMS_LLM_MODEL_NAME
                     if task_type == "llm"
-                    else VLM_MODEL_NAME,
-                    "base_url": LLM_BASE_URL if task_type == "llm" else VLM_BASE_URL,
+                    else LMS_VLM_MODEL_NAME,
+                    "base_url": LMS_LLM_BASE_URL
+                    if task_type == "llm"
+                    else LMS_VLM_BASE_URL,
                     "setup_func": setup_lm_studio,
                     "cleanup_func": cleanup_lm_studio,
                 }
@@ -246,11 +252,13 @@ def main():
     print("This benchmark requires LM Studio to be installed.")
     print("Download from: https://lmstudio.ai/")
     print()
-    print("Default settings (no .env changes needed):")
-    print("  LLM_MODEL_NAME=openai/gpt-oss-20b")
-    print("  LLM_BASE_URL=http://127.0.0.1:1234/v1")
+    print("Default settings (configure in .env):")
+    print(f"  LMS_LLM_MODEL_NAME={LMS_LLM_MODEL_NAME}")
+    print(f"  LMS_LLM_BASE_URL={LMS_LLM_BASE_URL}")
     print()
-    print("Only modify .env if using custom API/model.")
+    print("Model selection is automatic based on your device:")
+    print("  - Apple Silicon (M-series): Uses MLX models")
+    print("  - Other devices: Uses GGUF models")
     print("=" * 50)
 
     while True:
@@ -284,8 +292,8 @@ def main():
     print("Dataset: Hallucination_COCO (3 questions with images)")
     print()
     print("Default settings (configure in .env):")
-    print(f"  VLM_MODEL_NAME={VLM_MODEL_NAME}")
-    print("  VLM_BASE_URL=http://127.0.0.1:1234/v1")
+    print(f"  LMS_VLM_MODEL_NAME={LMS_VLM_MODEL_NAME}")
+    print(f"  LMS_VLM_BASE_URL={LMS_VLM_BASE_URL}")
     print("=" * 50)
 
     while True:

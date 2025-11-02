@@ -1,7 +1,12 @@
 from dotenv import load_dotenv
 import os
+from src.system_info.device_info import get_device_info
 
 load_dotenv()
+
+# Detect device type for model selection
+_device_info = get_device_info()
+_is_apple_silicon = _device_info.get("device") == "mps"
 
 # Backend Selection
 # AUTO - Try LM Studio first, fallback to Ollama (uses one)
@@ -11,24 +16,61 @@ load_dotenv()
 LLM_BACKEND = os.getenv("LLM_BACKEND", "BOTH")  # AUTO, LM_STUDIO, OLLAMA, or BOTH
 VLM_BACKEND = os.getenv("VLM_BACKEND", "BOTH")  # AUTO, LM_STUDIO, OLLAMA, or BOTH
 
-# LM Studio Settings
+# API Keys
 LLM_API_KEY = os.getenv("LLM_API_KEY", "api-key")
-LLM_BASE_URL = os.getenv("LLM_BASE_URL", "http://127.0.0.1:1234/v1")
-LLM_MODEL_NAME = os.getenv("LLM_MODEL_NAME", "gpt-oss-20b")
-
-# VLM Settings (defaults to LLM settings if not specified)
 VLM_API_KEY = os.getenv("VLM_API_KEY", os.getenv("LLM_API_KEY", "api-key"))
-VLM_BASE_URL = os.getenv(
-    "VLM_BASE_URL", os.getenv("LLM_BASE_URL", "http://127.0.0.1:1234/v1")
-)
-VLM_MODEL_NAME = os.getenv("VLM_MODEL_NAME", "qwen/qwen3-vl-8b")
 
+# =============================================================================
+# LM Studio Settings
+# =============================================================================
+
+# LM Studio Base URLs
+LMS_LLM_BASE_URL = os.getenv("LMS_LLM_BASE_URL", "http://127.0.0.1:1234/v1")
+LMS_VLM_BASE_URL = os.getenv("LMS_VLM_BASE_URL", LMS_LLM_BASE_URL)
+
+# LM Studio Model Names - Device-aware defaults (MLX for Apple Silicon, GGUF for others)
+
+# LLM Models
+LMS_MLX_LLM_MODEL_NAME = os.getenv(
+    "LMS_MLX_LLM_MODEL_NAME", "mlx-community/gpt-oss-20b-MXFP4-Q8"
+)
+LMS_GGUF_LLM_MODEL_NAME = os.getenv(
+    "LMS_GGUF_LLM_MODEL_NAME", "lmstudio-community/gpt-oss-20b-GGUF"
+)
+
+# VLM Models
+LMS_MLX_VLM_MODEL_NAME = os.getenv(
+    "LMS_MLX_VLM_MODEL_NAME", "lmstudio-community/Qwen3-VL-8B-Instruct-MLX-8bit"
+)
+LMS_GGUF_VLM_MODEL_NAME = os.getenv(
+    "LMS_GGUF_VLM_MODEL_NAME", "lmstudio-community/Qwen3-VL-8B-Instruct-GGUF-Q8_0"
+)
+
+# Active model selection based on device
+LMS_LLM_MODEL_NAME = (
+    LMS_MLX_LLM_MODEL_NAME if _is_apple_silicon else LMS_GGUF_LLM_MODEL_NAME
+)
+LMS_VLM_MODEL_NAME = (
+    LMS_MLX_VLM_MODEL_NAME if _is_apple_silicon else LMS_GGUF_VLM_MODEL_NAME
+)
+
+# =============================================================================
 # Ollama Settings
-# For Ollama, BASE_URL is typically http://127.0.0.1:11434
-OLLAMA_LLM_BASE_URL = os.getenv("OLLAMA_LLM_BASE_URL", "http://127.0.0.1:11434/v1")
-OLLAMA_LLM_MODEL_NAME = os.getenv("OLLAMA_LLM_MODEL_NAME", "gpt-oss:20b")
+# =============================================================================
 
-OLLAMA_VLM_BASE_URL = os.getenv(
-    "OLLAMA_VLM_BASE_URL", os.getenv("OLLAMA_LLM_BASE_URL", "http://127.0.0.1:11434/v1")
-)
+# Ollama Base URLs (typically http://127.0.0.1:11434)
+OLLAMA_LLM_BASE_URL = os.getenv("OLLAMA_LLM_BASE_URL", "http://127.0.0.1:11434/v1")
+OLLAMA_VLM_BASE_URL = os.getenv("OLLAMA_VLM_BASE_URL", OLLAMA_LLM_BASE_URL)
+
+# Ollama Model Names
+OLLAMA_LLM_MODEL_NAME = os.getenv("OLLAMA_LLM_MODEL_NAME", "gpt-oss:20b")
 OLLAMA_VLM_MODEL_NAME = os.getenv("OLLAMA_VLM_MODEL_NAME", "qwen3-vl:8b")
+
+# =============================================================================
+# Legacy compatibility (deprecated - use LMS_* instead)
+# =============================================================================
+
+LLM_BASE_URL = LMS_LLM_BASE_URL
+LLM_MODEL_NAME = LMS_LLM_MODEL_NAME
+VLM_BASE_URL = LMS_VLM_BASE_URL
+VLM_MODEL_NAME = LMS_VLM_MODEL_NAME

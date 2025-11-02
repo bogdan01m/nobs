@@ -90,7 +90,7 @@ def run_single_model(
 
 
 def run_model_with_repeats(
-    model_name: str,
+    model_name: str | None,
     prompts: list,
     images: list | None = None,
     num_runs: int = 3,

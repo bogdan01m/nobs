@@ -1,6 +1,5 @@
 from src.data.hallucination_coco import dataset
 from .executor import run_model_with_repeats
-from src.settings import VLM_MODEL_NAME
 
 
 def run_vlms_benchmark(model_name: str | None = None, base_url: str | None = None):
@@ -15,8 +14,6 @@ def run_vlms_benchmark(model_name: str | None = None, base_url: str | None = Non
         dict: Results with median latency as main metric
     """
     # Use provided model_name or fallback to settings
-    if model_name is None:
-        model_name = VLM_MODEL_NAME
 
     # Load first 3 questions and images from hallucination_coco dataset
     questions = dataset["question"][:3]

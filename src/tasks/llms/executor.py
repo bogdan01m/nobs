@@ -72,13 +72,16 @@ def run_single_model(
 
 
 def run_model_with_repeats(
-    model_name: str, prompts: list, num_runs: int = 3, base_url: str | None = None
+    model_name: str | None,
+    prompts: list,
+    num_runs: int = 3,
+    base_url: str | None = None,
 ):
     """
     Runs model multiple times for statistical significance
 
     Args:
-        model_name: LLM model name
+        model_name: LLM model name (optional, defaults to settings)
         prompts: List of prompts to run
         num_runs: Number of times to repeat the full prompt set (default 3)
         base_url: API base URL (optional, defaults to settings)

@@ -15,7 +15,7 @@ from typing import Any
 
 import psutil
 
-from device_info import get_device_info
+from src.system_info.device_info import get_device_info
 
 # Setup logging
 LOGS_DIR = Path("logs")
