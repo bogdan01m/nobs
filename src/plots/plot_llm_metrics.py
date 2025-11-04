@@ -82,10 +82,8 @@ def plot_llm_performance(
     # Sort by TPS (descending - higher is better)
     devices_sorted = sorted(devices, key=lambda x: x["tps"], reverse=True)
 
-    x_labels = [
-        f"{d['host']} [{d['backend']}]" if backend_filter is None else d["host"]
-        for d in devices_sorted
-    ]
+    # Create labels: "gpu_name\n[BACKEND]" format
+    y_labels = [f"{d['gpu_name']}\n[{d['backend']}]" for d in devices_sorted]
     ttft_values = [d["ttft"] for d in devices_sorted]
     ttft_std_values = [d["ttft_std"] for d in devices_sorted]
     tps_values = [d["tps"] for d in devices_sorted]
@@ -97,18 +95,20 @@ def plot_llm_performance(
     # Create figure with scientific style
     plt.style.use("seaborn-v0_8-paper")
 
-    # X positions
-    x_pos = np.arange(len(x_labels))
+    # Y positions and dynamic height
+    n_devices = len(y_labels)
+    fig_height = max(6, n_devices * 0.6)
+    y_pos = np.arange(len(y_labels))
     backend_label = f" ({backend_filter.replace('_', ' ')})" if backend_filter else ""
 
     # ===== PLOT 1: TTFT (lower is better) =====
-    fig1, ax1 = plt.subplots(figsize=(10, 6), dpi=300)
+    fig1, ax1 = plt.subplots(figsize=(12, fig_height), dpi=300)
 
-    # Plot bars with error bars
-    bars1 = ax1.bar(
-        x_pos,
+    # Plot horizontal bars with error bars
+    bars1 = ax1.barh(
+        y_pos,
         ttft_values,
-        yerr=ttft_std_values,
+        xerr=ttft_std_values,
         capsize=5,
         color=colors,
         alpha=0.8,
@@ -117,29 +117,30 @@ def plot_llm_performance(
     )
 
     # Styling
-    ax1.set_xlabel("GPU Device (sorted by throughput)", fontsize=12, fontweight="bold")
-    ax1.set_ylabel("Time To First Token (seconds)", fontsize=12, fontweight="bold")
+    ax1.set_ylabel("GPU Device [Backend]", fontsize=12, fontweight="bold")
+    ax1.set_xlabel("Time To First Token (seconds)", fontsize=12, fontweight="bold")
     ax1.set_title(
         f"LLM Inference Performance: Time To First Token{backend_label}\n(Lower is Better)",
         fontsize=14,
         fontweight="bold",
         pad=20,
     )
-    ax1.set_xticks(x_pos)
-    ax1.set_xticklabels(x_labels, rotation=15, ha="right")
-    ax1.grid(True, alpha=0.3, linestyle="--", linewidth=0.5, axis="y")
+    ax1.set_yticks(y_pos)
+    ax1.set_yticklabels(y_labels, fontsize=10)
+    ax1.invert_yaxis()  # Best performer at top
+    ax1.grid(True, alpha=0.3, linestyle="--", linewidth=0.5, axis="x")
     ax1.set_axisbelow(True)
-    ax1.set_ylim(bottom=0)
+    ax1.set_xlim(left=0)
 
     # Add value labels on bars
     for i, (bar, val, std) in enumerate(zip(bars1, ttft_values, ttft_std_values)):
-        height = bar.get_height()
+        width = bar.get_width()
         ax1.text(
-            bar.get_x() + bar.get_width() / 2.0,
-            height + std + 0.1,
+            width + std + max(ttft_values) * 0.02,
+            bar.get_y() + bar.get_height() / 2.0,
             f"{val:.2f}s",
-            ha="center",
-            va="bottom",
+            ha="left",
+            va="center",
             fontsize=9,
             fontweight="bold",
         )
@@ -159,11 +160,11 @@ def plot_llm_performance(
     plt.close()
 
     # ===== PLOT 2: TPS (higher is better) =====
-    fig2, ax2 = plt.subplots(figsize=(10, 6), dpi=300)
+    fig2, ax2 = plt.subplots(figsize=(12, fig_height), dpi=300)
 
-    # Plot bars with error bars
-    bars2 = ax2.bar(
-        x_pos,
+    # Plot horizontal bars with error bars
+    bars2 = ax2.barh(
+        y_pos,
         tps_values,
         yerr=tps_std_values,
         capsize=5,
@@ -174,29 +175,32 @@ def plot_llm_performance(
     )
 
     # Styling
-    ax2.set_xlabel("GPU Device (sorted by throughput)", fontsize=12, fontweight="bold")
-    ax2.set_ylabel("Throughput (tokens/second)", fontsize=12, fontweight="bold")
+    ax2.set_ylabel(
+        "GPU Device [Backend] (sorted by throughput)", fontsize=12, fontweight="bold"
+    )
+    ax2.set_xlabel("Throughput (tokens/second)", fontsize=12, fontweight="bold")
     ax2.set_title(
         f"LLM Inference Performance: Throughput{backend_label}\n(Higher is Better)",
         fontsize=14,
         fontweight="bold",
         pad=20,
     )
-    ax2.set_xticks(x_pos)
-    ax2.set_xticklabels(x_labels, rotation=15, ha="right")
-    ax2.grid(True, alpha=0.3, linestyle="--", linewidth=0.5, axis="y")
+    ax2.set_yticks(y_pos)
+    ax2.set_yticklabels(y_labels, fontsize=10)
+    ax2.invert_yaxis()  # Best performer at top
+    ax2.grid(True, alpha=0.3, linestyle="--", linewidth=0.5, axis="x")
     ax2.set_axisbelow(True)
-    ax2.set_ylim(bottom=0)
+    ax2.set_xlim(left=0)
 
     # Add value labels on bars
     for i, (bar, val, std) in enumerate(zip(bars2, tps_values, tps_std_values)):
-        height = bar.get_height()
+        width = bar.get_width()
         ax2.text(
-            bar.get_x() + bar.get_width() / 2.0,
-            height + std + 2,
+            width + std + max(tps_values) * 0.02,
+            bar.get_y() + bar.get_height() / 2.0,
             f"{val:.1f}",
-            ha="center",
-            va="bottom",
+            ha="left",
+            va="center",
             fontsize=9,
             fontweight="bold",
         )

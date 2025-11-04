@@ -21,6 +21,14 @@ LLM_API_KEY = os.getenv("LLM_API_KEY", "api-key")
 VLM_API_KEY = os.getenv("VLM_API_KEY", os.getenv("LLM_API_KEY", "api-key"))
 
 # =============================================================================
+# Embedding Model Settings
+# =============================================================================
+EMBEDDING_MODEL_NAME = os.getenv(
+    "EMBEDDING_MODEL_NAME", "nomic-ai/modernbert-embed-base"
+)
+EMBEDDING_BATCH_SIZE = int(os.getenv("EMBEDDING_BATCH_SIZE", "32"))
+
+# =============================================================================
 # LM Studio Settings
 # =============================================================================
 
