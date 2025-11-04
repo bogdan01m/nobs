@@ -43,12 +43,14 @@ La Perf is a collection of reproducible tests and community-submitted results fo
      - *macOS*: `mlx-community/gpt-oss-20b-MXFP4-Q8` (MLX MXFP4-Q8)
      - *Other platforms*: `lmstudio-community/gpt-oss-20b-GGUF` (GGUF)
    - **Ollama**: [gpt-oss-20b](https://ollama.com/library/gpt-oss:20b)
+      -
 - #### 👁️ **VLM inference** — ✅ Ready (LM Studio and Ollama, [Hallucination_COCO dataset](https://huggingface.co/datasets/DogNeverSleep/Hallucination_COCO))
    vlm models:
-   - **LM Studio**: [Qwen3-VL-8B-Instruct](https://huggingface.co/Qwen/Qwen3-VL-8B-Instruct)
-     - *macOS*: `lmstudio-community/Qwen3-VL-8B-Instruct-MLX-8bit` (MLX 8-bit)
-     - *Other platforms*: `lmstudio-community/Qwen3-VL-8B-Instruct-GGUF-Q8_0` (GGUF Q8_0)
-   - **Ollama**: `qwen3-vl:8b`
+   - **LM Studio**: [Qwen3-VL-8B-Instruct](https://lmstudio.ai/models/qwen/qwen3-vl-8b)
+     - *macOS*: `lmstudio-community/Qwen3-VL-8B-Instruct-MLX-4bit` (MLX 8-bit)
+     - *Other platforms*: `lmstudio-community/Qwen3-VL-8B-Instruct-GGUF-Q4_K_M` (Q4_K_M)
+   - **Ollama**: [qwen3-vl:8b](https://ollama.com/library/qwen3-vl:8b)
+      - **all platforms**: `qwen3-vl:8b` (Q4_K_M)
 - #### 🎨 **Diffusion image generation** — 📋 Planned
 - #### 🗣️ **Speach to Text** - 📋 Planned (whisper)
 - #### 🔬 **Classic ML** — 📋 Planned (scikit-learn, XGBoost, LightGBM, Catboost)
@@ -84,14 +86,12 @@ NoBS was built to understand how different devices — from everyday laptops and
 
 ## Benchmark Results
 
-> **Last Updated**: 2025-11-03
-
+> **Last Updated**: 2025-11-04
 ### 🏆 Overall Ranking
 
 | Rank | Device | Platform | CPU | RAM | GPU | VRAM | Embeddings, sts (s) | LLM, lms (s) | LLM, ollama (s) | VLM, lms (s) | VLM, ollama (s) | Total Time (s) |
-|------|--------|----------|-----|-----|-----|------|----------------|-----------------|--------------|-----------------|--------------|----------------|
-| 🥇 1 | Mac16,10 | 🍏 macOS | Apple M4 Max (14 cores) | 36 GB | Apple M4 Max (40 cores) | shared with system RAM | 8.56 | 115.88 | - | 85.06 | - | **209.50** |
-| 🥈 2 | RTX4060Ti-PC | 🐧 Linux | Intel Core i7-13700K | 32 GB | NVIDIA RTX 4060 Ti | 16 GB | 10.50 | - | 127.28 | - | 84.87 | **222.65** |
+|------|------|------|------|------|------|------|------|------|------|------|------|------|
+| 🥇 1 | Mac16,6 | 🍏 macOS | Apple M4 Max (14) | 36 GB | Apple M4 Max (32 cores) | shared with system RAM | - | - | 21.22 | - | 50.42 | **71.64** |
 
 *sts - sentence transformers*
 
@@ -101,34 +101,14 @@ NoBS was built to understand how different devices — from everyday laptops and
 
 
 
-
 ### ⚡ Power Metrics
 
-| Device | CPU Usage (p50/p95) | RAM Used (p50/p95) | GPU Usage (p50/p95) | GPU Temp (p50/p95) | Battery Drain (p50/p95) | GPU Power (p50/p95) | CPU Power (p50/p95) |
-|--------|---------------------|--------------------|--------------------|--------------------|-----------------------|--------------------|--------------------|
-| Mac16,10 | 36.3% / 61.2% | 25.1GB / 25.7GB | 60.0% / 71.6% | 51.3°C / 58.5°C | 29.2W / 30.4W | 23.1W / 48.2W | 9.7W / 17.8W |
-| RTX4060Ti-PC | 51.4% / 77.5% | 21.8GB / 24.3GB | 87.2% / 94.0% | 69.7°C / 78.6°C | N/A | 127.7W / 204.8W | N/A |
+| Device | CPU Usage (p50/p95) | RAM Used (p50/p95) | GPU Usage (p50/p95) | GPU Temp (p50/p95) | Battery (start/end/Δ) | GPU Power (p50/p95) | CPU Power (p50/p95) |
+|------|------|------|------|------|------|------|------|
+| Mac16,6 | 6.0% / 20.4% | 21.1GB / 24.4GB | 97.0% / 98.0% | N/A | 23% / 26% / -3% | 10.4W / 32.0W | 1.1W / 2.9W |
 
 *p50 = median, p95 = 95th percentile*
 
-
-
-### Embeddings
-
-#### Text Embeddings (100 IMDB samples)
-
-| Device | Model | Rows/sec | Time (s) | Embedding Dim | Batch Size |
-|--------|-------|----------|----------|---------------|------------|
-| Mac16,10 | nomic-ai/nomic-embed-text-v1.5 | 220.49 ± 15.86 | 4.02 ± 0.38 | 768 | 24 |
-| Mac16,10 | text-embedding-3-large | 281.46 ± 31.40 | 2.69 ± 0.26 | 3072 | 16 |
-| Mac16,10 | text-embedding-3-small | 425.60 ± 50.04 | 1.85 ± 0.27 | 1536 | 32 |
-| RTX4060Ti-PC | nomic-ai/nomic-embed-text-v1.5 | 197.21 ± 16.52 | 4.59 ± 0.41 | 768 | 24 |
-| RTX4060Ti-PC | text-embedding-3-large | 272.31 ± 31.78 | 3.86 ± 0.50 | 3072 | 16 |
-| RTX4060Ti-PC | text-embedding-3-small | 434.32 ± 32.45 | 2.06 ± 0.29 | 1536 | 32 |
-
-![Embeddings Performance Profile](results/plots/embeddings_performance.png)
-
-*Throughput comparison for different embedding models across hardware. Higher values indicate better performance.*
 
 
 ### LLMs
@@ -136,17 +116,11 @@ NoBS was built to understand how different devices — from everyday laptops and
 #### LLM Inference (3 prompts from awesome-chatgpt-prompts)
 
 
-**LM STUDIO**
-
-| Device | Model | Tokens/sec | TTFT (s) | Latency (s) | Input Tokens | Output Tokens |
-|--------|-------|------------|----------|-------------|--------------|---------------|
-| Mac16,10 | granite-coder-34b | 160.72 ± 11.77 | 1.62 ± 0.58 | 6.03 ± 2.53 | 9769 | 13303 |
-
 **OLLAMA**
 
 | Device | Model | Tokens/sec | TTFT (s) | Latency (s) | Input Tokens | Output Tokens |
-|--------|-------|------------|----------|-------------|--------------|---------------|
-| RTX4060Ti-PC | llama3:13b-instruct | 127.45 ± 9.33 | 1.98 ± 0.74 | 7.95 ± 3.16 | 6551 | 13000 |
+|------|------|------|------|------|------|------|
+| Mac16,6 | gpt-oss:20b | 68.00 ± 2.29 | 3.82 ± 0.25 | 21.22 ± 0.72 | 166 | 1443 |
 
 ![LLM TTFT vs Input Tokens](results/plots/llm_ttft_vs_input_tokens.png)
 
@@ -172,17 +146,11 @@ NoBS was built to understand how different devices — from everyday laptops and
 #### VLM Inference (3 questions from Hallucination_COCO)
 
 
-**LM STUDIO**
-
-| Device | Model | Tokens/sec | TTFT (s) | Latency (s) | Input Tokens | Output Tokens |
-|--------|-------|------------|----------|-------------|--------------|---------------|
-| Mac16,10 | minicpm-v:8b | 105.73 ± 8.11 | 2.38 ± 0.49 | 6.98 ± 3.00 | 5202 | 6566 |
-
 **OLLAMA**
 
 | Device | Model | Tokens/sec | TTFT (s) | Latency (s) | Input Tokens | Output Tokens |
-|--------|-------|------------|----------|-------------|--------------|---------------|
-| RTX4060Ti-PC | minicpm-v:8b | 80.82 ± 5.12 | 3.43 ± 1.19 | 10.40 ± 3.62 | 5873 | 4726 |
+|------|------|------|------|------|------|------|
+| Mac16,6 | qwen3-vl:8b | 40.14 ± 3.22 | 22.55 ± 2.85 | 50.42 ± 4.45 | 309 | 2024 |
 
 ![VLM TTFT vs Input Tokens](results/plots/vlm_ttft_vs_input_tokens.png)
 
@@ -204,9 +172,7 @@ NoBS was built to understand how different devices — from everyday laptops and
 
 
 ---
-
-_All metrics are shown as median �� standard deviation across 3 runs.
-Lower times are better (faster performance)._
+_All metrics are shown as median ± standard deviation across 3 runs. Lower times are better (faster performance)._
 
 ## ⚡ Quick Start
 

@@ -16,9 +16,9 @@ def run_llms_benchmark(model_name: str | None = None, base_url: str | None = Non
     # Use provided model_name or fallback to settings
 
     # Load 10 prompts from awesome prompts dataset
-    prompts = dataset["prompt"][:3]
+    prompts = dataset["prompt"]
 
-    print(f"Dataset loaded: {dataset}")
+    print("Dataset loaded")
     print(f"Number of prompts: {len(prompts)}\n")
 
     # Run benchmark with 3 repeats per prompt
@@ -26,8 +26,8 @@ def run_llms_benchmark(model_name: str | None = None, base_url: str | None = Non
         model_name=model_name, prompts=prompts, num_runs=3, base_url=base_url
     )
 
-    # Use median latency as main metric
-    total_time = model_results["final_median_latency_s"]
+    # Use median E2E latency as main metric
+    total_time = model_results["final_50p_e2e_latency_s"]
 
     results = {
         "task": "llms",

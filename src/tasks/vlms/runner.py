@@ -16,10 +16,10 @@ def run_vlms_benchmark(model_name: str | None = None, base_url: str | None = Non
     # Use provided model_name or fallback to settings
 
     # Load first 3 questions and images from hallucination_coco dataset
-    questions = dataset["question"][:3]
-    images = dataset["image"][:3]  # PIL Image objects
+    questions = dataset["question"]
+    images = dataset["image"]  # PIL Image objects
 
-    print(f"Dataset loaded: {dataset}")
+    print("Dataset loaded")
     print(f"Number of questions: {len(questions)}\n")
 
     # Run benchmark with 3 repeats per question
@@ -32,7 +32,7 @@ def run_vlms_benchmark(model_name: str | None = None, base_url: str | None = Non
     )
 
     # Use median latency as main metric
-    total_time = model_results["final_50p_latency_s"]
+    total_time = model_results["final_50p_e2e_latency_s"]
 
     results = {
         "task": "vlms",

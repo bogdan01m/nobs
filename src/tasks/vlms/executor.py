@@ -25,6 +25,7 @@ def run_single_model(
     """
     all_latencies = []
     all_ttft = []
+    all_tg = []
     all_tokens_per_sec = []
     total_input_tokens = 0
     total_output_tokens = 0
@@ -52,6 +53,8 @@ def run_single_model(
         all_latencies.append(result["total_latency_s"])
         if result.get("ttft_s"):
             all_ttft.append(result["ttft_s"])
+        if result.get("tg_s"):
+            all_tg.append(result["tg_s"])
         if result.get("tokens_per_sec"):
             all_tokens_per_sec.append(result["tokens_per_sec"])
         if result.get("input_tokens"):
@@ -74,11 +77,13 @@ def run_single_model(
     # Calculate median metrics for this run
     median_latency = median(all_latencies)
     median_ttft = median(all_ttft) if all_ttft else None
+    median_tg = median(all_tg) if all_tg else None
     median_tokens_per_sec = median(all_tokens_per_sec) if all_tokens_per_sec else None
 
     return {
         "median_latency_s": round(median_latency, 4),
         "median_ttft_s": round(median_ttft, 4) if median_ttft else None,
+        "median_tg_s": round(median_tg, 4) if median_tg else None,
         "median_tokens_per_sec": round(median_tokens_per_sec, 4)
         if median_tokens_per_sec
         else None,
@@ -131,6 +136,7 @@ def run_model_with_repeats(
     all_run_results = []
     all_latencies = []
     all_ttft = []
+    all_tg = []
     all_tokens_per_sec = []
     all_prompt_details = []
 
@@ -148,6 +154,7 @@ def run_model_with_repeats(
                 "run": run_idx + 1,
                 "median_latency_s": result["median_latency_s"],
                 "median_ttft_s": result["median_ttft_s"],
+                "median_tg_s": result["median_tg_s"],
                 "median_tokens_per_sec": result["median_tokens_per_sec"],
                 "total_input_tokens": result["total_input_tokens"],
                 "total_output_tokens": result["total_output_tokens"],
@@ -159,6 +166,8 @@ def run_model_with_repeats(
         all_latencies.append(result["median_latency_s"])
         if result["median_ttft_s"]:
             all_ttft.append(result["median_ttft_s"])
+        if result["median_tg_s"]:
+            all_tg.append(result["median_tg_s"])
         if result["median_tokens_per_sec"]:
             all_tokens_per_sec.append(result["median_tokens_per_sec"])
 
@@ -173,6 +182,9 @@ def run_model_with_repeats(
 
     final_median_ttft = median(all_ttft) if all_ttft else None
     final_std_ttft = stdev(all_ttft) if all_ttft and len(all_ttft) > 1 else 0.0
+
+    final_median_tg = median(all_tg) if all_tg else None
+    final_std_tg = stdev(all_tg) if all_tg and len(all_tg) > 1 else 0.0
 
     final_median_tokens_per_sec = (
         median(all_tokens_per_sec) if all_tokens_per_sec else None
@@ -189,14 +201,16 @@ def run_model_with_repeats(
         "num_runs": num_runs,
         "runs": all_run_results,
         "all_prompt_details": all_prompt_details,
-        "final_50p_latency_s": round(final_median_latency, 4),
-        "final_std_latency_s": round(final_std_latency, 4),
+        "final_50p_e2e_latency_s": round(final_median_latency, 4),
+        "final_std_e2e_latency_s": round(final_std_latency, 4),
         "final_50p_ttft_s": round(final_median_ttft, 4) if final_median_ttft else None,
         "final_std_ttft_s": round(final_std_ttft, 4) if all_ttft else None,
-        "final_50p_tokens_per_sec": round(final_median_tokens_per_sec, 4)
+        "final_50p_tg_s": round(final_median_tg, 4) if final_median_tg else None,
+        "final_std_tg_s": round(final_std_tg, 4) if all_tg else None,
+        "final_50p_e2e_tps": round(final_median_tokens_per_sec, 4)
         if final_median_tokens_per_sec
         else None,
-        "final_std_tokens_per_sec": round(final_std_tokens_per_sec, 4)
+        "final_std_e2e_tps": round(final_std_tokens_per_sec, 4)
         if all_tokens_per_sec
         else None,
     }
@@ -205,7 +219,7 @@ def run_model_with_repeats(
     print("BENCHMARK COMPLETE")
     print(f"{'='*60}")
     print(
-        f"Final Median Latency: {results['final_50p_latency_s']:.4f} ± {results['final_std_latency_s']:.4f}s"
+        f"Final Median E2E Latency: {results['final_50p_e2e_latency_s']:.4f} ± {results['final_std_e2e_latency_s']:.4f}s"
     )
     print(
         f"Final Median TTFT: {results['final_50p_ttft_s']:.4f} ± {results['final_std_ttft_s']:.4f}s"
@@ -213,9 +227,14 @@ def run_model_with_repeats(
         else "Final Median TTFT: N/A"
     )
     print(
-        f"Final Median Tokens/sec: {results['final_50p_tokens_per_sec']:.4f} ± {results['final_std_tokens_per_sec']:.4f}"
-        if results["final_50p_tokens_per_sec"]
-        else "Final Median Tokens/sec: N/A"
+        f"Final Median TG: {results['final_50p_tg_s']:.4f} ± {results['final_std_tg_s']:.4f}s"
+        if results["final_50p_tg_s"]
+        else "Final Median TG: N/A"
+    )
+    print(
+        f"Final Median E2E TPS: {results['final_50p_e2e_tps']:.4f} ± {results['final_std_e2e_tps']:.4f}"
+        if results["final_50p_e2e_tps"]
+        else "Final Median E2E TPS: N/A"
     )
     print(f"{'='*60}")
 

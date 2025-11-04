@@ -154,8 +154,12 @@ def stop_all_models():
     try:
         # Получаем список запущенных моделей
         result = subprocess.run(
-            ["ollama", "ps"], capture_output=True, text=True, check=True
+            ["ollama", "ps"], capture_output=True, text=True, check=False
         )
+
+        if result.returncode != 0:
+            print(f"✗ Failed to get running models: {result.stderr}")
+            return False
 
         # Парсим вывод ollama ps и останавливаем каждую модель
         lines = result.stdout.strip().split("\n")
@@ -163,15 +167,25 @@ def stop_all_models():
             # Пропускаем заголовок и обрабатываем каждую модель
             for line in lines[1:]:
                 if line.strip():
-                    # Первая колонка - это имя модели
-                    model_name = line.split()[0]
-                    print(f"Stopping model: {model_name}")
-                    subprocess.run(["ollama", "stop", model_name], check=True)
+                    try:
+                        # Первая колонка - это имя модели
+                        model_name = line.split()[0]
+                        print(f"Stopping model: {model_name}")
+                        stop_result = subprocess.run(
+                            ["ollama", "stop", model_name],
+                            capture_output=True,
+                            text=True,
+                            check=False,
+                        )
+                        if stop_result.returncode != 0:
+                            print(f"⚠ Warning: Failed to stop {model_name}")
+                    except Exception as e:
+                        print(f"⚠ Warning: Error stopping model: {e}")
             print("✓ All models stopped")
         else:
             print("✓ No models were running")
         return True
-    except subprocess.CalledProcessError as e:
+    except Exception as e:
         print(f"✗ Failed to stop models: {e}")
         return False
 
@@ -183,25 +197,33 @@ def cleanup_ollama():
     Returns:
         bool: True если все успешно, False если есть ошибки
     """
-    print("=" * 50)
-    print("Ollama Cleanup")
-    print("=" * 50)
-    print()
+    try:
+        print("=" * 50)
+        print("Ollama Cleanup")
+        print("=" * 50)
+        print()
 
-    success = stop_all_models()
+        success = stop_all_models()
 
-    print()
-    if success:
-        print("=" * 50)
-        print("✓ Ollama cleanup complete!")
-        print("=" * 50)
-    else:
-        print("=" * 50)
-        print("⚠ Ollama cleanup completed with errors")
-        print("=" * 50)
-    print()
+        print()
+        if success:
+            print("=" * 50)
+            print("✓ Ollama cleanup complete!")
+            print("=" * 50)
+        else:
+            print("=" * 50)
+            print("⚠ Ollama cleanup completed with errors")
+            print("=" * 50)
+        print()
 
-    return success
+        return success
+    except Exception as e:
+        print(f"\n✗ Unexpected error during Ollama cleanup: {e}")
+        print("=" * 50)
+        print("⚠ Ollama cleanup failed")
+        print("=" * 50)
+        print()
+        return False
 
 
 def setup_ollama(model_name: str, base_url: str):

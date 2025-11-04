@@ -9,8 +9,8 @@ def run_embeddings_benchmark() -> dict:
     Returns:
         dict: Results for all models with metadata
     """
-    texts = dataset["text"][:100]
-    print(f"Dataset loaded: {dataset}")
+    texts = dataset["text"]
+    print("Dataset loaded")
     print(f"Number of rows: {len(texts)}\n")
 
     results: dict = {"task": "embeddings", "dataset_size": len(texts), "models": {}}

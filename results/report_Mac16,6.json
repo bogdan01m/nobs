@@ -1,0 +1,239 @@
+{
+  "timestamp": "2025-11-04T16:00:52.743789",
+  "device_info": {
+    "platform": "Darwin",
+    "device": "mps",
+    "ram_gb": 36.0,
+    "processor": "Apple M4 Max (14)",
+    "gpu_name": "Apple M4 Max (32 cores)",
+    "gpu_memory_gb": "shared with system RAM",
+    "host": "Mac16,6"
+  },
+  "tasks": [
+    {
+      "task": "llms",
+      "dataset": "awesome-chatgpt-prompts",
+      "num_prompts": 1,
+      "model": {
+        "model_name": "gpt-oss:20b",
+        "num_prompts": 1,
+        "num_runs": 3,
+        "runs": [
+          {
+            "run": 1,
+            "median_latency_s": 20.5676,
+            "median_ttft_s": 3.7859,
+            "median_tokens_per_sec": 70.1588,
+            "total_input_tokens": 166,
+            "total_output_tokens": 1443,
+            "per_prompt_details": [
+              {
+                "ttft_s": 3.7859,
+                "tg_s": 16.7817,
+                "input_tokens": 166,
+                "output_tokens": 1443,
+                "tokens_per_sec": 70.1588,
+                "total_latency_s": 20.5676
+              }
+            ]
+          },
+          {
+            "run": 2,
+            "median_latency_s": 22.0024,
+            "median_ttft_s": 3.8194,
+            "median_tokens_per_sec": 65.5838,
+            "total_input_tokens": 166,
+            "total_output_tokens": 1443,
+            "per_prompt_details": [
+              {
+                "ttft_s": 3.8194,
+                "tg_s": 18.183,
+                "input_tokens": 166,
+                "output_tokens": 1443,
+                "tokens_per_sec": 65.5838,
+                "total_latency_s": 22.0024
+              }
+            ]
+          },
+          {
+            "run": 3,
+            "median_latency_s": 21.2195,
+            "median_ttft_s": 4.2379,
+            "median_tokens_per_sec": 68.0034,
+            "total_input_tokens": 166,
+            "total_output_tokens": 1443,
+            "per_prompt_details": [
+              {
+                "ttft_s": 4.2379,
+                "tg_s": 16.9816,
+                "input_tokens": 166,
+                "output_tokens": 1443,
+                "tokens_per_sec": 68.0034,
+                "total_latency_s": 21.2195
+              }
+            ]
+          }
+        ],
+        "all_prompt_details": [
+          {
+            "ttft_s": 3.7859,
+            "tg_s": 16.7817,
+            "input_tokens": 166,
+            "output_tokens": 1443,
+            "tokens_per_sec": 70.1588,
+            "total_latency_s": 20.5676
+          },
+          {
+            "ttft_s": 3.8194,
+            "tg_s": 18.183,
+            "input_tokens": 166,
+            "output_tokens": 1443,
+            "tokens_per_sec": 65.5838,
+            "total_latency_s": 22.0024
+          },
+          {
+            "ttft_s": 4.2379,
+            "tg_s": 16.9816,
+            "input_tokens": 166,
+            "output_tokens": 1443,
+            "tokens_per_sec": 68.0034,
+            "total_latency_s": 21.2195
+          }
+        ],
+        "final_50p_latency_s": 21.2195,
+        "final_std_latency_s": 0.7184,
+        "final_50p_ttft_s": 3.8194,
+        "final_std_ttft_s": 0.2518,
+        "final_50p_tokens_per_sec": 68.0034,
+        "final_std_tokens_per_sec": 2.2888
+      },
+      "total_time_seconds": 21.22,
+      "backend": "OLLAMA",
+      "backend_model": "gpt-oss:20b"
+    },
+    {
+      "task": "vlms",
+      "dataset": "Hallucination_COCO",
+      "num_questions": 1,
+      "model": {
+        "model_name": "qwen3-vl:8b",
+        "num_prompts": 1,
+        "num_runs": 3,
+        "runs": [
+          {
+            "run": 1,
+            "median_latency_s": 57.0547,
+            "median_ttft_s": 27.2159,
+            "median_tokens_per_sec": 35.4747,
+            "total_input_tokens": 309,
+            "total_output_tokens": 2024,
+            "per_prompt_details": [
+              {
+                "ttft_s": 27.2159,
+                "tg_s": 29.8388,
+                "input_tokens": 309,
+                "output_tokens": 2024,
+                "tokens_per_sec": 35.4747,
+                "total_latency_s": 57.0547
+              }
+            ]
+          },
+          {
+            "run": 2,
+            "median_latency_s": 50.4215,
+            "median_ttft_s": 22.552,
+            "median_tokens_per_sec": 40.1416,
+            "total_input_tokens": 309,
+            "total_output_tokens": 2024,
+            "per_prompt_details": [
+              {
+                "ttft_s": 22.552,
+                "tg_s": 27.8694,
+                "input_tokens": 309,
+                "output_tokens": 2024,
+                "tokens_per_sec": 40.1416,
+                "total_latency_s": 50.4215
+              }
+            ]
+          },
+          {
+            "run": 3,
+            "median_latency_s": 48.5996,
+            "median_ttft_s": 22.0588,
+            "median_tokens_per_sec": 41.6465,
+            "total_input_tokens": 309,
+            "total_output_tokens": 2024,
+            "per_prompt_details": [
+              {
+                "ttft_s": 22.0588,
+                "tg_s": 26.5408,
+                "input_tokens": 309,
+                "output_tokens": 2024,
+                "tokens_per_sec": 41.6465,
+                "total_latency_s": 48.5996
+              }
+            ]
+          }
+        ],
+        "all_prompt_details": [
+          {
+            "ttft_s": 27.2159,
+            "tg_s": 29.8388,
+            "input_tokens": 309,
+            "output_tokens": 2024,
+            "tokens_per_sec": 35.4747,
+            "total_latency_s": 57.0547
+          },
+          {
+            "ttft_s": 22.552,
+            "tg_s": 27.8694,
+            "input_tokens": 309,
+            "output_tokens": 2024,
+            "tokens_per_sec": 40.1416,
+            "total_latency_s": 50.4215
+          },
+          {
+            "ttft_s": 22.0588,
+            "tg_s": 26.5408,
+            "input_tokens": 309,
+            "output_tokens": 2024,
+            "tokens_per_sec": 41.6465,
+            "total_latency_s": 48.5996
+          }
+        ],
+        "final_50p_latency_s": 50.4215,
+        "final_std_latency_s": 4.4499,
+        "final_50p_ttft_s": 22.552,
+        "final_std_ttft_s": 2.8458,
+        "final_50p_tokens_per_sec": 40.1416,
+        "final_std_tokens_per_sec": 3.2181
+      },
+      "total_time_seconds": 50.42,
+      "backend": "OLLAMA",
+      "backend_model": "qwen3-vl:8b"
+    }
+  ],
+  "power_metrics": {
+    "is_charging_p50": 1.0,
+    "is_charging_p95": 1.0,
+    "gpu_util_percent_p50": 97.0,
+    "gpu_util_percent_p95": 98.0,
+    "gpu_vram_used_mb_p50": 12007.42,
+    "gpu_vram_used_mb_p95": 15451.92,
+    "cpu_util_percent_p50": 6.0,
+    "cpu_util_percent_p95": 20.4,
+    "ram_used_gb_p50": 21.06,
+    "ram_used_gb_p95": 24.37,
+    "system_watts_p50": 3.91,
+    "system_watts_p95": 15.55,
+    "gpu_power_watts_p50": 10.41,
+    "gpu_power_watts_p95": 32.05,
+    "cpu_power_watts_p50": 1.06,
+    "cpu_power_watts_p95": 2.94,
+    "battery_start_percent": 23,
+    "battery_end_percent": 26,
+    "battery_drain_percent": -3,
+    "samples_collected": 374,
+    "monitoring_duration_seconds": 374.69
+  }
+}

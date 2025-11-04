@@ -51,7 +51,10 @@ def plot_llm_performance(
 
             model_data = llm_task["model"]
             ttft = model_data.get("final_50p_ttft_s")
-            tps = model_data.get("final_50p_tokens_per_sec")
+            # Try new key first, fallback to old for compatibility
+            tps = model_data.get("final_50p_e2e_tps") or model_data.get(
+                "final_50p_tokens_per_sec"
+            )
 
             if ttft is None or tps is None:
                 continue
@@ -64,7 +67,8 @@ def plot_llm_performance(
                     "ttft": ttft,
                     "tps": tps,
                     "ttft_std": model_data.get("final_std_ttft_s", 0),
-                    "tps_std": model_data.get("final_std_tokens_per_sec", 0),
+                    "tps_std": model_data.get("final_std_e2e_tps")
+                    or model_data.get("final_std_tokens_per_sec", 0),
                 }
             )
 

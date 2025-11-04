@@ -31,20 +31,12 @@ LMS_VLM_BASE_URL = os.getenv("LMS_VLM_BASE_URL", LMS_LLM_BASE_URL)
 # LM Studio Model Names - Device-aware defaults (MLX for Apple Silicon, GGUF for others)
 
 # LLM Models
-LMS_MLX_LLM_MODEL_NAME = os.getenv(
-    "LMS_MLX_LLM_MODEL_NAME", "mlx-community/gpt-oss-20b-MXFP4-Q8"
-)
-LMS_GGUF_LLM_MODEL_NAME = os.getenv(
-    "LMS_GGUF_LLM_MODEL_NAME", "lmstudio-community/gpt-oss-20b-GGUF"
-)
+LMS_MLX_LLM_MODEL_NAME = os.getenv("LMS_MLX_LLM_MODEL_NAME", "openai/gpt-oss-20b")
+LMS_GGUF_LLM_MODEL_NAME = os.getenv("LMS_GGUF_LLM_MODEL_NAME", "openai/gpt-oss-20b")
 
 # VLM Models
-LMS_MLX_VLM_MODEL_NAME = os.getenv(
-    "LMS_MLX_VLM_MODEL_NAME", "lmstudio-community/Qwen3-VL-8B-Instruct-MLX-8bit"
-)
-LMS_GGUF_VLM_MODEL_NAME = os.getenv(
-    "LMS_GGUF_VLM_MODEL_NAME", "lmstudio-community/Qwen3-VL-8B-Instruct-GGUF-Q8_0"
-)
+LMS_MLX_VLM_MODEL_NAME = os.getenv("LMS_MLX_VLM_MODEL_NAME", "qwen/qwen3-vl-8b")
+LMS_GGUF_VLM_MODEL_NAME = os.getenv("LMS_GGUF_VLM_MODEL_NAME", "qwen/qwen3-vl-8b")
 
 # Active model selection based on device
 LMS_LLM_MODEL_NAME = (
