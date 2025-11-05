@@ -4,6 +4,7 @@ import statistics
 
 from openai import OpenAI
 from src.settings import LLM_API_KEY
+from src.utils.task_logger import log_llm_task
 
 
 def stream_with_results(
@@ -107,5 +108,8 @@ def stream_with_results(
         "error_code": error_code,
         "error_msg": error_msg,
     }
+
+    # Log the task
+    log_llm_task(prompt=prompt, response=full_text)
 
     return result

@@ -67,8 +67,7 @@ def plot_vlm_performance(
                     "ttft": ttft,
                     "tps": tps,
                     "ttft_std": model_data.get("final_std_ttft_s", 0),
-                    "tps_std": model_data.get("final_std_e2e_tps")
-                    or model_data.get("final_std_tokens_per_sec", 0),
+                    "tps_std": model_data.get("final_std_e2e_tps", 0),
                 }
             )
 
@@ -120,7 +119,7 @@ def plot_vlm_performance(
     ax1.set_ylabel("GPU Device [Backend]", fontsize=12, fontweight="bold")
     ax1.set_xlabel("Time To First Token (seconds)", fontsize=12, fontweight="bold")
     ax1.set_title(
-        f"VLM Inference Performance: Time To First Token{backend_label}\n(Lower is Better)",
+        f"VLM Inference Performance: TTFT (sec){backend_label}\n(Lower is Better)",
         fontsize=14,
         fontweight="bold",
         pad=20,
@@ -175,12 +174,10 @@ def plot_vlm_performance(
     )
 
     # Styling
-    ax2.set_ylabel(
-        "GPU Device [Backend] (sorted by throughput)", fontsize=12, fontweight="bold"
-    )
-    ax2.set_xlabel("Throughput (tokens/second)", fontsize=12, fontweight="bold")
+    ax2.set_ylabel("GPU Device [Backend]", fontsize=12, fontweight="bold")
+    ax2.set_xlabel("Tokens per second", fontsize=12, fontweight="bold")
     ax2.set_title(
-        f"VLM Inference Performance: Throughput{backend_label}\n(Higher is Better)",
+        f"VLM Inference Performance: TPS{backend_label}\n(Higher is Better)",
         fontsize=14,
         fontweight="bold",
         pad=20,

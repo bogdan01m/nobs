@@ -5,6 +5,7 @@ from io import BytesIO
 from PIL import Image
 from openai import OpenAI
 from src.settings import VLM_API_KEY
+from src.utils.task_logger import log_vlm_task
 
 
 def stream_with_results(
@@ -26,6 +27,9 @@ def stream_with_results(
 
     t0_stream = time.perf_counter()
 
+    # Store base64 for logging
+    image_b64 = None
+
     try:
         # For VLM, need to pass image as base64 (LM Studio requirement)
         if image:
@@ -34,6 +38,9 @@ def stream_with_results(
                 img = Image.open(image)
             else:
                 img = image
+
+            # Downscale image to 448x448 while maintaining aspect ratio
+            img.thumbnail((448, 448), Image.Resampling.LANCZOS)
 
             # Convert to base64
             buffered = BytesIO()
@@ -133,5 +140,8 @@ def stream_with_results(
         "error_code": error_code,
         "error_msg": error_msg,
     }
+
+    # Log the task
+    log_vlm_task(prompt=prompt, image_b64_preview=image_b64, response=full_text)
 
     return result

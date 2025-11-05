@@ -2,7 +2,9 @@ import time
 import torch
 from sentence_transformers import SentenceTransformer
 from src.system_info.memory_cleaner import clear_memory
+from src.utils.task_logger import log_embedding_task
 from statistics import median, stdev
+from src.settings import EMBEDDING_MAX_LEN
 
 
 def sync_device(device_type: str):
@@ -39,7 +41,12 @@ def run_single_model(
     print("=" * 50)
 
     # Load model
-    model = SentenceTransformer(model_name, trust_remote_code=True)
+    model = SentenceTransformer(
+        model_name,
+        tokenizer_kwargs={"max_seq_length": EMBEDDING_MAX_LEN},
+        model_kwargs={"dtype": torch.float16},
+        trust_remote_code=True,
+    )
     model_dtype = str(next(model.parameters()).dtype)
     print(f"Model loaded, max_seq_length: {model.max_seq_length}")
     print(f"Model device: {model.device}, dtype: {model_dtype}")
@@ -60,6 +67,14 @@ def run_single_model(
 
     print(f"Encoding completed in {encoding_time:.2f}s")
     print(f"Speed: {len(texts) / encoding_time:.2f} rows/sec")
+
+    # Log first embedding sample
+    if len(texts) > 0 and len(embeddings) > 0:
+        log_embedding_task(
+            text=texts[0],
+            embedding_preview=embeddings[0].tolist(),
+            shape=embeddings.shape,
+        )
 
     # Results
     results = {

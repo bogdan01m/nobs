@@ -86,12 +86,12 @@ NoBS was built to understand how different devices — from everyday laptops and
 
 ## Benchmark Results
 
-> **Last Updated**: 2025-11-04
+> **Last Updated**: 2025-11-05
 ### 🏆 Overall Ranking
 
 | Rank | Device | Platform | CPU | RAM | GPU | VRAM | Embeddings, sts (s) | LLM, lms (s) | LLM, ollama (s) | VLM, lms (s) | VLM, ollama (s) | Total Time (s) |
 |------|------|------|------|------|------|------|------|------|------|------|------|------|
-| 🥇 1 | Mac16,6 | 🍏 macOS | Apple M4 Max (14) | 36 GB | Apple M4 Max (32 cores) | shared with system RAM | 0.90 | 11.48 | 20.50 | 10.09 | 36.06 | **79.03** |
+| 🥇 1 | Mac16,6 | 🍏 macOS | Apple M4 Max (14) | 36 GB | Apple M4 Max (32 cores) | shared with system RAM | 52.92 | 1.02 | 15.99 | 10.57 | 33.69 | **114.19** |
 
 *sts - sentence transformers*
 
@@ -105,7 +105,7 @@ NoBS was built to understand how different devices — from everyday laptops and
 
 | Device | CPU Usage (p50/p95) | RAM Used (p50/p95) | GPU Usage (p50/p95) | GPU Temp (p50/p95) | Battery (start/end/Δ) | GPU Power (p50/p95) | CPU Power (p50/p95) |
 |------|------|------|------|------|------|------|------|
-| Mac16,6 | 5.0% / 13.5% | 22.1GB / 24.5GB | 96.0% / 100.0% | N/A | 85% / 78% / +7% | 23.6W / 32.5W | 1.2W / 4.4W |
+| Mac16,6 | 4.6% / 9.4% | 20.9GB / 22.4GB | 97.0% / 100.0% | N/A | 65% / 8% / +57% | 11.7W / 36.0W | 1.4W / 2.8W |
 
 *p50 = median, p95 = 95th percentile*
 
@@ -117,7 +117,7 @@ NoBS was built to understand how different devices — from everyday laptops and
 
 | Device | Model | Rows/sec | Time (s) | Embedding Dim | Batch Size |
 |------|------|------|------|------|------|
-| Mac16,6 | nomic-ai/modernbert-embed-base | 23.48 ± 0.30 | 0.43 ± 0.01 | 768 | 16 |
+| Mac16,6 | nomic-ai/modernbert-embed-base | 56.69 ± 0.29 | 52.92 ± 0.27 | 768 | 32 |
 
 ![Embeddings Performance Profile](results/plots/embeddings_performance.png)
 
@@ -133,13 +133,13 @@ NoBS was built to understand how different devices — from everyday laptops and
 
 | Device | Model | E2E TPS | TTFT (s) | TG (s) | E2E Latency (s) | Input Tokens | Output Tokens |
 |------|------|------|------|------|------|------|------|
-| Mac16,6 | openai/gpt-oss-20b | 96.91 ± 0.37 | 0.94 ± 0.01 | 10.55 ± 0.05 | 11.48 ± 0.04 | 166 | 1113 |
+| Mac16,6 | openai/gpt-oss-20b | 70.83 ± 1.61 | 0.75 ± 0.01 | 0.23 ± 0.00 | 1.02 ± 0.02 | 1728 | 3968 |
 
 **OLLAMA**
 
 | Device | Model | E2E TPS | TTFT (s) | TG (s) | E2E Latency (s) | Input Tokens | Output Tokens |
 |------|------|------|------|------|------|------|------|
-| Mac16,6 | gpt-oss:20b | 70.39 ± 0.33 | 3.85 ± 0.01 | 16.65 ± 0.09 | 20.50 ± 0.10 | 166 | 1443 |
+| Mac16,6 | gpt-oss:20b | 64.21 ± 0.20 | 8.83 ± 0.05 | 0.32 ± 0.00 | 15.99 ± 0.05 | 1728 | 12159 |
 
 ![LLM TTFT vs Input Tokens](results/plots/llm_ttft_vs_input_tokens.png)
 
@@ -169,13 +169,13 @@ NoBS was built to understand how different devices — from everyday laptops and
 
 | Device | Model | E2E TPS | TTFT (s) | TG (s) | E2E Latency (s) | Input Tokens | Output Tokens |
 |------|------|------|------|------|------|------|------|
-| Mac16,6 | qwen/qwen3-vl-8b | 58.55 ± 0.81 | 1.53 ± 0.05 | 8.49 ± 0.62 | 10.09 ± 0.60 | 20 | 577 |
+| Mac16,6 | qwen/qwen3-vl-8b | 54.27 ± 1.66 | 1.55 ± 0.06 | 9.04 ± 0.43 | 10.57 ± 0.45 | 310 | 6043 |
 
 **OLLAMA**
 
 | Device | Model | E2E TPS | TTFT (s) | TG (s) | E2E Latency (s) | Input Tokens | Output Tokens |
 |------|------|------|------|------|------|------|------|
-| Mac16,6 | qwen3-vl:8b | 56.13 ± 0.13 | 16.05 ± 0.07 | 20.06 ± 0.03 | 36.06 ± 0.08 | 309 | 2024 |
+| Mac16,6 | qwen3-vl:8b | 46.47 ± 0.52 | 16.86 ± 0.21 | 17.17 ± 0.17 | 33.69 ± 0.54 | 1814 | 15516 |
 
 ![VLM TTFT vs Input Tokens](results/plots/vlm_ttft_vs_input_tokens.png)
 

@@ -52,9 +52,7 @@ def plot_llm_performance(
             model_data = llm_task["model"]
             ttft = model_data.get("final_50p_ttft_s")
             # Try new key first, fallback to old for compatibility
-            tps = model_data.get("final_50p_e2e_tps") or model_data.get(
-                "final_50p_tokens_per_sec"
-            )
+            tps = model_data.get("final_50p_e2e_tps")
 
             if ttft is None or tps is None:
                 continue
@@ -120,7 +118,7 @@ def plot_llm_performance(
     ax1.set_ylabel("GPU Device [Backend]", fontsize=12, fontweight="bold")
     ax1.set_xlabel("Time To First Token (seconds)", fontsize=12, fontweight="bold")
     ax1.set_title(
-        f"LLM Inference Performance: Time To First Token{backend_label}\n(Lower is Better)",
+        f"LLM Inference Performance: TTFT (sec){backend_label}\n(Lower is Better)",
         fontsize=14,
         fontweight="bold",
         pad=20,
@@ -175,12 +173,10 @@ def plot_llm_performance(
     )
 
     # Styling
-    ax2.set_ylabel(
-        "GPU Device [Backend] (sorted by throughput)", fontsize=12, fontweight="bold"
-    )
-    ax2.set_xlabel("Throughput (tokens/second)", fontsize=12, fontweight="bold")
+    ax2.set_ylabel("GPU Device [Backend]", fontsize=12, fontweight="bold")
+    ax2.set_xlabel("Tokens per second", fontsize=12, fontweight="bold")
     ax2.set_title(
-        f"LLM Inference Performance: Throughput{backend_label}\n(Higher is Better)",
+        f"LLM Inference Performance: TPS{backend_label}\n(Higher is Better)",
         fontsize=14,
         fontweight="bold",
         pad=20,

@@ -14,12 +14,12 @@ _is_apple_silicon = _device_info.get("device") == "mps"
 # OLLAMA - Use only Ollama
 # BOTH - Run benchmarks on both LM Studio AND Ollama (for comparison)
 LLM_BACKEND = os.getenv("LLM_BACKEND", "BOTH")  # AUTO, LM_STUDIO, OLLAMA, or BOTH
-VLM_BACKEND = os.getenv("VLM_BACKEND", "BOTH")  # AUTO, LM_STUDIO, OLLAMA, or BOTH
-
-# API Keys
 LLM_API_KEY = os.getenv("LLM_API_KEY", "api-key")
-VLM_API_KEY = os.getenv("VLM_API_KEY", os.getenv("LLM_API_KEY", "api-key"))
+LLM_DATA_SIZE = int(os.getenv("LLM_DATA_SIZE", "10"))
 
+VLM_BACKEND = os.getenv("VLM_BACKEND", "BOTH")  # AUTO, LM_STUDIO, OLLAMA, or BOTH
+VLM_API_KEY = os.getenv("VLM_API_KEY", os.getenv("LLM_API_KEY", "api-key"))
+VLM_DATA_SIZE = int(os.getenv("VLM_DATA_SIZE", "10"))
 # =============================================================================
 # Embedding Model Settings
 # =============================================================================
@@ -27,7 +27,8 @@ EMBEDDING_MODEL_NAME = os.getenv(
     "EMBEDDING_MODEL_NAME", "nomic-ai/modernbert-embed-base"
 )
 EMBEDDING_BATCH_SIZE = int(os.getenv("EMBEDDING_BATCH_SIZE", "32"))
-
+EMBEDDING_DATA_SIZE = int(os.getenv("EMBEDDING_DATA_SIZE", "3000"))
+EMBEDDING_MAX_LEN = int(os.getenv("EMBEDDING_MAX_LEN", "1024"))
 # =============================================================================
 # LM Studio Settings
 # =============================================================================
