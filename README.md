@@ -92,6 +92,7 @@ NoBS was built to understand how different devices — from everyday laptops and
 | Rank | Device | Platform | CPU | RAM | GPU | VRAM | Embeddings, sts (s) | LLM, lms (s) | LLM, ollama (s) | VLM, lms (s) | VLM, ollama (s) | Total Time (s) |
 |------|------|------|------|------|------|------|------|------|------|------|------|------|
 | 🥇 1 | Mac16,6 | 🍏 macOS | Apple M4 Max (14) | 36 GB | Apple M4 Max (32 cores) | shared with system RAM | 52.92 | 1.02 | 15.99 | 10.57 | 33.69 | **114.19** |
+| 🥈 2 | ASUSTeK COMPUTER INC. ASUS Vivobook Pro 15 N6506MV_N6506MV 1.0 | 🐧 Linux | Intel(R) Core(TM) Ultra 9 185H (16) | 23 GB | NVIDIA GeForce RTX 4060 Laptop GPU | 8 GB | 19.99 | 7.60 | 30.22 | 25.58 | 127.01 | **210.40** |
 
 *sts - sentence transformers*
 
@@ -105,7 +106,8 @@ NoBS was built to understand how different devices — from everyday laptops and
 
 | Device | CPU Usage (p50/p95) | RAM Used (p50/p95) | GPU Usage (p50/p95) | GPU Temp (p50/p95) | Battery (start/end/Δ) | GPU Power (p50/p95) | CPU Power (p50/p95) |
 |------|------|------|------|------|------|------|------|
-| Mac16,6 | 4.6% / 9.4% | 20.9GB / 22.4GB | 97.0% / 100.0% | N/A | 65% / 8% / +57% | 11.7W / 36.0W | 1.4W / 2.8W |
+| ASUSTeK COMPUTER INC. ASUS Vivobook Pro 15 N6506MV_N6506MV 1.0 | 27.1% / 29.9% | 10.6GB / 13.4GB | 12.0% / 35.0% | 65.0°C / 66.0°C | 72.0% / 100.0% / -28.0% | 18.1W / 41.9W | 18.1W / 41.9W |
+| Mac16,6 | 4.6% / 9.4% | 20.9GB / 22.4GB | 97.0% / 100.0% | N/A | 65% / 8% / +57.0% | 11.7W / 36.0W | 1.4W / 2.8W |
 
 *p50 = median, p95 = 95th percentile*
 
@@ -117,6 +119,7 @@ NoBS was built to understand how different devices — from everyday laptops and
 
 | Device | Model | Rows/sec | Time (s) | Embedding Dim | Batch Size |
 |------|------|------|------|------|------|
+| ASUSTeK COMPUTER INC. ASUS Vivobook Pro 15 N6506MV_N6506MV 1.0 | nomic-ai/modernbert-embed-base | 150.06 ± 0.39 | 19.99 ± 0.05 | 768 | 32 |
 | Mac16,6 | nomic-ai/modernbert-embed-base | 56.69 ± 0.29 | 52.92 ± 0.27 | 768 | 32 |
 
 ![Embeddings Performance Profile](results/plots/embeddings_performance.png)
@@ -133,12 +136,14 @@ NoBS was built to understand how different devices — from everyday laptops and
 
 | Device | Model | E2E TPS | TTFT (s) | TG (s) | E2E Latency (s) | Input Tokens | Output Tokens |
 |------|------|------|------|------|------|------|------|
+| ASUSTeK COMPUTER INC. ASUS Vivobook Pro 15 N6506MV_N6506MV 1.0 | openai/gpt-oss-20b | 13.10 ± 0.94 | 3.64 ± 0.51 | 1.67 ± 0.09 | 7.60 ± 1.19 | 1728 | 3978 |
 | Mac16,6 | openai/gpt-oss-20b | 70.83 ± 1.61 | 0.75 ± 0.01 | 0.23 ± 0.00 | 1.02 ± 0.02 | 1728 | 3968 |
 
 **OLLAMA**
 
 | Device | Model | E2E TPS | TTFT (s) | TG (s) | E2E Latency (s) | Input Tokens | Output Tokens |
 |------|------|------|------|------|------|------|------|
+| ASUSTeK COMPUTER INC. ASUS Vivobook Pro 15 N6506MV_N6506MV 1.0 | gpt-oss:20b | 13.11 ± 0.35 | 21.03 ± 0.97 | 2.47 ± 0.12 | 30.22 ± 1.68 | 1728 | 10036 |
 | Mac16,6 | gpt-oss:20b | 64.21 ± 0.20 | 8.83 ± 0.05 | 0.32 ± 0.00 | 15.99 ± 0.05 | 1728 | 12159 |
 
 ![LLM TTFT vs Input Tokens](results/plots/llm_ttft_vs_input_tokens.png)
@@ -169,12 +174,14 @@ NoBS was built to understand how different devices — from everyday laptops and
 
 | Device | Model | E2E TPS | TTFT (s) | TG (s) | E2E Latency (s) | Input Tokens | Output Tokens |
 |------|------|------|------|------|------|------|------|
+| ASUSTeK COMPUTER INC. ASUS Vivobook Pro 15 N6506MV_N6506MV 1.0 | qwen/qwen3-vl-8b | 20.20 ± 0.06 | 0.79 ± 0.06 | 24.75 ± 0.07 | 25.58 ± 0.10 | 290 | 5128 |
 | Mac16,6 | qwen/qwen3-vl-8b | 54.27 ± 1.66 | 1.55 ± 0.06 | 9.04 ± 0.43 | 10.57 ± 0.45 | 310 | 6043 |
 
 **OLLAMA**
 
 | Device | Model | E2E TPS | TTFT (s) | TG (s) | E2E Latency (s) | Input Tokens | Output Tokens |
 |------|------|------|------|------|------|------|------|
+| ASUSTeK COMPUTER INC. ASUS Vivobook Pro 15 N6506MV_N6506MV 1.0 | qwen3-vl:8b | 12.00 ± 0.19 | 64.86 ± 4.15 | 66.52 ± 0.54 | 127.01 ± 3.20 | 1814 | 14636 |
 | Mac16,6 | qwen3-vl:8b | 46.47 ± 0.52 | 16.86 ± 0.21 | 17.17 ± 0.17 | 33.69 ± 0.54 | 1814 | 15516 |
 
 ![VLM TTFT vs Input Tokens](results/plots/vlm_ttft_vs_input_tokens.png)

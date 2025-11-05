@@ -151,8 +151,8 @@ class PowerMetricsExtractor:
             Tuple of (p50, p95) GPU temperature in Celsius
         """
         return (
-            power.get("gpu_temp_c_p50", "N/A"),
-            power.get("gpu_temp_c_p95", "N/A"),
+            power.get("gpu_temp_celsius_p50", "N/A"),
+            power.get("gpu_temp_celsius_p95", "N/A"),
         )
 
     @staticmethod
@@ -181,10 +181,16 @@ class PowerMetricsExtractor:
         Returns:
             Tuple of (p50, p95) GPU power in watts
         """
-        return (
-            power.get("gpu_power_watts_p50", "N/A"),
-            power.get("gpu_power_watts_p95", "N/A"),
-        )
+        # Try dedicated GPU power first, fall back to system power if not available
+        gpu_p50 = power.get("gpu_power_watts_p50")
+        gpu_p95 = power.get("gpu_power_watts_p95")
+
+        if gpu_p50 is None or gpu_p95 is None:
+            # Fall back to system power when dedicated GPU power is not available
+            gpu_p50 = power.get("system_watts_p50", "N/A")
+            gpu_p95 = power.get("system_watts_p95", "N/A")
+
+        return (gpu_p50, gpu_p95)
 
     @staticmethod
     def get_cpu_power_metrics(power: dict[str, Any]) -> tuple[Any, Any]:
@@ -196,10 +202,16 @@ class PowerMetricsExtractor:
         Returns:
             Tuple of (p50, p95) CPU power in watts
         """
-        return (
-            power.get("cpu_power_watts_p50", "N/A"),
-            power.get("cpu_power_watts_p95", "N/A"),
-        )
+        # Try dedicated CPU power first, fall back to system power if not available
+        cpu_p50 = power.get("cpu_power_watts_p50")
+        cpu_p95 = power.get("cpu_power_watts_p95")
+
+        if cpu_p50 is None or cpu_p95 is None:
+            # Fall back to system power when dedicated CPU power is not available
+            cpu_p50 = power.get("system_watts_p50", "N/A")
+            cpu_p95 = power.get("system_watts_p95", "N/A")
+
+        return (cpu_p50, cpu_p95)
 
 
 class ModelMetricsExtractor:

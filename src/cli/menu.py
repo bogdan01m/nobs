@@ -78,13 +78,17 @@ def select_benchmarks(device_info: dict) -> dict:
         menu_items.append("VLM - Ollama (unavailable - CLI not found)")
         item_values.append("vlm_ollama_disabled")
 
-    # Power Metrics - only for macOS
+    # Power Metrics - available for macOS and Linux with NVIDIA GPUs
     if is_macos:
         menu_items.append("Power Metrics (macOS)")
         item_values.append("power_metrics")
         preselected_indices.append(len(menu_items) - 1)
+    elif device_info.get("device") == "cuda":
+        menu_items.append("Power Metrics (Linux + NVIDIA)")
+        item_values.append("power_metrics")
+        preselected_indices.append(len(menu_items) - 1)
     else:
-        menu_items.append("Power Metrics (macOS only)")
+        menu_items.append("Power Metrics (macOS/Linux+NVIDIA only)")
         item_values.append("power_metrics_disabled")
 
     # Show interactive menu

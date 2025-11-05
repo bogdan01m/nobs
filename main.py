@@ -41,9 +41,12 @@ def main():
 
     use_power_metrics = benchmark_config.get("power_metrics", False)
 
+    # Determine if we should ask about sudo powermetrics (only on macOS)
+    ask_sudo = use_power_metrics and device_info.get("platform") == "Darwin"
+
     with PowerMonitor(
         interval=1.0,
-        ask_user=use_power_metrics,  # Only ask about sudo if power metrics enabled
+        ask_user=ask_sudo,  # Only ask about sudo on macOS
     ) as pm:
         all_task_results = run_all_benchmarks(benchmark_config, device_info)
 

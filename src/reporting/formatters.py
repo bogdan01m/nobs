@@ -148,4 +148,4 @@ def format_battery_info(start: Any, end: Any, delta: Any) -> str:
     """
     if start == "N/A" or end == "N/A" or delta == "N/A":
         return "N/A"
-    return f"{start}% / {end}% / {delta:+d}%"
+    return f"{start}% / {end}% / {delta:+.1f}%"

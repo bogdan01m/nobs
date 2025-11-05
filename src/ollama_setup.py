@@ -92,7 +92,7 @@ def run_model(model_name: str):
             stdout=subprocess.DEVNULL,
             stderr=subprocess.DEVNULL,
         )
-        time.sleep(5)  # Даем модели время на загрузку
+        time.sleep(60)  # Даем модели время на загрузку (больше для NVIDIA)
 
         if is_model_running(model_name):
             print(f"✓ Model {model_name} loaded successfully")
