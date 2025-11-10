@@ -66,8 +66,10 @@ The `MLX` backend makes the benchmark harder to maintain, but it provides a more
 
 ### Requirements
 
-Laperf is compatible with **Linux**, **macOS**, and **Windows**.
-For embedding tasks, **8 GB of RAM** is usually enough.
+La Perf is compatible with **Linux**, **macOS**, and **Windows**.
+For embedding tasks, **8 GB of RAM** is usually sufficient.
+However for all tasks, it is **recommended to have at least 16 GB**, **18 GB** is better, and **24 GB or more** provides the best performance and reduces swap usage.
+
 It’s designed to run anywhere the **`uv` package manager** is installed.
 
 It’s recommended to use a GPU from **NVIDIA**, **AMD**, **Intel**, or **Apple**, since AI workloads run significantly faster on GPUs.
