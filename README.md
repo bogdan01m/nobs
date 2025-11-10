@@ -5,7 +5,8 @@
 [![MPS](https://img.shields.io/badge/MPS-Optimized-000000?style=flat&logo=apple&logoColor=white)](https://developer.apple.com/metal/)
 [![MLX](https://img.shields.io/badge/MLX-Accelerated-FF6B35?style=flat&logo=apple&logoColor=white)](https://github.com/ml-explore/mlx)
 [![AI Performance](https://img.shields.io/badge/AI-Performance-FF6B6B?style=flat&logo=tensorflow&logoColor=white)](https://github.com/bogdanminko/nobs)
-[![Open Source](https://img.shields.io/badge/Open%20Source-Benchmark-2ECC71?style=flat&logo=github&logoColor=white)](https://github.com/bogdanminko/nobs)
+[![Documentation](https://img.shields.io/badge/Documentation-GitHub%20Pages-2ECC71?style=flat&logo=github&logoColor=white)](https://bogdanminko.github.io/laperf/)
+
 ### La Perf — a local AI performance benchmark
 for comparing AI performance across different devices.
 
@@ -15,6 +16,9 @@ for comparing AI performance across different devices.
 The goal of this project is to create an all-in-one source of information you need **before buying your next laptop or PC for local AI tasks**.
 
 It’s designed for **AI/ML engineers** who prefer to run workloads locally — and for **AI enthusiasts** who want to understand real-world device performance.
+
+> **See full benchmark results here:**
+> [Laperf Results](https://bogdanminko.github.io/laperf/results.html)
 
 ## Table of Contents
 
