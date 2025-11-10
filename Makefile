@@ -1,4 +1,4 @@
-.PHONY: all generate format lint clean help
+.PHONY: all generate format lint clean docs docs-serve docs-build help
 
 # Default target - generate results only
 all: generate
@@ -32,12 +32,35 @@ clean:
 	@find . -type d -name ".pytest_cache" -exec rm -rf {} + 2>/dev/null || true
 	@find . -type d -name ".ruff_cache" -exec rm -rf {} + 2>/dev/null || true
 
+# Serve documentation locally
+docs-serve:
+	@echo "📚 Starting documentation server..."
+	@echo "📊 Copying plot files..."
+	@rm -rf docs/plots && mkdir -p docs/plots
+	@cp results/plots/*.png docs/plots/ 2>/dev/null || true
+	@uv run --group docs mkdocs serve --watch-theme --livereload
+
+# Build documentation site
+docs-build:
+	@echo "📚 Building documentation site..."
+	@echo "📊 Copying plot files..."
+	@rm -rf docs/plots && mkdir -p docs/plots
+	@cp results/plots/*.png docs/plots/ 2>/dev/null || true
+	@uv run --group docs mkdocs build
+
+# Alias for docs-serve
+docs: docs-serve
+
 # Show available commands
 help:
 	@echo "Available commands:"
-	@echo "  make          - Generate benchmark results tables (default)"
-	@echo "  make generate - Generate benchmark results tables"
-	@echo "  make format   - Run pre-commit hooks on all files"
-	@echo "  make lint     - Run ruff linter only"
-	@echo "  make clean    - Clean Python cache files"
-	@echo "  make help     - Show this help message"
+	@echo "  make             - Generate benchmark results tables (default)"
+	@echo "  make bench       - Run benchmarks"
+	@echo "  make generate    - Generate benchmark results tables"
+	@echo "  make format      - Run pre-commit hooks on all files"
+	@echo "  make lint        - Run ruff linter only"
+	@echo "  make clean       - Clean Python cache files"
+	@echo "  make docs        - Serve documentation locally"
+	@echo "  make docs-serve  - Serve documentation locally"
+	@echo "  make docs-build  - Build documentation site"
+	@echo "  make help        - Show this help message"

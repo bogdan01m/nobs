@@ -1,0 +1,160 @@
+site_name: La Perf
+site_description: Local AI Performance Benchmark - Compare AI performance across different devices
+site_url: https://bogdanminko.github.io/laperf/
+repo_url: https://github.com/bogdanminko/laperf
+repo_name: bogdanminko/laperf
+edit_uri: edit/main/docs/
+docs_dir: docs
+site_dir: site
+use_directory_urls: true
+
+# Dev server configuration for auto-reload
+dev_addr: 127.0.0.1:8000
+watch:
+  - docs/
+  - mkdocs.yml
+  - docs/stylesheets/
+
+theme:
+  name: material
+  language: en
+  palette:
+    # Dark mode (default)
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: indigo
+      accent: cyan
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+    # Light mode
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: indigo
+      accent: cyan
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+
+  features:
+    - navigation.instant       # Fast page loading
+    - navigation.instant.prefetch
+    - navigation.instant.progress
+    - navigation.tracking      # URL updates with scroll
+    - navigation.tabs          # Top-level sections in tabs
+    - navigation.tabs.sticky   # Tabs always visible
+    - navigation.sections      # Section titles in sidebar
+    - navigation.expand        # Expand sections by default
+    - navigation.indexes       # Section index pages
+    - navigation.top           # Back to top button
+    - navigation.footer        # Footer navigation
+    - search.suggest           # Search suggestions
+    - search.highlight         # Highlight search terms
+    - search.share             # Share search results
+    - toc.follow               # TOC follows scroll
+    - content.code.copy        # Copy code button
+    - content.code.annotate    # Code annotations
+    - content.tabs.link        # Link content tabs
+
+  icon:
+    repo: fontawesome/brands/github
+    admonition:
+      note: octicons/tag-16
+      abstract: octicons/checklist-16
+      info: octicons/info-16
+      tip: octicons/squirrel-16
+      success: octicons/check-16
+      question: octicons/question-16
+      warning: octicons/alert-16
+      failure: octicons/x-circle-16
+      danger: octicons/zap-16
+      bug: octicons/bug-16
+      example: octicons/beaker-16
+      quote: octicons/quote-16
+
+  font:
+    text: Inter
+    code: Roboto Mono
+
+plugins:
+  - search:
+      separator: '[\s\-,:!=\[\]()"`/]+|\.(?!\d)|&[lg]t;|(?!\b)(?=[A-Z][a-z])'
+  - offline  # Offline support
+
+markdown_extensions:
+  # Python Markdown
+  - abbr
+  - admonition
+  - attr_list
+  - def_list
+  - footnotes
+  - md_in_html
+  - toc:
+      permalink: true
+      toc_depth: 3
+
+  # PyMdown Extensions
+  - pymdownx.arithmatex:
+      generic: true
+  - pymdownx.betterem:
+      smart_enable: all
+  - pymdownx.caret
+  - pymdownx.details
+  - pymdownx.emoji:
+      emoji_index: !!python/name:material.extensions.emoji.twemoji
+      emoji_generator: !!python/name:material.extensions.emoji.to_svg
+  - pymdownx.highlight:
+      anchor_linenums: true
+      line_spans: __span
+      pygments_lang_class: true
+  - pymdownx.inlinehilite
+  - pymdownx.keys
+  - pymdownx.mark
+  - pymdownx.smartsymbols
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
+  - pymdownx.tabbed:
+      alternate_style: true
+  - pymdownx.tasklist:
+      custom_checkbox: true
+  - pymdownx.tilde
+
+extra:
+  social:
+    - icon: fontawesome/brands/github
+      link: https://github.com/bogdanminko/laperf
+    - icon: fontawesome/brands/python
+      link: https://pypi.org/project/laperf/
+
+  analytics:
+    feedback:
+      title: Was this page helpful?
+      ratings:
+        - icon: material/emoticon-happy-outline
+          name: This page was helpful
+          data: 1
+          note: >-
+            Thanks for your feedback!
+        - icon: material/emoticon-sad-outline
+          name: This page could be improved
+          data: 0
+          note: >-
+            Thanks for your feedback! Help us improve by opening an issue.
+
+extra_css:
+  - stylesheets/extra.css
+
+nav:
+  - Home: index.md
+  - Getting Started:
+    - Quick Start: getting-started/quickstart.md
+    - Installation: getting-started/installation.md
+    - Requirements: getting-started/requirements.md
+  - Results: results.md
+  - Metrics: metrics.md
+  - Contributing: contributing.md
+
+copyright: Copyright &copy; 2025 La Perf Contributors

@@ -1,0 +1,41 @@
+/* FastAPI/Pydantic-style dark theme customization */
+
+:root {
+  --md-primary-fg-color: #4051b5;
+  --md-accent-fg-color: #00bcd4;
+}
+
+/* Dark mode adjustments */
+[data-md-color-scheme="slate"] {
+  --md-primary-fg-color: #5c6bc0;
+  --md-accent-fg-color: #00e5ff;
+  --md-default-bg-color: #0d1117;
+  --md-default-fg-color: #c9d1d9;
+  --md-code-bg-color: #161b22;
+  --md-code-fg-color: #c9d1d9;
+}
+
+/* Code blocks */
+.highlight pre {
+  border-radius: 8px;
+}
+
+/* Admonitions */
+.admonition {
+  border-radius: 8px;
+}
+
+/* Cards styling */
+.grid.cards {
+  margin-top: 1.5rem;
+}
+
+.grid.cards > * {
+  border-radius: 12px;
+}
+
+/* Tables */
+table {
+  border-radius: 8px;
+  overflow: hidden;
+}

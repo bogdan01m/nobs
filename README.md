@@ -63,44 +63,19 @@ The `MLX` backend makes the benchmark harder to maintain, but it provides a more
 ### Requirements
 
 Laperf is compatible with **Linux**, **macOS**, and **Windows**.
-For embedding tasks, **8 GB of RAM** is usually enough — sometimes even **4 GB** will work.
+For embedding tasks, **8 GB of RAM** is usually enough.
 It’s designed to run anywhere the **`uv` package manager** is installed.
-
-For LLM or VLM benchmarks, make sure you have **at least 16 GB of RAM** available.
-
-Please note that this project is still in its early stages — some features like **power metrics** and **GPU power tracking** may not yet work on all devices.
 
 It’s recommended to use a GPU from **NVIDIA**, **AMD**, **Intel**, or **Apple**, since AI workloads run significantly faster on GPUs.
 Make sure to enable **full GPU offload** in tools like **LM Studio** or **Ollama** for optimal performance.
 
-For embedding tasks, Laperf **automatically detects your available device** and runs computations accordingly.
-
----
-
-## Philosophy
-
-> *"We don’t measure synthetic FLOPS. We measure how your GPU cries in real life."*
-
-NoBS was built to understand how different devices — from everyday laptops and PCs to large inference giants — actually perform on real AI tasks.
+For embedding tasks, La Perf **automatically detects your available device** and runs computations accordingly.
 
 ---
 
 ## Benchmark Results
 
 > **Last Updated**: 2025-11-10
-### 🏆 Overall Ranking
-
-| Rank | Device | Platform | CPU | RAM | GPU | VRAM | Embeddings, sts (s) | LLM, lms (s) | LLM, ollama (s) | VLM, lms (s) | VLM, ollama (s) | Total Time (s) |
-|------|------|------|------|------|------|------|------|------|------|------|------|------|
-| 🥇 1 | Mac16,6 | 🍏 macOS | Apple M4 Max (14) | 36 GB | Apple M4 Max (32 cores) | shared with system RAM | 53.76 | 1.28 | 4.64 | 11.24 | 33.09 | **104.01** |
-| 🥈 2 | ASUSTeK COMPUTER ASUS Vivobook Pro N6506MV | 🐧 Linux | Intel(R) Core(TM) Ultra 9 185H (16) | 23 GB | NVIDIA GeForce RTX 4060 Laptop GPU | 8 GB | 18.50 | 6.15 | 59.90 | 23.03 | 109.44 | **217.02** |
-
-*sts - sentence transformers*
-
-*lms - lm stuido*
-
-*ollama - ollama*
-
 
 
 ### ⚡ Power Metrics
@@ -118,14 +93,12 @@ NoBS was built to understand how different devices — from everyday laptops and
 
 #### Text Embeddings (3000 IMDB samples)
 
+_RPS = Rows Per Second — number of text samples encoded per second._
+
 | Device | Model | RPS (mean ± std) | Time (s) (mean ± std) | Embedding Dim | Batch Size |
 |------|------|------|------|------|------|
 | ASUSTeK COMPUTER ASUS Vivobook Pro N6506MV | nomic-ai/modernbert-embed-base | 162.17 ± 0.61 | 18.50 ± 0.07 | 768 | 32 |
 | Mac16,6 | nomic-ai/modernbert-embed-base | 55.81 ± 0.75 | 53.76 ± 0.72 | 768 | 32 |
-
-![Embeddings Performance Profile](results/plots/embeddings_performance.png)
-
-*Throughput comparison for different embedding models across hardware. Higher values indicate better performance.*
 
 
 ### LLMs
@@ -147,24 +120,6 @@ NoBS was built to understand how different devices — from everyday laptops and
 | ASUSTeK COMPUTER ASUS Vivobook Pro N6506MV | gpt-oss:20b | 16.03 ± 0.04 | 16.43 ± 0.02 | 35.68 ± 13.48 | 158.11 ± 0.38 | 4.53 ± 0.05 | 74.99 ± 1.27 | 59.90 ± 0.02 | 199.34 ± 0.39 | 1728 | 13563 |
 | Mac16,6 | gpt-oss:20b | 61.03 ± 4.29 | 63.50 ± 6.07 | 4.18 ± 0.31 | 56.83 ± 0.82 | 0.46 ± 0.04 | 25.17 ± 0.33 | 4.64 ± 0.35 | 79.54 ± 0.91 | 1728 | 12939 |
 
-![LLM TTFT vs Input Tokens](results/plots/llm_ttft_vs_input_tokens.png)
-
-*Time To First Token across prompt lengths. Lower values mean faster first responses.*
-
-
-![LLM Generation Time vs Output Tokens](results/plots/llm_tg_vs_output_tokens.png)
-
-*Generation time growth relative to output length. Lower values reflect faster completions.*
-
-![LLM E2E Latency Performance](results/plots/llm_latency.png)
-
-*End-to-End Latency P50 - Lower is better. Measures full request-to-response time.*
-
-
-![LLM Throughput Performance](results/plots/llm_tps.png)
-
-*Token Generation per second (TPS) - Higher is better. Measures token generation speed.*
-
 
 ### VLMs
 
@@ -185,28 +140,9 @@ NoBS was built to understand how different devices — from everyday laptops and
 | ASUSTeK COMPUTER ASUS Vivobook Pro N6506MV | qwen3-vl:8b | 13.60 ± 0.08 | 14.12 ± 0.06 | 54.82 ± 5.26 | 72.83 ± 0.45 | 58.42 ± 1.03 | 83.23 ± 0.56 | 109.44 ± 6.02 | 152.33 ± 1.20 | 1814 | 14636 |
 | Mac16,6 | qwen3-vl:8b | 47.78 ± 4.93 | 49.61 ± 6.79 | 15.29 ± 1.24 | 27.64 ± 0.60 | 16.28 ± 0.91 | 19.59 ± 1.52 | 33.09 ± 3.44 | 44.33 ± 0.41 | 1814 | 15490 |
 
-![VLM TTFT vs Input Tokens](results/plots/vlm_ttft_vs_input_tokens.png)
-
-*TTFT behaviour for multimodal prompts. Lower values mean faster first visual-token outputs.*
-
-
-![VLM Generation Time vs Output Tokens](results/plots/vlm_tg_vs_output_tokens.png)
-
-*Generation time vs output token count for multimodal responses. Lower values are faster.*
-
-![VLM E2E Latency Performance](results/plots/vlm_latency.png)
-
-*End-to-End Latency P50 - Lower is better. Measures full request-to-response time.*
-
-
-![VLM Throughput Performance](results/plots/vlm_tps.png)
-
-*Token Generation per second (TPS) - Higher is better. Measures token generation speed.*
-
 
 ---
-_All metrics are shown as median ± standard deviation across 3 runs. Lower times are better (faster performance)._
-
+_All metrics are shown as mean ± standard deviation across 3 runs.
 ## ⚡ Quick Start
 
 ### Prerequisites
@@ -258,102 +194,21 @@ uv run python -m src.tasks.llms.runner
 
 ---
 
-## 🤝 Contributing
+## Citation
 
-We welcome contributions! Whether it's adding new benchmarks, supporting new models, or submitting your hardware results.
+If you use **LaPerf** in your research or reports, please cite it as follows:
 
-### Development Setup
+> Minko B. (2025). *LaPerf: Local AI Performance Benchmark Suite.*
+> GitHub repository. Available at: https://github.com/bogdan01m/laperf
+> Licensed under the Apache License, Version 2.0.
 
-1. **Fork and clone the repository**
-   ```sh
-   git clone https://github.com/YOUR_USERNAME/laperf.git
-   cd laperf
-   ```
-
-2. **Install dependencies including dev tools**
-   ```sh
-   uv sync --group quality --group dev
-   ```
-
-3. **Install pre-commit hooks**
-   ```sh
-   pre-commit install
-   ```
-
-   This sets up automatic code quality checks that run before each commit:
-   - **ruff** — Fast Python linter and formatter
-   - **mypy** — Static type checking
-   - **bandit** — Security vulnerability scanner
-   - Standard checks (trailing whitespace, YAML syntax, etc.)
-
-### Making Changes
-
-1. **Create a new branch**
-   ```sh
-   git checkout -b feature/your-feature-name
-   ```
-
-2. **Make your changes**
-   - Write code following the existing patterns
-   - Add type hints where applicable
-   - Update documentation if needed
-
-3. **Test your changes**
-   ```sh
-   # Run benchmarks to ensure they work
-   uv run python main.py
-
-   # Update benchmark results tables (if you modified results)
-   make
-
-   # Run code quality checks manually (optional - pre-commit will run them automatically)
-   make format
-   ```
-
-   **Available Makefile commands:**
-   - `make` — Generate benchmark results tables (default)
-   - `make generate` — Generate benchmark results tables
-   - `make format` — Run pre-commit hooks on all files
-   - `make lint` — Run ruff linter only
-   - `make clean` — Clean Python cache files
-   - `make help` — Show all available commands
-
-4. **Commit your changes**
-   ```sh
-   git add .
-   git commit -m "feat: your descriptive commit message"
-   ```
-
-   Pre-commit hooks will automatically:
-   - Format your code
-   - Check for type errors
-   - Scan for security issues
-   - Fix common issues (trailing whitespace, etc.)
-
-   If any check fails, fix the issues and commit again.
-
-5. **Push and create a Pull Request**
-   ```sh
-   git push origin feature/your-feature-name
-   ```
-
-### Code Quality Standards
-
-All contributions must pass:
-- ✅ **Ruff** linting and formatting
-- ✅ **Mypy** type checking
-- ✅ **Bandit** security checks
-
-These are enforced automatically via pre-commit hooks.
-
-### Adding New Benchmarks
-
-See [CLAUDE.md](CLAUDE.md) for detailed instructions on:
-- Adding new models to existing benchmarks
-- Creating new benchmark categories
-- Data loading patterns
-- Memory management best practices
-
-Tip: Add CLAUDE.md when working with your AI coding assistant — it helps provide full project context.
-
----
+**BibTeX:**
+```bibtex
+@software{minko2025laperf,
+  author       = {Bogdan Minko},
+  title        = {LaPerf: Local AI Performance Benchmark Suite},
+  year         = {2025},
+  url          = {https://github.com/bogdan01m/laperf},
+  license      = {Apache-2.0},
+  note         = {GitHub repository}
+}

@@ -19,31 +19,50 @@ from .visualizations import generate_token_metric_visualizations
 class ResultsSectionGenerator:
     """Orchestrate generation of complete results section for README."""
 
-    def __init__(self, results_dir: Path = Path("results")):
+    def __init__(
+        self, results_dir: Path = Path("results"), plot_base_path: str = "results"
+    ):
         """Initialize with results directory.
 
         Args:
             results_dir: Directory containing benchmark result JSON files
+            plot_base_path: Base path for plot references in markdown (default: "results")
         """
         self.results_dir = results_dir
         self.results = load_results(results_dir)
+        self.plot_base_path = plot_base_path
 
-    def generate(self) -> str:
-        """Generate complete results section for README.
+    def _plot_path(self, filename: str) -> str:
+        """Generate plot path with proper base path handling.
+
+        Args:
+            filename: Plot filename (e.g., "embeddings_performance.png")
 
         Returns:
-            Complete markdown section with all tables and plots
+            Full path to plot file
+        """
+        if self.plot_base_path:
+            return f"{self.plot_base_path}/plots/{filename}"
+        return f"plots/{filename}"
+
+    def generate(self, include_plots: bool = True) -> str:
+        """Generate complete results section.
+
+        Args:
+            include_plots: Whether to include plots/visualizations
+
+        Returns:
+            Complete markdown section with tables and optionally plots
         """
         if not self.results:
             return self._empty_results_message()
 
         sections = [
             self._generate_header(),
-            self._generate_summary(),
             self._generate_power_metrics(),
-            self._generate_embeddings(),
-            self._generate_llms(),
-            self._generate_vlms(),
+            self._generate_embeddings(include_plots=include_plots),
+            self._generate_llms(include_plots=include_plots),
+            self._generate_vlms(include_plots=include_plots),
             self._generate_footer(),
         ]
 
@@ -66,11 +85,7 @@ class ResultsSectionGenerator:
         latest = max(self.results, key=lambda x: x["timestamp"])
         timestamp = latest["timestamp"].split("T")[0]
 
-        return (
-            "## Benchmark Results\n\n"
-            f"> **Last Updated**: {timestamp}\n"
-            "### 🏆 Overall Ranking\n"
-        )
+        return "## Benchmark Results\n\n" f"> **Last Updated**: {timestamp}\n"
 
     def _generate_summary(self) -> str:
         """Generate summary ranking table.
@@ -91,8 +106,11 @@ class ResultsSectionGenerator:
             return "\n" + power_section
         return ""
 
-    def _generate_embeddings(self) -> str:
-        """Generate embeddings section with table and plots.
+    def _generate_embeddings(self, include_plots: bool = True) -> str:
+        """Generate embeddings section with table and optionally plots.
+
+        Args:
+            include_plots: Whether to include performance plots
 
         Returns:
             Embeddings section markdown or empty string
@@ -103,28 +121,32 @@ class ResultsSectionGenerator:
 
         sections = ["\n### Embeddings\n", table]
 
-        # Add embeddings performance plot
-        has_embeddings = any(
-            any(t["task"] == "embeddings" for t in r["tasks"]) for r in self.results
-        )
+        # Add embeddings performance plot if requested
+        if include_plots:
+            has_embeddings = any(
+                any(t["task"] == "embeddings" for t in r["tasks"]) for r in self.results
+            )
 
-        if has_embeddings:
-            try:
-                plot_embeddings_performance(self.results_dir)
-                sections.append(
-                    "![Embeddings Performance Profile](results/plots/embeddings_performance.png)\n"
-                )
-                sections.append(
-                    "*Throughput comparison for different embedding models across hardware. "
-                    "Higher values indicate better performance.*\n"
-                )
-            except Exception as e:
-                print(f"⚠️  Failed to generate embeddings plot: {e}")
+            if has_embeddings:
+                try:
+                    plot_embeddings_performance(self.results_dir)
+                    sections.append(
+                        f"![Embeddings Performance Profile]({self._plot_path('embeddings_performance.png')})\n"
+                    )
+                    sections.append(
+                        "*Throughput comparison for different embedding models across hardware. "
+                        "Higher values indicate better performance.*\n"
+                    )
+                except Exception as e:
+                    print(f"⚠️  Failed to generate embeddings plot: {e}")
 
         return "\n".join(sections)
 
-    def _generate_llms(self) -> str:
-        """Generate LLMs section with table and plots.
+    def _generate_llms(self, include_plots: bool = True) -> str:
+        """Generate LLMs section with table and optionally plots.
+
+        Args:
+            include_plots: Whether to include performance plots
 
         Returns:
             LLMs section markdown or empty string
@@ -135,53 +157,57 @@ class ResultsSectionGenerator:
 
         sections = ["\n### LLMs\n", table]
 
-        # Add token metric plots
-        has_llms = any(
-            any(t["task"] == "llms" for t in r["tasks"]) for r in self.results
-        )
+        # Add token metric plots if requested
+        if include_plots:
+            has_llms = any(
+                any(t["task"] == "llms" for t in r["tasks"]) for r in self.results
+            )
 
-        if has_llms:
-            token_plots = generate_token_metric_visualizations(self.results_dir)
-            llm_plots = token_plots.get("llms")
+            if has_llms:
+                token_plots = generate_token_metric_visualizations(self.results_dir)
+                llm_plots = token_plots.get("llms")
 
-            if llm_plots:
-                sections.append(
-                    f"![LLM TTFT vs Input Tokens]({llm_plots['ttft'].as_posix()})\n"
-                )
-                sections.append(
-                    "*Time To First Token across prompt lengths. Lower values mean faster first responses.*\n\n"
-                )
-                sections.append(
-                    f"![LLM Generation Time vs Output Tokens]({llm_plots['tg'].as_posix()})\n"
-                )
-                sections.append(
-                    "*Generation time growth relative to output length. Lower values reflect faster completions.*\n"
-                )
+                if llm_plots:
+                    sections.append(
+                        f"![LLM TTFT vs Input Tokens]({self._plot_path('llm_ttft_vs_input_tokens.png')})\n"
+                    )
+                    sections.append(
+                        "*Time To First Token across prompt lengths. Lower values mean faster first responses.*\n\n"
+                    )
+                    sections.append(
+                        f"![LLM Generation Time vs Output Tokens]({self._plot_path('llm_tg_vs_output_tokens.png')})\n"
+                    )
+                    sections.append(
+                        "*Generation time growth relative to output length. Lower values reflect faster completions.*\n"
+                    )
 
-            # Add performance plots
-            try:
-                plot_llm_performance(self.results_dir)
-                sections.append(
-                    "![LLM E2E Latency Performance](results/plots/llm_latency.png)\n"
-                )
-                sections.append(
-                    "*End-to-End Latency P50 - Lower is better. "
-                    "Measures full request-to-response time.*\n\n"
-                )
-                sections.append(
-                    "![LLM Throughput Performance](results/plots/llm_tps.png)\n"
-                )
-                sections.append(
-                    "*Token Generation per second (TPS) - Higher is better. "
-                    "Measures token generation speed.*\n"
-                )
-            except Exception as e:
-                print(f"⚠️  Failed to generate LLM plots: {e}")
+                # Add performance plots
+                try:
+                    plot_llm_performance(self.results_dir)
+                    sections.append(
+                        f"![LLM E2E Latency Performance]({self._plot_path('llm_latency.png')})\n"
+                    )
+                    sections.append(
+                        "*End-to-End Latency P50 - Lower is better. "
+                        "Measures full request-to-response time.*\n\n"
+                    )
+                    sections.append(
+                        f"![LLM Throughput Performance]({self._plot_path('llm_tps.png')})\n"
+                    )
+                    sections.append(
+                        "*Token Generation per second (TPS) - Higher is better. "
+                        "Measures token generation speed.*\n"
+                    )
+                except Exception as e:
+                    print(f"⚠️  Failed to generate LLM plots: {e}")
 
         return "\n".join(sections)
 
-    def _generate_vlms(self) -> str:
-        """Generate VLMs section with table and plots.
+    def _generate_vlms(self, include_plots: bool = True) -> str:
+        """Generate VLMs section with table and optionally plots.
+
+        Args:
+            include_plots: Whether to include performance plots
 
         Returns:
             VLMs section markdown or empty string
@@ -192,48 +218,49 @@ class ResultsSectionGenerator:
 
         sections = ["\n### VLMs\n", table]
 
-        # Add token metric plots
-        has_vlms = any(
-            any(t["task"] == "vlms" for t in r["tasks"]) for r in self.results
-        )
+        # Add token metric plots if requested
+        if include_plots:
+            has_vlms = any(
+                any(t["task"] == "vlms" for t in r["tasks"]) for r in self.results
+            )
 
-        if has_vlms:
-            token_plots = generate_token_metric_visualizations(self.results_dir)
-            vlm_plots = token_plots.get("vlms")
+            if has_vlms:
+                token_plots = generate_token_metric_visualizations(self.results_dir)
+                vlm_plots = token_plots.get("vlms")
 
-            if vlm_plots:
-                sections.append(
-                    f"![VLM TTFT vs Input Tokens]({vlm_plots['ttft'].as_posix()})\n"
-                )
-                sections.append(
-                    "*TTFT behaviour for multimodal prompts. Lower values mean faster first visual-token outputs.*\n\n"
-                )
-                sections.append(
-                    f"![VLM Generation Time vs Output Tokens]({vlm_plots['tg'].as_posix()})\n"
-                )
-                sections.append(
-                    "*Generation time vs output token count for multimodal responses. Lower values are faster.*\n"
-                )
+                if vlm_plots:
+                    sections.append(
+                        f"![VLM TTFT vs Input Tokens]({self._plot_path('vlm_ttft_vs_input_tokens.png')})\n"
+                    )
+                    sections.append(
+                        "*TTFT behaviour for multimodal prompts. Lower values mean faster first visual-token outputs.*\n\n"
+                    )
+                    sections.append(
+                        f"![VLM Generation Time vs Output Tokens]({self._plot_path('vlm_tg_vs_output_tokens.png')})\n"
+                    )
+                    sections.append(
+                        "*Generation time vs output token count for multimodal responses. Lower values are faster.*\n"
+                    )
 
-            # Add performance plots
-            try:
-                plot_vlm_performance(self.results_dir)
-                sections.append(
-                    "![VLM E2E Latency Performance](results/plots/vlm_latency.png)\n"
-                )
-                sections.append(
-                    "*End-to-End Latency P50 - Lower is better. "
-                    "Measures full request-to-response time.*\n\n"
-                )
-                sections.append(
-                    "![VLM Throughput Performance](results/plots/vlm_tps.png)\n"
-                )
-                sections.append(
-                    "*Token Generation per second (TPS) - Higher is better. "
-                    "Measures token generation speed.*\n"
-                )
-            except Exception as e:
-                print(f"⚠️  Failed to generate VLM plots: {e}")
+                # Add performance plots
+                try:
+                    plot_vlm_performance(self.results_dir)
+                    sections.append(
+                        f"![VLM E2E Latency Performance]({self._plot_path('vlm_latency.png')})\n"
+                    )
+                    sections.append(
+                        "*End-to-End Latency P50 - Lower is better. "
+                        "Measures full request-to-response time.*\n\n"
+                    )
+                    sections.append(
+                        f"![VLM Throughput Performance]({self._plot_path('vlm_tps.png')})\n"
+                    )
+                    sections.append(
+                        "*Token Generation per second (TPS) - Higher is better. "
+                        "Measures token generation speed.*\n"
+                    )
+                except Exception as e:
+                    print(f"⚠️  Failed to generate VLM plots: {e}")
 
         return "\n".join(sections)
 
@@ -245,6 +272,5 @@ class ResultsSectionGenerator:
         """
         return (
             "\n---\n"
-            "_All metrics are shown as median ± standard deviation across 3 runs. "
-            "Lower times are better (faster performance)._\n"
+            "_All metrics are shown as mean ± standard deviation across 3 runs. "
         )

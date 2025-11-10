@@ -19,7 +19,10 @@ class EmbeddingsTableGenerator(BaseTableGenerator):
         if not models:
             return ""
 
-        lines = ["#### Text Embeddings (3000 IMDB samples)\n"]
+        lines = [
+            "#### Text Embeddings (3000 IMDB samples)\n",
+            "_RPS = Rows Per Second — number of text samples encoded per second._\n",
+        ]
         lines.extend(
             self._build_header(
                 [
