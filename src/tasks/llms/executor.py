@@ -1,6 +1,6 @@
 from .chat_stream import stream_with_results
 from src.system_info.memory_cleaner import clear_memory
-from statistics import median, stdev
+from src.utils.metrics import calculate_percentiles, calculate_mean_std
 from tqdm import tqdm
 
 
@@ -56,19 +56,29 @@ def run_single_model(
             }
         )
 
-    # Calculate median metrics for this run
-    median_latency = median(all_latencies)
-    median_ttft = median(all_ttft) if all_ttft else None
-    median_tg = median(all_tg) if all_tg else None
-    median_tokens_per_sec = median(all_tokens_per_sec) if all_tokens_per_sec else None
+    # Calculate percentiles (P25, P50, P75, P95) for this run according to docs/metrics.md
+    p25_lat, p50_lat, p75_lat, p95_lat = calculate_percentiles(all_latencies)
+    p25_ttft, p50_ttft, p75_ttft, p95_ttft = calculate_percentiles(all_ttft)
+    p25_tg, p50_tg, p75_tg, p95_tg = calculate_percentiles(all_tg)
+    p25_tps, p50_tps, p75_tps, p95_tps = calculate_percentiles(all_tokens_per_sec)
 
     return {
-        "median_latency_s": round(median_latency, 4),
-        "median_ttft_s": round(median_ttft, 4) if median_ttft else None,
-        "median_tg_s": round(median_tg, 4) if median_tg else None,
-        "median_tokens_per_sec": round(median_tokens_per_sec, 4)
-        if median_tokens_per_sec
-        else None,
+        "p25_latency_s": round(p25_lat, 4) if p25_lat is not None else None,
+        "p50_latency_s": round(p50_lat, 4) if p50_lat is not None else None,
+        "p75_latency_s": round(p75_lat, 4) if p75_lat is not None else None,
+        "p95_latency_s": round(p95_lat, 4) if p95_lat is not None else None,
+        "p25_ttft_s": round(p25_ttft, 4) if p25_ttft is not None else None,
+        "p50_ttft_s": round(p50_ttft, 4) if p50_ttft is not None else None,
+        "p75_ttft_s": round(p75_ttft, 4) if p75_ttft is not None else None,
+        "p95_ttft_s": round(p95_ttft, 4) if p95_ttft is not None else None,
+        "p25_tg_s": round(p25_tg, 4) if p25_tg is not None else None,
+        "p50_tg_s": round(p50_tg, 4) if p50_tg is not None else None,
+        "p75_tg_s": round(p75_tg, 4) if p75_tg is not None else None,
+        "p95_tg_s": round(p95_tg, 4) if p95_tg is not None else None,
+        "p25_tps": round(p25_tps, 4) if p25_tps is not None else None,
+        "p50_tps": round(p50_tps, 4) if p50_tps is not None else None,
+        "p75_tps": round(p75_tps, 4) if p75_tps is not None else None,
+        "p95_tps": round(p95_tps, 4) if p95_tps is not None else None,
         "total_input_tokens": total_input_tokens,
         "total_output_tokens": total_output_tokens,
         "num_prompts": len(prompts),
@@ -107,11 +117,13 @@ def run_model_with_repeats(
 
     # Collect metrics from all runs
     all_run_results = []
-    all_latencies = []
-    all_ttft = []
-    all_tg = []
-    all_tokens_per_sec = []
     all_prompt_details = []
+
+    # Collect percentile metrics across runs for mean ± std calculation
+    p25_latencies, p50_latencies, p75_latencies, p95_latencies = [], [], [], []
+    p25_ttfts, p50_ttfts, p75_ttfts, p95_ttfts = [], [], [], []
+    p25_tgs, p50_tgs, p75_tgs, p95_tgs = [], [], [], []
+    p25_tpss, p50_tpss, p75_tpss, p95_tpss = [], [], [], []
 
     for run_idx in range(num_runs):
         print(f"\n{'='*60}")
@@ -125,48 +137,90 @@ def run_model_with_repeats(
         all_run_results.append(
             {
                 "run": run_idx + 1,
-                "median_latency_s": result["median_latency_s"],
-                "median_ttft_s": result["median_ttft_s"],
-                "median_tg_s": result["median_tg_s"],
-                "median_tokens_per_sec": result["median_tokens_per_sec"],
+                "p25_latency_s": result["p25_latency_s"],
+                "p50_latency_s": result["p50_latency_s"],
+                "p75_latency_s": result["p75_latency_s"],
+                "p95_latency_s": result["p95_latency_s"],
+                "p25_ttft_s": result["p25_ttft_s"],
+                "p50_ttft_s": result["p50_ttft_s"],
+                "p75_ttft_s": result["p75_ttft_s"],
+                "p95_ttft_s": result["p95_ttft_s"],
+                "p25_tg_s": result["p25_tg_s"],
+                "p50_tg_s": result["p50_tg_s"],
+                "p75_tg_s": result["p75_tg_s"],
+                "p95_tg_s": result["p95_tg_s"],
+                "p25_tps": result["p25_tps"],
+                "p50_tps": result["p50_tps"],
+                "p75_tps": result["p75_tps"],
+                "p95_tps": result["p95_tps"],
                 "total_input_tokens": result["total_input_tokens"],
                 "total_output_tokens": result["total_output_tokens"],
                 "per_prompt_details": result["per_prompt_details"],
             }
         )
 
-        # Collect for overall median calculation
-        all_latencies.append(result["median_latency_s"])
-        if result["median_ttft_s"]:
-            all_ttft.append(result["median_ttft_s"])
-        if result["median_tg_s"]:
-            all_tg.append(result["median_tg_s"])
-        if result["median_tokens_per_sec"]:
-            all_tokens_per_sec.append(result["median_tokens_per_sec"])
+        # Collect percentiles from each run for cross-run statistics (docs/metrics.md)
+        p25_latencies.append(result["p25_latency_s"])
+        p50_latencies.append(result["p50_latency_s"])
+        p75_latencies.append(result["p75_latency_s"])
+        p95_latencies.append(result["p95_latency_s"])
+
+        if result["p25_ttft_s"]:
+            p25_ttfts.append(result["p25_ttft_s"])
+        if result["p50_ttft_s"]:
+            p50_ttfts.append(result["p50_ttft_s"])
+        if result["p75_ttft_s"]:
+            p75_ttfts.append(result["p75_ttft_s"])
+        if result["p95_ttft_s"]:
+            p95_ttfts.append(result["p95_ttft_s"])
+
+        if result["p25_tg_s"]:
+            p25_tgs.append(result["p25_tg_s"])
+        if result["p50_tg_s"]:
+            p50_tgs.append(result["p50_tg_s"])
+        if result["p75_tg_s"]:
+            p75_tgs.append(result["p75_tg_s"])
+        if result["p95_tg_s"]:
+            p95_tgs.append(result["p95_tg_s"])
+
+        if result["p25_tps"]:
+            p25_tpss.append(result["p25_tps"])
+        if result["p50_tps"]:
+            p50_tpss.append(result["p50_tps"])
+        if result["p75_tps"]:
+            p75_tpss.append(result["p75_tps"])
+        if result["p95_tps"]:
+            p95_tpss.append(result["p95_tps"])
 
         # Collect all prompt details from all runs
         all_prompt_details.extend(result["per_prompt_details"])
 
         clear_memory()
 
-    # Calculate overall median metrics and std deviation across all runs
-    final_median_latency = median(all_latencies)
-    final_std_latency = stdev(all_latencies) if len(all_latencies) > 1 else 0.0
+    # Calculate mean ± std for each percentile metric across runs (per docs/metrics.md)
+    # Latency metrics
+    mean_p25_lat, std_p25_lat = calculate_mean_std(p25_latencies)
+    mean_p50_lat, std_p50_lat = calculate_mean_std(p50_latencies)
+    mean_p75_lat, std_p75_lat = calculate_mean_std(p75_latencies)
+    mean_p95_lat, std_p95_lat = calculate_mean_std(p95_latencies)
 
-    final_median_ttft = median(all_ttft) if all_ttft else None
-    final_std_ttft = stdev(all_ttft) if all_ttft and len(all_ttft) > 1 else 0.0
+    # TTFT metrics
+    mean_p25_ttft, std_p25_ttft = calculate_mean_std(p25_ttfts)
+    mean_p50_ttft, std_p50_ttft = calculate_mean_std(p50_ttfts)
+    mean_p75_ttft, std_p75_ttft = calculate_mean_std(p75_ttfts)
+    mean_p95_ttft, std_p95_ttft = calculate_mean_std(p95_ttfts)
 
-    final_median_tg = median(all_tg) if all_tg else None
-    final_std_tg = stdev(all_tg) if all_tg and len(all_tg) > 1 else 0.0
+    # TG metrics
+    mean_p25_tg, std_p25_tg = calculate_mean_std(p25_tgs)
+    mean_p50_tg, std_p50_tg = calculate_mean_std(p50_tgs)
+    mean_p75_tg, std_p75_tg = calculate_mean_std(p75_tgs)
+    mean_p95_tg, std_p95_tg = calculate_mean_std(p95_tgs)
 
-    final_median_tokens_per_sec = (
-        median(all_tokens_per_sec) if all_tokens_per_sec else None
-    )
-    final_std_tokens_per_sec = (
-        stdev(all_tokens_per_sec)
-        if all_tokens_per_sec and len(all_tokens_per_sec) > 1
-        else 0.0
-    )
+    # TPS metrics
+    mean_p25_tps, std_p25_tps = calculate_mean_std(p25_tpss)
+    mean_p50_tps, std_p50_tps = calculate_mean_std(p50_tpss)
+    mean_p75_tps, std_p75_tps = calculate_mean_std(p75_tpss)
+    mean_p95_tps, std_p95_tps = calculate_mean_std(p95_tpss)
 
     results = {
         "model_name": model_name,
@@ -174,40 +228,64 @@ def run_model_with_repeats(
         "num_runs": num_runs,
         "runs": all_run_results,
         "all_prompt_details": all_prompt_details,
-        "final_50p_e2e_latency_s": round(final_median_latency, 4),
-        "final_std_e2e_latency_s": round(final_std_latency, 4),
-        "final_50p_ttft_s": round(final_median_ttft, 4) if final_median_ttft else None,
-        "final_std_ttft_s": round(final_std_ttft, 4) if all_ttft else None,
-        "final_50p_tg_s": round(final_median_tg, 4) if final_median_tg else None,
-        "final_std_tg_s": round(final_std_tg, 4) if all_tg else None,
-        "final_50p_e2e_tps": round(final_median_tokens_per_sec, 4)
-        if final_median_tokens_per_sec
-        else None,
-        "final_std_e2e_tps": round(final_std_tokens_per_sec, 4)
-        if all_tokens_per_sec
-        else None,
+        # E2E Latency
+        "final_p25_e2e_latency_s": round(mean_p25_lat, 4) if mean_p25_lat else None,
+        "final_p25_e2e_latency_std_s": round(std_p25_lat, 4) if std_p25_lat else None,
+        "final_p50_e2e_latency_s": round(mean_p50_lat, 4) if mean_p50_lat else None,
+        "final_p50_e2e_latency_std_s": round(std_p50_lat, 4) if std_p50_lat else None,
+        "final_p75_e2e_latency_s": round(mean_p75_lat, 4) if mean_p75_lat else None,
+        "final_p75_e2e_latency_std_s": round(std_p75_lat, 4) if std_p75_lat else None,
+        "final_p95_e2e_latency_s": round(mean_p95_lat, 4) if mean_p95_lat else None,
+        "final_p95_e2e_latency_std_s": round(std_p95_lat, 4) if std_p95_lat else None,
+        # TTFT
+        "final_p25_ttft_s": round(mean_p25_ttft, 4) if mean_p25_ttft else None,
+        "final_p25_ttft_std_s": round(std_p25_ttft, 4) if std_p25_ttft else None,
+        "final_p50_ttft_s": round(mean_p50_ttft, 4) if mean_p50_ttft else None,
+        "final_p50_ttft_std_s": round(std_p50_ttft, 4) if std_p50_ttft else None,
+        "final_p75_ttft_s": round(mean_p75_ttft, 4) if mean_p75_ttft else None,
+        "final_p75_ttft_std_s": round(std_p75_ttft, 4) if std_p75_ttft else None,
+        "final_p95_ttft_s": round(mean_p95_ttft, 4) if mean_p95_ttft else None,
+        "final_p95_ttft_std_s": round(std_p95_ttft, 4) if std_p95_ttft else None,
+        # TG
+        "final_p25_tg_s": round(mean_p25_tg, 4) if mean_p25_tg else None,
+        "final_p25_tg_std_s": round(std_p25_tg, 4) if std_p25_tg else None,
+        "final_p50_tg_s": round(mean_p50_tg, 4) if mean_p50_tg else None,
+        "final_p50_tg_std_s": round(std_p50_tg, 4) if std_p50_tg else None,
+        "final_p75_tg_s": round(mean_p75_tg, 4) if mean_p75_tg else None,
+        "final_p75_tg_std_s": round(std_p75_tg, 4) if std_p75_tg else None,
+        "final_p95_tg_s": round(mean_p95_tg, 4) if mean_p95_tg else None,
+        "final_p95_tg_std_s": round(std_p95_tg, 4) if std_p95_tg else None,
+        # TPS
+        "final_p25_tps": round(mean_p25_tps, 4) if mean_p25_tps else None,
+        "final_p25_tps_std": round(std_p25_tps, 4) if std_p25_tps else None,
+        "final_p50_tps": round(mean_p50_tps, 4) if mean_p50_tps else None,
+        "final_p50_tps_std": round(std_p50_tps, 4) if std_p50_tps else None,
+        "final_p75_tps": round(mean_p75_tps, 4) if mean_p75_tps else None,
+        "final_p75_tps_std": round(std_p75_tps, 4) if std_p75_tps else None,
+        "final_p95_tps": round(mean_p95_tps, 4) if mean_p95_tps else None,
+        "final_p95_tps_std": round(std_p95_tps, 4) if std_p95_tps else None,
     }
 
     print(f"\n{'='*60}")
     print("BENCHMARK COMPLETE")
     print(f"{'='*60}")
     print(
-        f"Final Median E2E Latency: {results['final_50p_e2e_latency_s']:.4f} ± {results['final_std_e2e_latency_s']:.4f}s"
+        f"Final Mean P50 E2E Latency: {results['final_p50_e2e_latency_s']:.4f} ± {results['final_p50_e2e_latency_std_s']:.4f}s"
     )
     print(
-        f"Final Median TTFT: {results['final_50p_ttft_s']:.4f} ± {results['final_std_ttft_s']:.4f}s"
-        if results["final_50p_ttft_s"]
-        else "Final Median TTFT: N/A"
+        f"Final Mean P50 TTFT: {results['final_p50_ttft_s']:.4f} ± {results['final_p50_ttft_std_s']:.4f}s"
+        if results["final_p50_ttft_s"]
+        else "Final Mean P50 TTFT: N/A"
     )
     print(
-        f"Final Median TG: {results['final_50p_tg_s']:.4f} ± {results['final_std_tg_s']:.4f}s"
-        if results["final_50p_tg_s"]
-        else "Final Median TG: N/A"
+        f"Final Mean P50 TG: {results['final_p50_tg_s']:.4f} ± {results['final_p50_tg_std_s']:.4f}s"
+        if results["final_p50_tg_s"]
+        else "Final Mean P50 TG: N/A"
     )
     print(
-        f"Final Median E2E TPS: {results['final_50p_e2e_tps']:.4f} ± {results['final_std_e2e_tps']:.4f}"
-        if results["final_50p_e2e_tps"]
-        else "Final Median E2E TPS: N/A"
+        f"Final Mean P50 TPS: {results['final_p50_tps']:.4f} ± {results['final_p50_tps_std']:.4f}"
+        if results["final_p50_tps"]
+        else "Final Mean P50 TPS: N/A"
     )
     print(f"{'='*60}")
 

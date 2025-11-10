@@ -29,12 +29,8 @@ def run_embeddings_benchmark() -> dict:
         num_runs=3,
     )
 
-    # Calculate total time as main metric
-    total_median_time = results["models"][model_name]["median_encoding_time_seconds"]
-    results["total_time_seconds"] = round(total_median_time, 2)
-
-    print(f"\n{'='*60}")
-    print(f"TOTAL TIME: {results['total_time_seconds']} seconds")
-    print(f"{'='*60}")
+    # Calculate total time as main metric using mean E2E latency
+    total_mean_time = results["models"][model_name]["final_mean_e2e_latency_s"]
+    results["total_time_seconds"] = round(total_mean_time, 4)
 
     return results

@@ -1,7 +1,3 @@
-import os
-
-os.environ["TOKENIZERS_PARALLELISM"] = "false"
-
 from src.system_info.device_info import get_device_info
 from src.system_info.power_metrics import PowerMonitor
 from src.cli import display_device_info, display_final_summary, select_benchmarks

@@ -3,7 +3,6 @@
 from typing import Any
 
 from ..extractors import ModelMetricsExtractor
-from ..formatters import format_time_with_std
 from .base import BaseTableGenerator
 
 
@@ -46,9 +45,9 @@ class InferenceTableGenerator(BaseTableGenerator):
             Section title string
         """
         if self.task_type == "llms":
-            return "#### LLM Inference (3 prompts from awesome-chatgpt-prompts)\n"
+            return "#### LLM Inference (10 prompts from awesome-chatgpt-prompts)\n"
         else:
-            return "#### VLM Inference (3 questions from Hallucination_COCO)\n"
+            return "#### VLM Inference (10 questions from Hallucination_COCO)\n"
 
     def _has_inference_data(self) -> bool:
         """Check if any result has inference data for this task type.
@@ -109,10 +108,14 @@ class InferenceTableGenerator(BaseTableGenerator):
                 [
                     "Device",
                     "Model",
-                    "E2E TPS",
-                    "TTFT (s)",
-                    "TG (s)",
-                    "E2E Latency (s)",
+                    "TPS P50",
+                    "TPS P95",
+                    "TTFT P50 (s)",
+                    "TTFT P95 (s)",
+                    "TG P50 (s)",
+                    "TG P95 (s)",
+                    "Latency P50 (s)",
+                    "Latency P95 (s)",
                     "Input Tokens",
                     "Output Tokens",
                 ]
@@ -142,39 +145,43 @@ class InferenceTableGenerator(BaseTableGenerator):
         input_tokens = first_run.get("total_input_tokens", "-")
         output_tokens = first_run.get("total_output_tokens", "-")
 
-        # Format E2E TPS with std (try new key first, fallback to old for compatibility)
-        tps_median = model_data.get("final_50p_e2e_tps") or model_data.get(
-            "final_50p_tokens_per_sec"
-        )
-        tps_std = model_data.get("final_std_e2e_tps") or model_data.get(
-            "final_std_tokens_per_sec", 0
-        )
-        tps_str = format_time_with_std(tps_median, tps_std) if tps_median else "N/A"
+        # Helper function to format value with std
+        def fmt_with_std(val, std_val):
+            if isinstance(val, (int, float)) and isinstance(std_val, (int, float)):
+                return f"{val:.2f} ± {std_val:.2f}"
+            elif isinstance(val, (int, float)):
+                return f"{val:.2f}"
+            return "-"
 
-        # Format TTFT with std
-        ttft_median = model_data.get("final_50p_ttft_s")
-        ttft_std = model_data.get("final_std_ttft_s", 0)
-        ttft_str = format_time_with_std(ttft_median, ttft_std) if ttft_median else "N/A"
+        # Get P50 and P95 with std for TPS
+        tps_p50 = model_data.get("final_p50_tps")
+        tps_p50_std = model_data.get("final_p50_tps_std")
+        tps_p95 = model_data.get("final_p95_tps")
+        tps_p95_std = model_data.get("final_p95_tps_std")
 
-        # Format TG with std
-        tg_median = model_data.get("final_50p_tg_s")
-        tg_std = model_data.get("final_std_tg_s", 0)
-        tg_str = format_time_with_std(tg_median, tg_std) if tg_median else "N/A"
+        # Get P50 and P95 with std for TTFT
+        ttft_p50 = model_data.get("final_p50_ttft_s")
+        ttft_p50_std = model_data.get("final_p50_ttft_std_s")
+        ttft_p95 = model_data.get("final_p95_ttft_s")
+        ttft_p95_std = model_data.get("final_p95_ttft_std_s")
 
-        # Format E2E Latency with std (try new key first, fallback to old for compatibility)
-        lat_median = model_data.get("final_50p_e2e_latency_s") or model_data.get(
-            "final_50p_latency_s"
-        )
-        lat_std = model_data.get("final_std_e2e_latency_s") or model_data.get(
-            "final_std_latency_s", 0
-        )
-        lat_str = format_time_with_std(lat_median, lat_std) if lat_median else "N/A"
+        # Get P50 and P95 with std for TG
+        tg_p50 = model_data.get("final_p50_tg_s")
+        tg_p50_std = model_data.get("final_p50_tg_std_s")
+        tg_p95 = model_data.get("final_p95_tg_s")
+        tg_p95_std = model_data.get("final_p95_tg_std_s")
+
+        # Get P50 and P95 with std for E2E Latency
+        lat_p50 = model_data.get("final_p50_e2e_latency_s")
+        lat_p50_std = model_data.get("final_p50_e2e_latency_std_s")
+        lat_p95 = model_data.get("final_p95_e2e_latency_s")
+        lat_p95_std = model_data.get("final_p95_e2e_latency_std_s")
 
         return (
             f"| {device} | {model_data['model_name']} | "
-            f"{tps_str} | "
-            f"{ttft_str} | "
-            f"{tg_str} | "
-            f"{lat_str} | "
+            f"{fmt_with_std(tps_p50, tps_p50_std)} | {fmt_with_std(tps_p95, tps_p95_std)} | "
+            f"{fmt_with_std(ttft_p50, ttft_p50_std)} | {fmt_with_std(ttft_p95, ttft_p95_std)} | "
+            f"{fmt_with_std(tg_p50, tg_p50_std)} | {fmt_with_std(tg_p95, tg_p95_std)} | "
+            f"{fmt_with_std(lat_p50, lat_p50_std)} | {fmt_with_std(lat_p95, lat_p95_std)} | "
             f"{input_tokens} | {output_tokens} |"
         )

@@ -3,7 +3,6 @@
 from typing import Any
 
 from ..extractors import ModelMetricsExtractor
-from ..formatters import format_time_with_std
 from .base import BaseTableGenerator
 
 
@@ -20,14 +19,14 @@ class EmbeddingsTableGenerator(BaseTableGenerator):
         if not models:
             return ""
 
-        lines = ["#### Text Embeddings (100 IMDB samples)\n"]
+        lines = ["#### Text Embeddings (3000 IMDB samples)\n"]
         lines.extend(
             self._build_header(
                 [
                     "Device",
                     "Model",
-                    "Rows/sec",
-                    "Time (s)",
+                    "RPS (mean ± std)",
+                    "Time (s) (mean ± std)",
                     "Embedding Dim",
                     "Batch Size",
                 ]
@@ -78,20 +77,27 @@ class EmbeddingsTableGenerator(BaseTableGenerator):
             if model_name in embeddings_models:
                 model_data = embeddings_models[model_name]
 
-                # Format rows/sec with std
-                rps_median = model_data["median_rows_per_second"]
-                rps_std = model_data.get("std_rows_per_second", 0)
-                rps_str = format_time_with_std(rps_median, rps_std)
+                # Helper function to format value with std
+                def fmt_with_std(val, std_val):
+                    if isinstance(val, (int, float)) and isinstance(
+                        std_val, (int, float)
+                    ):
+                        return f"{val:.2f} ± {std_val:.2f}"
+                    elif isinstance(val, (int, float)):
+                        return f"{val:.2f}"
+                    return "-"
 
-                # Format time with std
-                time_median = model_data["median_encoding_time_seconds"]
-                time_std = model_data.get("std_encoding_time_seconds", 0)
-                time_str = format_time_with_std(time_median, time_std)
+                # Get mean ± std for RPS and Time
+                # Simple approach: mean(run1, run2, run3) ± std(run1, run2, run3)
+                rps_mean = model_data.get("final_mean_rps")
+                rps_std = model_data.get("final_std_rps")
+                time_mean = model_data.get("final_mean_e2e_latency_s")
+                time_std = model_data.get("final_std_e2e_latency_s")
 
                 rows.append(
                     f"| {device} | {model_name} | "
-                    f"{rps_str} | "
-                    f"{time_str} | "
+                    f"{fmt_with_std(rps_mean, rps_std)} | "
+                    f"{fmt_with_std(time_mean, time_std)} | "
                     f"{model_data['embedding_dimension']} | "
                     f"{model_data['batch_size']} |"
                 )

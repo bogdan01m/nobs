@@ -51,14 +51,18 @@ def plot_embeddings_performance(
                     model_name.split("/")[-1] if "/" in model_name else model_name
                 )
 
+                # Use mean ± std approach: mean(run1, run2, run3) ± std(run1, run2, run3)
+                rps = model_data.get("final_mean_rps", 0)
+                rps_std = model_data.get("final_std_rps", 0)
+
                 devices.append(
                     {
                         "gpu_name": device_info["gpu_name"],
                         "host": device_info["host"],
                         "backend": "STS",  # Sentence Transformers backend
                         "model_name": display_model,
-                        "rps": model_data["median_rows_per_second"],
-                        "rps_std": model_data.get("std_rows_per_second", 0),
+                        "rps": rps,
+                        "rps_std": rps_std,
                     }
                 )
 
@@ -102,7 +106,7 @@ def plot_embeddings_performance(
     ax.set_ylabel("GPU Device [Backend]", fontsize=12, fontweight="bold")
     ax.set_xlabel("Throughput (rows/second)", fontsize=12, fontweight="bold")
     ax.set_title(
-        "Text Embeddings Performance: Throughput\n(Higher is Better)",
+        "Text Embeddings Performance: Throughput [mean ± std]\n(Higher is Better)",
         fontsize=14,
         fontweight="bold",
         pad=20,

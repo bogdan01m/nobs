@@ -12,8 +12,7 @@ def display_device_info(device_info: dict):
         device_info: Device information dict from get_device_info()
     """
     print("=" * 60)
-    print("NoBS Benchmark")
-    print("(No Bullshit Benchmark for Real AI Performance)")
+    print("La Perf Benchmark")
     print("=" * 60)
     print("Device Info:")
     print(json.dumps(device_info, indent=2))

@@ -27,7 +27,7 @@ def run_llms_benchmark(model_name: str | None = None, base_url: str | None = Non
     )
 
     # Use median E2E latency as main metric
-    total_time = model_results["final_50p_e2e_latency_s"]
+    total_time = model_results["final_p50_e2e_latency_s"]
 
     results = {
         "task": "llms",
@@ -36,9 +36,5 @@ def run_llms_benchmark(model_name: str | None = None, base_url: str | None = Non
         "model": model_results,
         "total_time_seconds": round(total_time, 2),
     }
-
-    print(f"\n{'='*60}")
-    print(f"TOTAL TIME: {results['total_time_seconds']} seconds")
-    print(f"{'='*60}")
 
     return results

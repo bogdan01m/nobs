@@ -12,7 +12,7 @@ generate:
 bench:
 	@echo "🆕 Starting La Perf benchmark"
 	@uv run python main.py
-	@echo "✨ Done! Run 'make' to update results in README.md"
+	@echo "✨ Done! Run 'make generate' to update results in README.md"
 
 # Run pre-commit hooks on all files
 format:
@@ -22,7 +22,7 @@ format:
 # Run linting only (ruff)
 lint:
 	@echo "🔍 Running ruff linter..."
-	@uv run ruff check src/ main.py
+	@uvx ruff check src/ main.py
 
 # Clean Python cache files
 clean:

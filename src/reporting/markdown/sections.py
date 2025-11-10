@@ -161,17 +161,19 @@ class ResultsSectionGenerator:
             # Add performance plots
             try:
                 plot_llm_performance(self.results_dir)
-                sections.append("![LLM TTFT Performance](results/plots/llm_ttft.png)\n")
                 sections.append(
-                    "*Time To First Token (TTFT) - Lower is better. "
-                    "Measures response latency.*\n\n"
+                    "![LLM E2E Latency Performance](results/plots/llm_latency.png)\n"
+                )
+                sections.append(
+                    "*End-to-End Latency P50 - Lower is better. "
+                    "Measures full request-to-response time.*\n\n"
                 )
                 sections.append(
                     "![LLM Throughput Performance](results/plots/llm_tps.png)\n"
                 )
                 sections.append(
-                    "*Token Generation per second (TG) - Higher is better. "
-                    "Measures token generation.*\n"
+                    "*Token Generation per second (TPS) - Higher is better. "
+                    "Measures token generation speed.*\n"
                 )
             except Exception as e:
                 print(f"⚠️  Failed to generate LLM plots: {e}")
@@ -216,17 +218,19 @@ class ResultsSectionGenerator:
             # Add performance plots
             try:
                 plot_vlm_performance(self.results_dir)
-                sections.append("![VLM TTFT Performance](results/plots/vlm_ttft.png)\n")
                 sections.append(
-                    "*Time To First Token (TTFT) - Lower is better. "
-                    "Measures response latency.*\n\n"
+                    "![VLM E2E Latency Performance](results/plots/vlm_latency.png)\n"
+                )
+                sections.append(
+                    "*End-to-End Latency P50 - Lower is better. "
+                    "Measures full request-to-response time.*\n\n"
                 )
                 sections.append(
                     "![VLM Throughput Performance](results/plots/vlm_tps.png)\n"
                 )
                 sections.append(
-                    "*Token Generation per second (TG) - Higher is better. "
-                    "Measures token generation.*\n"
+                    "*Token Generation per second (TPS) - Higher is better. "
+                    "Measures token generation speed.*\n"
                 )
             except Exception as e:
                 print(f"⚠️  Failed to generate VLM plots: {e}")

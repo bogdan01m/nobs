@@ -4,6 +4,7 @@ from src.system_info.device_info import get_device_info
 
 load_dotenv()
 
+os.environ["TOKENIZERS_PARALLELISM"] = "true"
 # Detect device type for model selection
 _device_info = get_device_info()
 _is_apple_silicon = _device_info.get("device") == "mps"

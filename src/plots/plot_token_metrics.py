@@ -90,8 +90,8 @@ def load_prompt_details(result_file: str):
     # Extract device info
     device_info = data.get("device_info", {})
     gpu_name = device_info.get("gpu_name", "Unknown GPU")
-    host = device_info.get("host", "Unknown")
-    device_label = f"{gpu_name}"
+    # Use only GPU name for device label (no host, no backend)
+    device_label = gpu_name
 
     prompt_details = []
 
@@ -105,7 +105,6 @@ def load_prompt_details(result_file: str):
 
     return {
         "device_label": device_label,
-        "host": host,
         "gpu_name": gpu_name,
         "prompt_details": prompt_details,
     }

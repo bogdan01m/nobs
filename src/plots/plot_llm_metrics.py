@@ -20,14 +20,14 @@ def load_results(results_dir: Path = Path("results")) -> list[dict[str, Any]]:
 
 def plot_llm_performance(
     results_dir: Path = Path("results"),
-    output_path_ttft: Path = Path("results/plots/llm_ttft.png"),
+    output_path_latency: Path = Path("results/plots/llm_latency.png"),
     output_path_tps: Path = Path("results/plots/llm_tps.png"),
     backend_filter: str | None = None,
 ) -> None:
     """
     Generate two scientific performance profile plots for LLM metrics.
 
-    Plot 1: Time To First Token (TTFT) - lower is better
+    Plot 1: E2E Latency P50 - lower is better (full request to response time)
     Plot 2: Tokens Per Second (TPS) - higher is better
     Both sorted by overall performance (TPS)
     """
@@ -50,11 +50,10 @@ def plot_llm_performance(
                 continue
 
             model_data = llm_task["model"]
-            ttft = model_data.get("final_50p_ttft_s")
-            # Try new key first, fallback to old for compatibility
-            tps = model_data.get("final_50p_e2e_tps")
+            latency = model_data.get("final_p50_e2e_latency_s")
+            tps = model_data.get("final_p50_tps")
 
-            if ttft is None or tps is None:
+            if latency is None or tps is None:
                 continue
 
             devices.append(
@@ -62,11 +61,10 @@ def plot_llm_performance(
                     "gpu_name": device_info["gpu_name"],
                     "host": device_info["host"],
                     "backend": backend,
-                    "ttft": ttft,
+                    "latency": latency,
                     "tps": tps,
-                    "ttft_std": model_data.get("final_std_ttft_s", 0),
-                    "tps_std": model_data.get("final_std_e2e_tps")
-                    or model_data.get("final_std_tokens_per_sec", 0),
+                    "latency_std": model_data.get("final_p50_e2e_latency_std_s", 0),
+                    "tps_std": model_data.get("final_p50_tps_std", 0),
                 }
             )
 
@@ -82,8 +80,8 @@ def plot_llm_performance(
 
     # Create labels: "gpu_name\n[BACKEND]" format
     y_labels = [f"{d['gpu_name']}\n[{d['backend']}]" for d in devices_sorted]
-    ttft_values = [d["ttft"] for d in devices_sorted]
-    ttft_std_values = [d["ttft_std"] for d in devices_sorted]
+    latency_values = [d["latency"] for d in devices_sorted]
+    latency_std_values = [d["latency_std"] for d in devices_sorted]
     tps_values = [d["tps"] for d in devices_sorted]
     tps_std_values = [d["tps_std"] for d in devices_sorted]
 
@@ -99,14 +97,14 @@ def plot_llm_performance(
     y_pos = np.arange(len(y_labels))
     backend_label = f" ({backend_filter.replace('_', ' ')})" if backend_filter else ""
 
-    # ===== PLOT 1: TTFT (lower is better) =====
+    # ===== PLOT 1: E2E Latency P50 (lower is better) =====
     fig1, ax1 = plt.subplots(figsize=(12, fig_height), dpi=300)
 
     # Plot horizontal bars with error bars
     bars1 = ax1.barh(
         y_pos,
-        ttft_values,
-        xerr=ttft_std_values,
+        latency_values,
+        xerr=latency_std_values,
         capsize=5,
         color=colors,
         alpha=0.8,
@@ -116,9 +114,9 @@ def plot_llm_performance(
 
     # Styling
     ax1.set_ylabel("GPU Device [Backend]", fontsize=12, fontweight="bold")
-    ax1.set_xlabel("Time To First Token (seconds)", fontsize=12, fontweight="bold")
+    ax1.set_xlabel("End-to-End Latency (seconds)", fontsize=12, fontweight="bold")
     ax1.set_title(
-        f"LLM Inference Performance: TTFT (sec){backend_label}\n(Lower is Better)",
+        f"LLM Inference Performance: E2E Latency P50 (sec) [mean(P50) ± std(P50)]{backend_label}\n(Lower is Better)",
         fontsize=14,
         fontweight="bold",
         pad=20,
@@ -131,10 +129,10 @@ def plot_llm_performance(
     ax1.set_xlim(left=0)
 
     # Add value labels on bars
-    for i, (bar, val, std) in enumerate(zip(bars1, ttft_values, ttft_std_values)):
+    for i, (bar, val, std) in enumerate(zip(bars1, latency_values, latency_std_values)):
         width = bar.get_width()
         ax1.text(
-            width + std + max(ttft_values) * 0.02,
+            width + std + max(latency_values) * 0.02,
             bar.get_y() + bar.get_height() / 2.0,
             f"{val:.2f}s",
             ha="left",
@@ -144,17 +142,17 @@ def plot_llm_performance(
         )
 
     # Highlight best performer
-    best_idx = ttft_values.index(min(ttft_values))
+    best_idx = latency_values.index(min(latency_values))
     bars1[best_idx].set_edgecolor("green")
     bars1[best_idx].set_linewidth(2.5)
 
     plt.tight_layout()
-    output_path_ttft.parent.mkdir(parents=True, exist_ok=True)
-    plt.savefig(output_path_ttft, dpi=300, bbox_inches="tight")
+    output_path_latency.parent.mkdir(parents=True, exist_ok=True)
+    plt.savefig(output_path_latency, dpi=300, bbox_inches="tight")
     scope_msg = (
         f" for backend {backend_filter.replace('_', ' ')}" if backend_filter else ""
     )
-    print(f"✅ LLM TTFT plot saved to {output_path_ttft}{scope_msg}")
+    print(f"✅ LLM E2E Latency plot saved to {output_path_latency}{scope_msg}")
     plt.close()
 
     # ===== PLOT 2: TPS (higher is better) =====
@@ -164,7 +162,7 @@ def plot_llm_performance(
     bars2 = ax2.barh(
         y_pos,
         tps_values,
-        yerr=tps_std_values,
+        xerr=tps_std_values,
         capsize=5,
         color=colors,
         alpha=0.8,
@@ -176,7 +174,7 @@ def plot_llm_performance(
     ax2.set_ylabel("GPU Device [Backend]", fontsize=12, fontweight="bold")
     ax2.set_xlabel("Tokens per second", fontsize=12, fontweight="bold")
     ax2.set_title(
-        f"LLM Inference Performance: TPS{backend_label}\n(Higher is Better)",
+        f"LLM Inference Performance: TPS [mean(P50) ± std(P50)]{backend_label}\n(Higher is Better)",
         fontsize=14,
         fontweight="bold",
         pad=20,

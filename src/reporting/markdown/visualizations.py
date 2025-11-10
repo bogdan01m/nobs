@@ -33,7 +33,6 @@ def collect_prompt_details_by_task(
             continue
 
         device_info = data.get("device_info", {})
-        host = device_info.get("host")
         gpu_name = device_info.get("gpu_name", "Unknown GPU")
 
         for task in data.get("tasks", []):
@@ -47,14 +46,8 @@ def collect_prompt_details_by_task(
                 "OLLAMA": "Ollama",
             }.get(backend_name, backend_name.title())
 
-            # Build device label
-            parts = []
-            if host:
-                parts.append(host)
-            if gpu_name:
-                parts.append(gpu_name)
-            parts.append(backend_display)
-            device_label = " | ".join(parts)
+            # Build device label - GPU name + backend (no hostname)
+            device_label = f"{gpu_name} | {backend_display}"
 
             model_data = task.get("model") or {}
             prompt_details = model_data.get("all_prompt_details") or []
@@ -92,7 +85,6 @@ def build_device_gpu_mapping(results_dir: Path) -> dict[str, str]:
             with open(result_file) as f:
                 data = json.load(f)
             device_info = data.get("device_info", {})
-            host = device_info.get("host")
             gpu_name = device_info.get("gpu_name", "Unknown GPU")
 
             # Match the device_label format from collect_prompt_details_by_task
@@ -106,14 +98,8 @@ def build_device_gpu_mapping(results_dir: Path) -> dict[str, str]:
                     "OLLAMA": "Ollama",
                 }.get(backend_name, backend_name.title())
 
-                parts = []
-                if host:
-                    parts.append(host)
-                if gpu_name:
-                    parts.append(gpu_name)
-                parts.append(backend_display)
-                device_label = " | ".join(parts)
-
+                # Build device label - GPU name + backend (no hostname)
+                device_label = f"{gpu_name} | {backend_display}"
                 device_gpu_mapping[device_label] = gpu_name
         except Exception:
             continue
