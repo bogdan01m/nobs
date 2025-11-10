@@ -209,8 +209,9 @@ If you use **LaPerf** in your research or reports, please cite it as follows:
 > Licensed under the Apache License, Version 2.0.
 
 **BibTeX:**
+
 ```bibtex
-@software{minko2025laperf,
+@software{laperf,
   author       = {Bogdan Minko},
   title        = {LaPerf: Local AI Performance Benchmark Suite},
   year         = {2025},
@@ -218,3 +219,4 @@ If you use **LaPerf** in your research or reports, please cite it as follows:
   license      = {Apache-2.0},
   note         = {GitHub repository}
 }
+```

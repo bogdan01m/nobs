@@ -90,7 +90,7 @@ markdown_extensions:
   - footnotes
   - md_in_html
   - toc:
-      permalink: true
+      permalink: "#"
       toc_depth: 3
 
   # PyMdown Extensions
