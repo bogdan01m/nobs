@@ -214,4 +214,3 @@ __marimo__/
 # Project-specific
 /logs/
 generate_synthetic_results.py
-docs/plots/
