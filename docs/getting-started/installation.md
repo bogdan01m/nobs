@@ -45,6 +45,8 @@ Verify installation:
 ```bash
 uv --version
 ```
+!!! info "Why uv?"
+    La Perf uses `uv` for fast, reliable dependency management. It's significantly faster than pip and handles environment isolation automatically.
 
 ---
 
@@ -86,50 +88,6 @@ uv run python -c "import torch; print(torch.__version__)"
 
 ---
 
-## GPU Setup
-
-### NVIDIA (CUDA)
-
-#### Check CUDA availability
-
-```bash
-nvidia-smi
-```
-
-#### Install CUDA toolkit
-
-Follow [NVIDIA's guide](https://developer.nvidia.com/cuda-downloads) for your platform.
-
-#### Verify PyTorch CUDA support
-
-```bash
-uv run python -c "import torch; print(torch.cuda.is_available())"
-```
-
-### Apple Silicon (MPS)
-
-MPS is available by default on macOS 12.3+ with Apple Silicon.
-
-#### Verify MPS support
-
-```bash
-uv run python -c "import torch; print(torch.backends.mps.is_available())"
-```
-
-### AMD (ROCm)
-
-#### Install ROCm
-
-Follow [AMD's guide](https://rocm.docs.amd.com/) for your platform.
-
-#### Verify ROCm support
-
-```bash
-rocm-smi
-```
-
----
-
 ## LM Studio Setup
 
 For LLM/VLM benchmarks, install LM Studio:
@@ -139,12 +97,28 @@ For LLM/VLM benchmarks, install LM Studio:
 Visit [lmstudio.ai](https://lmstudio.ai/) and download for your platform.
 
 ### 2. Load a model
+Best way to find it is using LM Studio UI
+
+**Load LLM**
+
+Search for `gpt-oss-20b` in available models
 
 === "macOS (MLX)"
-    Search for: `mlx-community/gpt-oss-20b-MXFP4-Q8`
+    `mlx-community/gpt-oss-20b-MXFP4-Q8`
 
 === "Windows/Linux (GGUF)"
-    Search for: `lmstudio-community/gpt-oss-20b-GGUF`
+    `lmstudio-community/gpt-oss-20b-GGUF`
+
+**Load VLM**
+
+Search for `Qwen3-VL-8B-Instruct` in available models
+
+=== "macOS (MLX)"
+    `lmstudio-community/Qwen3-VL-8B-Instruct-MLX-4bit`
+
+=== "Windows/Linux (GGUF)"
+    `lmstudio-community/Qwen3-VL-8B-Instruct-GGUF-Q4_K_M`
+
 
 ### 3. Start the server
 
@@ -173,9 +147,13 @@ For LLM/VLM benchmarks, install Ollama:
     Download from [ollama.com](https://ollama.com/)
 
 ### 2. Pull a model
-
+**Pull LLM**
 ```bash
 ollama pull gpt-oss:20b
+```
+**Pull VLM**
+```bash
+ollama pull qwen3-vl:8b
 ```
 
 ---
@@ -184,18 +162,48 @@ ollama pull gpt-oss:20b
 
 Run a quick test to ensure everything works:
 
+**Using make**
+```bash
+make bench
+```
+
+**Using uv**
 ```bash
 uv run python main.py
 ```
 
-You should see:
+This will:
 
-- Hardware detection output
-- Benchmark progress bars
-- Results saved to `results/` directory
+1. **Auto-detect** your hardware (CUDA / MPS / CPU)
+2. **Run** all available benchmarks
+   (all are pre-selected — you can toggle individual ones in the TUI using `Space`)
+3. **Save** the results to `results/report_{your_device}.json`
+
+!!! success "Hardware Detection"
+    La Perf automatically detects your GPU and optimizes accordingly. No manual configuration needed!
+
+## Understanding Results
+
+After running benchmarks, you'll find:
+
+- **JSON results** in `results/report_{device}.json`
+- **Plots** in `results/plots/`
+- **Summary tables** in the terminal
+
+### Generate Markdown Tables
+Run
+```bash
+make
+```
+or
+
+```bash
+make generate
+```
+
+This processes JSON results and generates markdown tables for the README.
 
 ---
-
 ## Troubleshooting
 
 ### uv command not found
@@ -219,14 +227,6 @@ uv run python --version
 - Install [NVIDIA drivers](https://www.nvidia.com/download/index.aspx)
 - Install [CUDA toolkit](https://developer.nvidia.com/cuda-downloads)
 - Restart your system
-
-### Out of disk space
-
-Models and datasets require ~5 GB. Free up space or use a different directory:
-
-```bash
-export HF_HOME=/path/to/large/disk
-```
 
 ---
 

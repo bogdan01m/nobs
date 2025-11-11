@@ -10,6 +10,8 @@ Before running La Perf, ensure you have:
 
 - **[uv](https://docs.astral.sh/uv/)** package manager
 - **Python 3.12+** - uv will automatically install it
+- **Ollama** - for LLM, VLM inference (Optional)
+- **LM Studio** - for LLM, VLM inference (Optional)
 
 !!! info "Why uv?"
     La Perf uses `uv` for fast, reliable dependency management. It's significantly faster than pip and handles environment isolation automatically.
@@ -62,69 +64,6 @@ This will:
 !!! success "Hardware Detection"
     La Perf automatically detects your GPU and optimizes accordingly. No manual configuration needed!
 
----
-
-## Run Specific Benchmarks
-
-### Embeddings Only
-
-```bash
-uv run python -m src.tasks.text_embeddings.runner
-```
-
-**Requirements:**
-- 8 GB RAM minimum
-- GPU recommended
-
-### LLM Inference
-
-```bash
-uv run python -m src.tasks.llms.runner
-```
-
-**Requirements:**
-- 16+ GB RAM
-- LM Studio or Ollama running locally
-- GPU highly recommended
-
-### VLM Inference
-
-```bash
-uv run python -m src.tasks.vlms.runner
-```
-
-**Requirements:**
-- 12+ GB RAM
-- LM Studio or Ollama running locally
-- GPU highly recommended
-
----
-
-## LLM/VLM Setup
-
-La Perf supports both **LM Studio** and **Ollama** for LLM/VLM benchmarks.
-
-### Option 1: LM Studio (Recommended)
-
-1. **Download** [LM Studio](https://lmstudio.ai/)
-2. **Load a model** (e.g., gpt-oss-20b)
-3. **Start the local server** (default: `http://localhost:1234`)
-4. **Run benchmarks**
-
-!!! tip "macOS Users"
-    For best performance on Apple Silicon, use MLX models in LM Studio. They're 10-20% faster than GGUF.
-
-### Option 2: Ollama
-
-1. **Install** [Ollama](https://ollama.com/)
-2. **Pull a model**:
-   ```bash
-   ollama pull gpt-oss:20b
-   ```
-3. **Run benchmarks** (Ollama starts automatically)
-
----
-
 ## Understanding Results
 
 After running benchmarks, you'll find:
@@ -134,9 +73,14 @@ After running benchmarks, you'll find:
 - **Summary tables** in the terminal
 
 ### Generate Markdown Tables
-
+Run
 ```bash
 make
+```
+or
+
+```bash
+make generate
 ```
 
 This processes JSON results and generates markdown tables for the README.
@@ -154,31 +98,11 @@ This processes JSON results and generates markdown tables for the README.
 
 ## Troubleshooting
 
-### GPU not detected
-
-=== "NVIDIA"
-    Ensure CUDA drivers are installed:
-    ```bash
-    nvidia-smi
-    ```
-
-=== "Apple Silicon"
-    MPS should be available by default on macOS 12.3+
-
-=== "AMD"
-    Ensure ROCm is installed and configured
-
 ### Out of memory
 
-- **Reduce batch size** in config files
+- **Reduce batch size** in `.env`
 - **Close** other GPU-intensive applications
 - **Use CPU** mode for testing (slower but works)
-
-### LM Studio connection failed
-
-- Ensure LM Studio server is **running**
-- Check it's on **localhost:1234**
-- Verify the model is **loaded**
 
 ---
 
