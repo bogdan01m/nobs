@@ -117,13 +117,17 @@ def load_prompt_details(result_file: str):
             num_prompts = model_data.get("num_prompts", 10)
 
             if len(all_details) != num_runs * num_prompts:
-                print(f"Warning: Expected {num_runs * num_prompts} details, got {len(all_details)} for {task_type}")
+                print(
+                    f"Warning: Expected {num_runs * num_prompts} details, got {len(all_details)} for {task_type}"
+                )
                 # Fallback to old behavior if structure doesn't match
-                result_entries.append({
-                    "device_label": device_label,
-                    "gpu_name": gpu_name,
-                    "prompt_details": all_details,
-                })
+                result_entries.append(
+                    {
+                        "device_label": device_label,
+                        "gpu_name": gpu_name,
+                        "prompt_details": all_details,
+                    }
+                )
                 continue
 
             # Group by prompt index and calculate means
@@ -140,12 +144,30 @@ def load_prompt_details(result_file: str):
                     continue
 
                 # Calculate mean values for this prompt
-                mean_ttft = np.mean([d.get("ttft_s", 0) for d in prompt_data_across_runs if d.get("ttft_s") is not None])
-                mean_tg = np.mean([d.get("tg_s", 0) for d in prompt_data_across_runs if d.get("tg_s") is not None])
+                mean_ttft = np.mean(
+                    [
+                        d.get("ttft_s", 0)
+                        for d in prompt_data_across_runs
+                        if d.get("ttft_s") is not None
+                    ]
+                )
+                mean_tg = np.mean(
+                    [
+                        d.get("tg_s", 0)
+                        for d in prompt_data_across_runs
+                        if d.get("tg_s") is not None
+                    ]
+                )
 
                 # Input/output tokens should be the same across runs for same prompt
                 input_tokens = prompt_data_across_runs[0].get("input_tokens")
-                output_tokens = np.mean([d.get("output_tokens", 0) for d in prompt_data_across_runs if d.get("output_tokens") is not None])
+                output_tokens = np.mean(
+                    [
+                        d.get("output_tokens", 0)
+                        for d in prompt_data_across_runs
+                        if d.get("output_tokens") is not None
+                    ]
+                )
 
                 aggregated_detail = {
                     "ttft_s": float(mean_ttft),
@@ -159,11 +181,13 @@ def load_prompt_details(result_file: str):
             # Sort by input tokens (prompt length) for logical ordering
             prompt_aggregations.sort(key=lambda x: x["input_tokens"])
 
-            result_entries.append({
-                "device_label": device_label,
-                "gpu_name": gpu_name,
-                "prompt_details": prompt_aggregations,
-            })
+            result_entries.append(
+                {
+                    "device_label": device_label,
+                    "gpu_name": gpu_name,
+                    "prompt_details": prompt_aggregations,
+                }
+            )
 
     return result_entries
 
@@ -270,7 +294,7 @@ def plot_ttft_vs_input_tokens(
     ax.set_ylim(bottom=0)
 
     # Add grid for better readability
-    ax.grid(True, alpha=0.3, linestyle='-', linewidth=0.5)
+    ax.grid(True, alpha=0.3, linestyle="-", linewidth=0.5)
 
     plt.tight_layout()
 
@@ -383,7 +407,7 @@ def plot_tg_vs_output_tokens(
     ax.set_ylim(bottom=0)
 
     # Add grid for better readability
-    ax.grid(True, alpha=0.3, linestyle='-', linewidth=0.5)
+    ax.grid(True, alpha=0.3, linestyle="-", linewidth=0.5)
 
     plt.tight_layout()
 

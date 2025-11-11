@@ -148,7 +148,7 @@ _RPS = Rows Per Second — number of text samples encoded per second._
 
 
 ---
-_All metrics are shown as mean ± standard deviation across 3 runs. 
+_All metrics are shown as mean ± standard deviation across 3 runs.
 ## ⚡ Quick Start
 
 For a full quickstart and setup instructions, please visit the La Perf documentation: [Quickstart](https://bogdanminko.github.io/laperf/getting-started/quickstart.html).

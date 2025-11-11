@@ -107,4 +107,4 @@ _RPS = Rows Per Second — number of text samples encoded per second._
 
 
 ---
-_All metrics are shown as mean ± standard deviation across 3 runs. 
+_All metrics are shown as mean ± standard deviation across 3 runs.
