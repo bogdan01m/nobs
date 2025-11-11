@@ -182,27 +182,6 @@ This will:
 !!! success "Hardware Detection"
     La Perf automatically detects your GPU and optimizes accordingly. No manual configuration needed!
 
-## Understanding Results
-
-After running benchmarks, you'll find:
-
-- **JSON results** in `results/report_{device}.json`
-- **Plots** in `results/plots/`
-- **Summary tables** in the terminal
-
-### Generate Markdown Tables
-Run
-```bash
-make
-```
-or
-
-```bash
-make generate
-```
-
-This processes JSON results and generates markdown tables for the README.
-
 ---
 ## Troubleshooting
 
