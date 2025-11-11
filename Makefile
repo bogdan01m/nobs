@@ -7,6 +7,8 @@ all: generate
 generate:
 	@echo "📊 Generating benchmark results tables..."
 	@uv run python src/generate_results_table.py
+	@echo "📈 Copying plots to docs..."
+	@cp -r results/plots/* docs/plots/ 2>/dev/null || true
 	@echo "✨ Done! Run 'make format' to run pre-commit hooks."
 
 bench:

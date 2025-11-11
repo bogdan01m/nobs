@@ -146,7 +146,7 @@ class PowerMetrics:
             if lines and lines[0]:
                 values = [v.strip() for v in lines[0].split(",")]
                 if len(values) >= 5:
-                    metrics["system_watts"] = float(values[0])
+                    metrics["gpu_watts"] = float(values[0])
                     metrics["gpu_vram_used_mb"] = float(values[1])
                     metrics["gpu_vram_total_mb"] = float(values[2])
                     metrics["gpu_util_percent"] = float(values[3])

@@ -2443,8 +2443,8 @@
     }
   ],
   "power_metrics": {
-    "system_watts_p50": 18.27,
-    "system_watts_p95": 44.81,
+    "gpu_watts_p50": 18.27,
+    "gpu_watts_p95": 44.81,
     "gpu_vram_used_mb_p50": 7163.0,
     "gpu_vram_used_mb_p95": 7367.0,
     "gpu_vram_total_mb_p50": 8188.0,

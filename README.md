@@ -88,7 +88,7 @@ For embedding tasks, La Perf **automatically detects your available device** and
 
 | Device | CPU Usage (p50/p95) | RAM Used (p50/p95) | GPU Usage (p50/p95) | GPU Temp (p50/p95) | Battery (start/end/Δ) | GPU Power (p50/p95) | CPU Power (p50/p95) |
 |------|------|------|------|------|------|------|------|
-| ASUSTeK COMPUTER ASUS Vivobook Pro N6506MV | 24.2% / 25.7% | 10.8GB / 13.2GB | 16.0% / 41.0% | 64.0°C / 66.0°C | 99.0% / 100.0% / -1.0% | 18.3W / 44.8W | 18.3W / 44.8W |
+| ASUSTeK COMPUTER ASUS Vivobook Pro N6506MV | 24.2% / 25.7% | 10.8GB / 13.2GB | 16.0% / 41.0% | 64.0°C / 66.0°C | 99.0% / 100.0% / -1.0% | 18.3W / 44.8W | N/A |
 | Mac16,6 | 4.0% / 12.0% | 22.3GB / 23.9GB | 97.0% / 100.0% | N/A | 85% / 85% / +0.0% | 11.7W / 32.3W | 1.1W / 2.2W |
 
 *p50 = median, p95 = 95th percentile*
@@ -148,55 +148,53 @@ _RPS = Rows Per Second — number of text samples encoded per second._
 
 
 ---
-_All metrics are shown as mean ± standard deviation across 3 runs.
+_All metrics are shown as mean ± standard deviation across 3 runs. 
 ## ⚡ Quick Start
 
-### Prerequisites
-- Python 3.12+
-- [uv](https://docs.astral.sh/uv/) package manager
+For a full quickstart and setup instructions, please visit the La Perf documentation: [Quickstart](https://bogdanminko.github.io/laperf/getting-started/quickstart.html).
 
-### Installation
-```sh
-# Clone the repository
-git clone https://github.com/bogdanminko/nobs.git
-cd nobs
+### 1. Clone the repository
 
-# Install dependencies
+```bash
+git clone https://github.com/bogdanminko/laperf.git
+cd laperf
+```
+
+### 2. Install dependencies (optional)
+
+```bash
 uv sync
 ```
 
-### Running Benchmarks
+This will:
 
-#### Run all benchmarks
-```sh
+- Create a virtual environment
+- Install all required dependencies
+- Set up the project for immediate use
+
+---
+
+## Running Your First Benchmark
+
+### Run all benchmarks
+**Using make**
+```bash
+make bench
+```
+
+**Using uv**
+```bash
 uv run python main.py
 ```
 
 This will:
-1. Auto-detect your hardware (CUDA/MPS/CPU)
-2. Run all available benchmarks
-3. Save results to `results/report_{your_device}.json`
 
-#### Run specific benchmarks
-```sh
-# Embeddings only
-uv run python -m src.tasks.text_embeddings.runner
+1. **Auto-detect** your hardware (CUDA / MPS / CPU)
+2. **Run** all available benchmarks
+   (all are pre-selected — you can toggle individual ones in the TUI using `Space`)
+3. **Save** the results to `results/report_{your_device}.json`
 
-# LLM inference (requires LM Studio running on localhost:1234)
-uv run python -m src.tasks.llms.runner
-```
 
-#### LLM Benchmarks Setup
-
-**Note:** LLM benchmarks currently require [LM Studio](https://lmstudio.ai/) running locally.
-
-1. Download and install [LM Studio](https://lmstudio.ai/)
-2. Load a model in LM Studio
-3. Start the local server (default: `http://localhost:1234`)
-4. Run the LLM benchmark:
-   ```sh
-   uv run python -m src.tasks.llms.runner
-   ```
 
 ---
 

@@ -76,13 +76,15 @@ def get_marker(idx: int):
 
 def load_prompt_details(result_file: str):
     """
-    Load all prompt details from a benchmark result file with device info.
+    Load prompt details from a benchmark result file with device info.
+    Aggregates multiple runs by calculating mean for each prompt position.
+    Returns separate entries for each model+backend combination.
 
     Args:
         result_file: Path to JSON result file
 
     Returns:
-        dict: Dictionary with device_info and prompt_details list
+        list: List of dictionaries with device_label, gpu_name and prompt_details
     """
     with open(result_file) as f:
         data = json.load(f)
@@ -90,31 +92,87 @@ def load_prompt_details(result_file: str):
     # Extract device info
     device_info = data.get("device_info", {})
     gpu_name = device_info.get("gpu_name", "Unknown GPU")
-    # Use only GPU name for device label (no host, no backend)
-    device_label = gpu_name
 
-    prompt_details = []
+    result_entries = []
 
     for task in data.get("tasks", []):
         task_type = task.get("task")
 
         if task_type == "llms" or task_type == "vlms":
             model_data = task.get("model", {})
-            details = model_data.get("all_prompt_details", [])
-            prompt_details.extend(details)
+            all_details = model_data.get("all_prompt_details", [])
+            model_name = model_data.get("model_name", "Unknown Model")
 
-    return {
-        "device_label": device_label,
-        "gpu_name": gpu_name,
-        "prompt_details": prompt_details,
-    }
+            # Determine backend from model name
+            if "/" in model_name:
+                backend = "LM Studio"
+            else:
+                backend = "Ollama"
+
+            # Create device label with GPU + Backend + Task type
+            device_label = f"{gpu_name} | {backend}"
+
+            # Group details by runs (assuming each run has same number of prompts)
+            num_runs = model_data.get("num_runs", 3)
+            num_prompts = model_data.get("num_prompts", 10)
+
+            if len(all_details) != num_runs * num_prompts:
+                print(f"Warning: Expected {num_runs * num_prompts} details, got {len(all_details)} for {task_type}")
+                # Fallback to old behavior if structure doesn't match
+                result_entries.append({
+                    "device_label": device_label,
+                    "gpu_name": gpu_name,
+                    "prompt_details": all_details,
+                })
+                continue
+
+            # Group by prompt index and calculate means
+            prompt_aggregations = []
+            for prompt_idx in range(num_prompts):
+                # Collect data for this prompt from all runs
+                prompt_data_across_runs = []
+                for run_idx in range(num_runs):
+                    detail_idx = run_idx * num_prompts + prompt_idx
+                    if detail_idx < len(all_details):
+                        prompt_data_across_runs.append(all_details[detail_idx])
+
+                if not prompt_data_across_runs:
+                    continue
+
+                # Calculate mean values for this prompt
+                mean_ttft = np.mean([d.get("ttft_s", 0) for d in prompt_data_across_runs if d.get("ttft_s") is not None])
+                mean_tg = np.mean([d.get("tg_s", 0) for d in prompt_data_across_runs if d.get("tg_s") is not None])
+
+                # Input/output tokens should be the same across runs for same prompt
+                input_tokens = prompt_data_across_runs[0].get("input_tokens")
+                output_tokens = np.mean([d.get("output_tokens", 0) for d in prompt_data_across_runs if d.get("output_tokens") is not None])
+
+                aggregated_detail = {
+                    "ttft_s": float(mean_ttft),
+                    "tg_s": float(mean_tg),
+                    "input_tokens": input_tokens,
+                    "output_tokens": int(output_tokens),
+                }
+
+                prompt_aggregations.append(aggregated_detail)
+
+            # Sort by input tokens (prompt length) for logical ordering
+            prompt_aggregations.sort(key=lambda x: x["input_tokens"])
+
+            result_entries.append({
+                "device_label": device_label,
+                "gpu_name": gpu_name,
+                "prompt_details": prompt_aggregations,
+            })
+
+    return result_entries
 
 
 def plot_ttft_vs_input_tokens(
     devices_data: dict, device_gpu_mapping: dict, output_path: Path | None = None
 ):
     """
-    Plot Time To First Token vs Input Tokens for multiple devices.
+    Plot Time To First Token vs Input Tokens for multiple devices using line plots.
 
     Args:
         devices_data: Dict mapping device_label to list of prompt details
@@ -143,6 +201,8 @@ def plot_ttft_vs_input_tokens(
             continue
 
         has_data = True
+
+        # Extract data for scatter plot
         input_tokens = np.array([x[0] for x in filtered])
         ttft_times = np.array([x[1] for x in filtered])
 
@@ -154,34 +214,34 @@ def plot_ttft_vs_input_tokens(
         # For multiple devices of same vendor, adjust hue slightly
         color = mpl.colors.to_rgba(vendor_color)
 
-        # Scatter plot
+        # Sort data for connected line
+        sorted_data = sorted(zip(input_tokens, ttft_times))
+        sorted_input_tokens = np.array([x[0] for x in sorted_data])
+        sorted_ttft_times = np.array([x[1] for x in sorted_data])
+
+        # Plot line connecting points
+        ax.plot(
+            sorted_input_tokens,
+            sorted_ttft_times,
+            color=color,
+            linewidth=2,
+            alpha=0.6,
+            zorder=2,
+        )
+
+        # Scatter plot on top
         ax.scatter(
             input_tokens,
             ttft_times,
-            alpha=0.6,
-            s=100,
             color=color,
             marker=marker,
+            s=80,
             edgecolors="white",
-            linewidth=0.5,
+            linewidths=1,
+            alpha=0.8,
             label=device_label,
             zorder=3,
         )
-
-        # Add trend line for this device
-        if len(input_tokens) > 1:
-            z = np.polyfit(input_tokens, ttft_times, 1)
-            p = np.poly1d(z)
-            x_trend = np.linspace(input_tokens.min(), input_tokens.max(), 100)
-            ax.plot(
-                x_trend,
-                p(x_trend),
-                "--",
-                color=color,
-                alpha=0.3,
-                linewidth=1.5,
-                zorder=2,
-            )
 
     if not has_data:
         print("No data available for TTFT vs Input Tokens plot")
@@ -209,6 +269,9 @@ def plot_ttft_vs_input_tokens(
     # Start from 0
     ax.set_ylim(bottom=0)
 
+    # Add grid for better readability
+    ax.grid(True, alpha=0.3, linestyle='-', linewidth=0.5)
+
     plt.tight_layout()
 
     # Create output directory if needed
@@ -222,7 +285,7 @@ def plot_tg_vs_output_tokens(
     devices_data: dict, device_gpu_mapping: dict, output_path: Path | None = None
 ):
     """
-    Plot Text Generation Time vs Output Tokens for multiple devices.
+    Plot Text Generation Time vs Output Tokens for multiple devices using line plots.
 
     Args:
         devices_data: Dict mapping device_label to list of prompt details
@@ -251,6 +314,8 @@ def plot_tg_vs_output_tokens(
             continue
 
         has_data = True
+
+        # Extract data for scatter plot
         output_tokens = np.array([x[0] for x in filtered])
         tg_times = np.array([x[1] for x in filtered])
 
@@ -262,34 +327,34 @@ def plot_tg_vs_output_tokens(
         # For multiple devices of same vendor, adjust hue slightly
         color = mpl.colors.to_rgba(vendor_color)
 
-        # Scatter plot
+        # Sort data for connected line
+        sorted_data = sorted(zip(output_tokens, tg_times))
+        sorted_output_tokens = np.array([x[0] for x in sorted_data])
+        sorted_tg_times = np.array([x[1] for x in sorted_data])
+
+        # Plot line connecting points
+        ax.plot(
+            sorted_output_tokens,
+            sorted_tg_times,
+            color=color,
+            linewidth=2,
+            alpha=0.6,
+            zorder=2,
+        )
+
+        # Scatter plot on top
         ax.scatter(
             output_tokens,
             tg_times,
-            alpha=0.6,
-            s=100,
             color=color,
             marker=marker,
+            s=80,
             edgecolors="white",
-            linewidth=0.5,
+            linewidths=1,
+            alpha=0.8,
             label=device_label,
             zorder=3,
         )
-
-        # Add trend line for this device
-        if len(output_tokens) > 1:
-            z = np.polyfit(output_tokens, tg_times, 1)
-            p = np.poly1d(z)
-            x_trend = np.linspace(output_tokens.min(), output_tokens.max(), 100)
-            ax.plot(
-                x_trend,
-                p(x_trend),
-                "--",
-                color=color,
-                alpha=0.3,
-                linewidth=1.5,
-                zorder=2,
-            )
 
     if not has_data:
         print("No data available for Generation Time vs Output Tokens plot")
@@ -317,6 +382,9 @@ def plot_tg_vs_output_tokens(
     # Start from 0
     ax.set_ylim(bottom=0)
 
+    # Add grid for better readability
+    ax.grid(True, alpha=0.3, linestyle='-', linewidth=0.5)
+
     plt.tight_layout()
 
     # Create output directory if needed
@@ -343,20 +411,21 @@ def main():
 
     for result_file in result_files:
         print(f"Loading: {result_file.name}")
-        data = load_prompt_details(str(result_file))
+        entries = load_prompt_details(str(result_file))
 
-        device_label = data["device_label"]
-        gpu_name = data["gpu_name"]
-        prompt_details = data["prompt_details"]
+        for entry in entries:
+            device_label = entry["device_label"]
+            gpu_name = entry["gpu_name"]
+            prompt_details = entry["prompt_details"]
 
-        # Store GPU name for color mapping
-        device_gpu_mapping[device_label] = gpu_name
+            # Store GPU name for color mapping
+            device_gpu_mapping[device_label] = gpu_name
 
-        # Aggregate data for this device (append if device already exists)
-        if device_label not in devices_data:
-            devices_data[device_label] = []
+            # Aggregate data for this device (append if device already exists)
+            if device_label not in devices_data:
+                devices_data[device_label] = []
 
-        devices_data[device_label].extend(prompt_details)
+            devices_data[device_label].extend(prompt_details)
 
     # Print summary
     total_details = 0
