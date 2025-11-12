@@ -162,7 +162,18 @@ git clone https://github.com/bogdanminko/laperf.git
 cd laperf
 ```
 
-### 2. Install dependencies (optional)
+### 2. (Optional) Configure environment variables
+
+La Perf works out of the box with default settings, but you can customize it for different providers:
+
+```bash
+cp .env.example .env
+# Edit .env to change URLs, models, dataset sizes, etc.
+```
+
+See [`.env.example`](.env.example) for all available options, including how to use custom OpenAI-compatible providers like vLLM, TGI, or LocalAI.
+
+### 3. Install dependencies (optional)
 
 ```bash
 uv sync

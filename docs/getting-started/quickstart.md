@@ -27,7 +27,34 @@ git clone https://github.com/bogdanminko/laperf.git
 cd laperf
 ```
 
-### 2. Install dependencies (optional)
+### 2. (Optional) Configure environment variables
+
+La Perf works out of the box with default settings, but you can customize it:
+
+```bash
+cp .env.example .env
+# Edit .env to customize settings
+```
+
+Common customizations:
+
+- **Change provider URLs** - Use different OpenAI-compatible providers (vLLM, TGI, LocalAI)
+- **Adjust dataset sizes** - Change `LLM_DATA_SIZE`, `VLM_DATA_SIZE`, `EMBEDDING_DATA_SIZE`
+- **Select backends** - Use `LM_STUDIO`, `OLLAMA`, or `BOTH` for benchmarking
+- **Customize models** - Set different model names for your provider
+
+!!! example "Using a custom provider"
+    To use vLLM or another OpenAI-compatible provider:
+
+    ```bash
+    # In your .env file:
+    LLM_BACKEND=LM_STUDIO
+    LMS_LLM_BASE_URL=http://localhost:8000/v1
+    LMS_LLM_MODEL_NAME=Qwen/Qwen3-30B-Instruct
+    LLM_API_KEY=your-api-key-if-needed
+    ```
+
+### 3. Install dependencies (optional)
 
 ```bash
 uv sync
@@ -100,7 +127,17 @@ This processes JSON results and generates markdown tables for the README.
 
 ### Out of memory
 
-- **Reduce batch size** in `.env`
+If you encounter out-of-memory errors, create a `.env` file and adjust these settings:
+
+```bash
+cp .env.example .env
+```
+
+Then edit `.env` to reduce resource usage:
+
+- **Reduce batch size**: `EMBEDDING_BATCH_SIZE=16` (default: 32)
+- **Reduce dataset size**: `EMBEDDING_DATA_SIZE=1000` (default: 3000)
+- **Reduce LLM/VLM samples**: `LLM_DATA_SIZE=5` or `VLM_DATA_SIZE=5` (default: 10)
 - **Close** other GPU-intensive applications
 - **Use CPU** mode for testing (slower but works)
 
