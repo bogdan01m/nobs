@@ -44,7 +44,7 @@ The goal of this project is to create an **all-in-one source of information** yo
 === "Embeddings"
     **Text embeddings** via `sentence-transformers`
 
-    - Models: [modernbert-embed-base](https://huggingface.co/nomic-ai/modernbert-embed-base), [gte-large](https://huggingface.co/thenlper/gte-large)
+    - Models: [modernbert-embed-base](https://huggingface.co/nomic-ai/modernbert-embed-base)
     - Dataset: [IMDB](https://huggingface.co/datasets/stanfordnlp/imdb) (3000 samples)
     - Metrics: RPS (Rows Per Second), E2E Latency
 

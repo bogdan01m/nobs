@@ -12,6 +12,8 @@ import matplotlib as mpl
 import matplotlib.pyplot as plt
 import numpy as np
 from .vendor_color import get_gpu_vendor_color
+import colorsys
+from collections import defaultdict
 
 # Get project root directory (2 levels up from src/plots/)
 PROJECT_ROOT = Path(__file__).parent.parent.parent
@@ -72,6 +74,17 @@ DEVICE_MARKERS = [
 
 def get_marker(idx: int):
     return DEVICE_MARKERS[idx % len(DEVICE_MARKERS)]
+
+
+# Helper to adjust color lightness
+def _adjust_lightness(color_in, factor: float):
+    """Lighten/darken a color by multiplying its HLS lightness by `factor`."""
+    rgba = mpl.colors.to_rgba(color_in)
+    r, g, b, a = rgba
+    h, lightness, s = colorsys.rgb_to_hls(r, g, b)
+    lightness = max(0.0, min(1.0, lightness * factor))
+    nr, ng, nb = colorsys.hls_to_rgb(h, lightness, s)
+    return (nr, ng, nb, a)
 
 
 def load_prompt_details(result_file: str):
@@ -192,28 +205,86 @@ def load_prompt_details(result_file: str):
     return result_entries
 
 
+def bin_data(tokens: np.ndarray, times: np.ndarray, bin_size: int = 100):
+    """
+    Bin data by token count and calculate mean time for each bin.
+
+    Args:
+        tokens: Array of token counts
+        times: Array of corresponding times
+        bin_size: Size of each bin (default: 100 tokens)
+
+    Returns:
+        bin_centers: Array of bin center positions
+        mean_times: Array of mean times for each bin
+    """
+    if len(tokens) == 0:
+        return np.array([]), np.array([])
+
+    # Create bins
+    min_tokens = int(np.floor(tokens.min() / bin_size) * bin_size)
+    max_tokens = int(np.ceil(tokens.max() / bin_size) * bin_size)
+    bins = np.arange(min_tokens, max_tokens + bin_size, bin_size)
+
+    # Assign each data point to a bin
+    bin_indices = np.digitize(tokens, bins) - 1
+
+    # Calculate mean for each bin
+    bin_centers = []
+    mean_times = []
+
+    for i in range(len(bins) - 1):
+        mask = bin_indices == i
+        if mask.any():
+            bin_centers.append((bins[i] + bins[i + 1]) / 2)
+            mean_times.append(times[mask].mean())
+
+    return np.array(bin_centers), np.array(mean_times)
+
+
 def plot_ttft_vs_input_tokens(
-    devices_data: dict, device_gpu_mapping: dict, output_path: Path | None = None
+    devices_data: dict,
+    device_gpu_mapping: dict,
+    output_path: Path | None = None,
+    max_time: float = 30.0,
 ):
     """
-    Plot Time To First Token vs Input Tokens for multiple devices using line plots.
+    Plot Time To First Token vs Input Tokens for multiple devices using bar charts with bins.
 
     Args:
         devices_data: Dict mapping device_label to list of prompt details
         device_gpu_mapping: Dict mapping device_label to GPU name for color selection
         output_path: Path to save the plot (defaults to results/plots/ttft_vs_input_tokens.png)
+        max_time: Maximum time in seconds to display on y-axis (default: 30.0)
     """
     if output_path is None:
         output_path = PLOTS_DIR / "ttft_vs_input_tokens.png"
 
     # Create figure with scientific style
     plt.style.use("seaborn-v0_8-paper")
-    fig, ax = plt.subplots(figsize=(12, 7), dpi=300)
+    fig, ax = plt.subplots(figsize=(14, 7), dpi=300)
 
     has_data = False
 
-    # Plot each device with different color/marker
-    for idx, (device_label, details) in enumerate(devices_data.items()):
+    # Determine bin size dynamically based on data range
+    all_input_tokens = []
+    for details in devices_data.values():
+        all_input_tokens.extend(
+            [d["input_tokens"] for d in details if d.get("input_tokens") is not None]
+        )
+
+    if not all_input_tokens:
+        print("No data available for TTFT vs Input Tokens plot")
+        return
+
+    token_range = max(all_input_tokens) - min(all_input_tokens)
+    bin_size = max(100, int(token_range / 8))  # Larger adaptive bin size
+
+    # Collect all binned data first to determine x positions
+    binned_devices = {}
+    all_bin_centers = set()
+
+    for device_label, details in devices_data.items():
         # Filter out None values
         filtered = [
             (d["input_tokens"], d["ttft_s"])
@@ -226,50 +297,97 @@ def plot_ttft_vs_input_tokens(
 
         has_data = True
 
-        # Extract data for scatter plot
+        # Extract data
         input_tokens = np.array([x[0] for x in filtered])
         ttft_times = np.array([x[1] for x in filtered])
 
-        # Get vendor-based color and marker for this device
-        gpu_name = device_gpu_mapping.get(device_label, "Unknown GPU")
-        vendor_color = get_gpu_vendor_color(gpu_name)
-        marker = get_marker(idx)
+        # Bin the data
+        bin_centers, mean_times = bin_data(input_tokens, ttft_times, bin_size)
 
-        # For multiple devices of same vendor, adjust hue slightly
-        color = mpl.colors.to_rgba(vendor_color)
-
-        # Sort data for connected line
-        sorted_data = sorted(zip(input_tokens, ttft_times))
-        sorted_input_tokens = np.array([x[0] for x in sorted_data])
-        sorted_ttft_times = np.array([x[1] for x in sorted_data])
-
-        # Plot line connecting points
-        ax.plot(
-            sorted_input_tokens,
-            sorted_ttft_times,
-            color=color,
-            linewidth=2,
-            alpha=0.6,
-            zorder=2,
-        )
-
-        # Scatter plot on top
-        ax.scatter(
-            input_tokens,
-            ttft_times,
-            color=color,
-            marker=marker,
-            s=80,
-            edgecolors="white",
-            linewidths=1,
-            alpha=0.8,
-            label=device_label,
-            zorder=3,
-        )
+        binned_devices[device_label] = (bin_centers, mean_times)
+        all_bin_centers.update(bin_centers)
 
     if not has_data:
         print("No data available for TTFT vs Input Tokens plot")
         return
+
+    # Calculate bar width - make bars wider while preventing overlap
+    num_devices = len(binned_devices)
+    # Compute per-bin group width with padding so bars never overlap adjacent bins
+    bin_padding = 0.15  # 15% empty space per bin for visual separation
+    group_width = bin_size * (1 - bin_padding)
+    bar_width = group_width / max(num_devices, 1)
+
+    # Plot bars for each device
+    variant_counts: defaultdict[tuple[str, str], int] = defaultdict(
+        int
+    )  # key: (vendor_hex, backend_key)
+    for idx, (device_label, (bin_centers, mean_times)) in enumerate(
+        binned_devices.items()
+    ):
+        # Vendor base color + backend-based shade (Ollama lighter, LM Studio darker)
+        gpu_name = device_gpu_mapping.get(device_label, "Unknown GPU")
+        vendor_color = get_gpu_vendor_color(gpu_name)
+
+        backend = device_label.split(" | ", 1)[1] if " | " in device_label else ""
+        backend_lower = backend.lower()
+        base_factor = 1.0
+        if backend_lower.startswith("ollama"):
+            base_factor = 1.12  # lighter
+        elif backend_lower.startswith("lm studio") or backend_lower.startswith(
+            "lmstudio"
+        ):
+            base_factor = 0.88  # darker
+
+        key = (vendor_color, backend_lower.split()[0] if backend_lower else "")
+        idx_variant = variant_counts[key]
+        variant_counts[key] += 1
+        variant_ring = [0.95, 1.0, 1.05, 0.9, 1.1]
+        factor = base_factor * variant_ring[idx_variant % len(variant_ring)]
+        color = _adjust_lightness(vendor_color, factor)
+
+        # Calculate x positions for this device's bars
+        x_offset = (idx - num_devices / 2) * bar_width + bar_width / 2
+        x_positions = bin_centers + x_offset
+
+        # Clip values to max_time for display
+        display_times = np.clip(mean_times, 0, max_time)
+
+        # Plot bars
+        ax.bar(
+            x_positions,
+            display_times,
+            width=bar_width,
+            color=color,
+            alpha=0.8,
+            label=device_label,
+            edgecolor="white",
+            linewidth=0.5,
+        )
+
+        # Add value labels on top of bars
+        for x_pos, actual_time, display_time in zip(
+            x_positions, mean_times, display_times
+        ):
+            # Format the time label
+            if actual_time > max_time:
+                time_label = f"{actual_time:.1f}s"
+                y_pos = max_time
+            else:
+                time_label = f"{actual_time:.1f}s"
+                y_pos = display_time
+
+            # Add time label on top of bar
+            ax.text(
+                x_pos,
+                y_pos + max_time * 0.02,
+                time_label,
+                ha="center",
+                va="bottom",
+                fontsize=7,
+                fontweight="bold",
+                color=color if actual_time <= max_time else "red",
+            )
 
     # Styling
     ax.set_xlabel("Input Tokens (prompt length)", fontsize=12, fontweight="bold")
@@ -281,20 +399,20 @@ def plot_ttft_vs_input_tokens(
         pad=20,
     )
 
-    # Legend
+    # Legend with vendor-colored shades
     ax.legend(
-        loc="upper left",
+        loc="best",
         frameon=True,
         framealpha=0.9,
         edgecolor="gray",
-        fontsize=10,
+        fontsize=9,
     )
 
-    # Start from 0
-    ax.set_ylim(bottom=0)
+    # Set y-axis limit to max_time
+    ax.set_ylim(bottom=0, top=max_time * 1.1)
 
     # Add grid for better readability
-    ax.grid(True, alpha=0.3, linestyle="-", linewidth=0.5)
+    ax.grid(True, alpha=0.3, linestyle="-", linewidth=0.5, axis="y")
 
     plt.tight_layout()
 
@@ -306,27 +424,48 @@ def plot_ttft_vs_input_tokens(
 
 
 def plot_tg_vs_output_tokens(
-    devices_data: dict, device_gpu_mapping: dict, output_path: Path | None = None
+    devices_data: dict,
+    device_gpu_mapping: dict,
+    output_path: Path | None = None,
+    max_time: float = 30.0,
 ):
     """
-    Plot Text Generation Time vs Output Tokens for multiple devices using line plots.
+    Plot Text Generation Time vs Output Tokens for multiple devices using bar charts with bins.
 
     Args:
         devices_data: Dict mapping device_label to list of prompt details
         device_gpu_mapping: Dict mapping device_label to GPU name for color selection
         output_path: Path to save the plot (defaults to results/plots/tg_vs_output_tokens.png)
+        max_time: Maximum time in seconds to display on y-axis (default: 30.0)
     """
     if output_path is None:
         output_path = PLOTS_DIR / "tg_vs_output_tokens.png"
 
     # Create figure with scientific style
     plt.style.use("seaborn-v0_8-paper")
-    fig, ax = plt.subplots(figsize=(12, 7), dpi=300)
+    fig, ax = plt.subplots(figsize=(14, 7), dpi=300)
 
     has_data = False
 
-    # Plot each device with different color/marker
-    for idx, (device_label, details) in enumerate(devices_data.items()):
+    # Determine bin size dynamically based on data range
+    all_output_tokens = []
+    for details in devices_data.values():
+        all_output_tokens.extend(
+            [d["output_tokens"] for d in details if d.get("output_tokens") is not None]
+        )
+
+    if not all_output_tokens:
+        print("No data available for Generation Time vs Output Tokens plot")
+        return
+
+    token_range = max(all_output_tokens) - min(all_output_tokens)
+    bin_size = max(100, int(token_range / 8))  # Larger adaptive bin size
+
+    # Collect all binned data first to determine x positions
+    binned_devices = {}
+    all_bin_centers = set()
+
+    for device_label, details in devices_data.items():
         # Filter out None values
         filtered = [
             (d["output_tokens"], d["tg_s"])
@@ -339,50 +478,97 @@ def plot_tg_vs_output_tokens(
 
         has_data = True
 
-        # Extract data for scatter plot
+        # Extract data
         output_tokens = np.array([x[0] for x in filtered])
         tg_times = np.array([x[1] for x in filtered])
 
-        # Get vendor-based color and marker for this device
-        gpu_name = device_gpu_mapping.get(device_label, "Unknown GPU")
-        vendor_color = get_gpu_vendor_color(gpu_name)
-        marker = get_marker(idx)
+        # Bin the data
+        bin_centers, mean_times = bin_data(output_tokens, tg_times, bin_size)
 
-        # For multiple devices of same vendor, adjust hue slightly
-        color = mpl.colors.to_rgba(vendor_color)
-
-        # Sort data for connected line
-        sorted_data = sorted(zip(output_tokens, tg_times))
-        sorted_output_tokens = np.array([x[0] for x in sorted_data])
-        sorted_tg_times = np.array([x[1] for x in sorted_data])
-
-        # Plot line connecting points
-        ax.plot(
-            sorted_output_tokens,
-            sorted_tg_times,
-            color=color,
-            linewidth=2,
-            alpha=0.6,
-            zorder=2,
-        )
-
-        # Scatter plot on top
-        ax.scatter(
-            output_tokens,
-            tg_times,
-            color=color,
-            marker=marker,
-            s=80,
-            edgecolors="white",
-            linewidths=1,
-            alpha=0.8,
-            label=device_label,
-            zorder=3,
-        )
+        binned_devices[device_label] = (bin_centers, mean_times)
+        all_bin_centers.update(bin_centers)
 
     if not has_data:
         print("No data available for Generation Time vs Output Tokens plot")
         return
+
+    # Calculate bar width - make bars wider while preventing overlap
+    num_devices = len(binned_devices)
+    # Compute per-bin group width with padding so bars never overlap adjacent bins
+    bin_padding = 0.15  # 15% empty space per bin for visual separation
+    group_width = bin_size * (1 - bin_padding)
+    bar_width = group_width / max(num_devices, 1)
+
+    # Plot bars for each device
+    variant_counts: defaultdict[tuple[str, str], int] = defaultdict(
+        int
+    )  # key: (vendor_hex, backend_key)
+    for idx, (device_label, (bin_centers, mean_times)) in enumerate(
+        binned_devices.items()
+    ):
+        # Vendor base color + backend-based shade (Ollama lighter, LM Studio darker)
+        gpu_name = device_gpu_mapping.get(device_label, "Unknown GPU")
+        vendor_color = get_gpu_vendor_color(gpu_name)
+
+        backend = device_label.split(" | ", 1)[1] if " | " in device_label else ""
+        backend_lower = backend.lower()
+        base_factor = 1.0
+        if backend_lower.startswith("ollama"):
+            base_factor = 1.12  # lighter
+        elif backend_lower.startswith("lm studio") or backend_lower.startswith(
+            "lmstudio"
+        ):
+            base_factor = 0.88  # darker
+
+        key = (vendor_color, backend_lower.split()[0] if backend_lower else "")
+        idx_variant = variant_counts[key]
+        variant_counts[key] += 1
+        variant_ring = [0.95, 1.0, 1.05, 0.9, 1.1]
+        factor = base_factor * variant_ring[idx_variant % len(variant_ring)]
+        color = _adjust_lightness(vendor_color, factor)
+
+        # Calculate x positions for this device's bars
+        x_offset = (idx - num_devices / 2) * bar_width + bar_width / 2
+        x_positions = bin_centers + x_offset
+
+        # Clip values to max_time for display
+        display_times = np.clip(mean_times, 0, max_time)
+
+        # Plot bars
+        ax.bar(
+            x_positions,
+            display_times,
+            width=bar_width,
+            color=color,
+            alpha=0.8,
+            label=device_label,
+            edgecolor="white",
+            linewidth=0.5,
+        )
+
+        # Add value labels on top of bars
+        for x_pos, actual_time, display_time in zip(
+            x_positions, mean_times, display_times
+        ):
+            # Format the time label
+            if actual_time > max_time:
+                time_label = f"{actual_time:.1f}s"
+                y_pos = max_time
+            else:
+                time_label = f"{actual_time:.1f}s"
+                y_pos = display_time
+
+            # Add time label on top of bar
+            ax.text(
+                x_pos,
+                y_pos + max_time * 0.02,
+                time_label,
+                ha="center",
+                va="bottom",
+                fontsize=7,
+                fontweight="bold",
+                color=color if actual_time <= max_time else "red",
+            )
 
     # Styling
     ax.set_xlabel("Output Tokens (response length)", fontsize=12, fontweight="bold")
@@ -394,20 +580,20 @@ def plot_tg_vs_output_tokens(
         pad=20,
     )
 
-    # Legend
+    # Legend with vendor-colored shades
     ax.legend(
-        loc="upper left",
+        loc="best",
         frameon=True,
         framealpha=0.9,
         edgecolor="gray",
-        fontsize=10,
+        fontsize=9,
     )
 
-    # Start from 0
-    ax.set_ylim(bottom=0)
+    # Set y-axis limit to max_time
+    ax.set_ylim(bottom=0, top=max_time * 1.1)
 
     # Add grid for better readability
-    ax.grid(True, alpha=0.3, linestyle="-", linewidth=0.5)
+    ax.grid(True, alpha=0.3, linestyle="-", linewidth=0.5, axis="y")
 
     plt.tight_layout()
 

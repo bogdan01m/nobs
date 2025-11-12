@@ -41,7 +41,7 @@ Detailed hardware and software requirements for running La Perf benchmarks.
 
 | Component | Minimum | Recommended |
 |-----------|---------|-------------|
-| **RAM/VRAM** | 12 GB | 16 GB+ |
+| **RAM/VRAM** | 16 GB | 20 GB+ |
 | **GPU** | Optional | NVIDIA/AMD/Apple |
 | **Disk** | 14 GB | SSD |
 

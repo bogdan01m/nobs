@@ -213,6 +213,32 @@ class PowerMetricsExtractor:
 
         return (cpu_p50, cpu_p95)
 
+    @staticmethod
+    def get_vram_metrics(power: dict[str, Any]) -> tuple[Any, Any]:
+        """Extract GPU VRAM usage metrics.
+
+        Args:
+            power: Power metrics dictionary
+
+        Returns:
+            Tuple of (p50, p95) VRAM usage in GB
+        """
+        vram_mb_p50 = power.get("gpu_vram_used_mb_p50")
+        vram_mb_p95 = power.get("gpu_vram_used_mb_p95")
+
+        # Convert MB to GB
+        if vram_mb_p50 is not None and isinstance(vram_mb_p50, (int, float)):
+            vram_p50 = round(vram_mb_p50 / 1024, 2)
+        else:
+            vram_p50 = "N/A"
+
+        if vram_mb_p95 is not None and isinstance(vram_mb_p95, (int, float)):
+            vram_p95 = round(vram_mb_p95 / 1024, 2)
+        else:
+            vram_p95 = "N/A"
+
+        return (vram_p50, vram_p95)
+
 
 class ModelMetricsExtractor:
     """Extract model-specific performance metrics."""

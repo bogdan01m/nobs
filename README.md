@@ -86,12 +86,14 @@ For embedding tasks, La Perf **automatically detects your available device** and
 
 ### ⚡ Power Metrics
 
-| Device | CPU Usage (p50/p95) | RAM Used (p50/p95) | GPU Usage (p50/p95) | GPU Temp (p50/p95) | Battery (start/end/Δ) | GPU Power (p50/p95) | CPU Power (p50/p95) |
-|------|------|------|------|------|------|------|------|
-| ASUSTeK COMPUTER ASUS Vivobook Pro N6506MV | 24.2% / 25.7% | 10.8GB / 13.2GB | 16.0% / 41.0% | 64.0°C / 66.0°C | 99.0% / 100.0% / -1.0% | 18.3W / 44.8W | N/A |
-| Mac16,6 | 4.0% / 12.0% | 22.3GB / 23.9GB | 97.0% / 100.0% | N/A | 85% / 85% / +0.0% | 11.7W / 32.3W | 1.1W / 2.2W |
+| Device | CPU Usage (p50/p95) | RAM Used GB (p50/p95) | VRAM Used GB (p50/p95) | GPU Usage (p50/p95) | GPU Temp (p50/p95) | Battery (start/end/Δ) | GPU Power (p50/p95) | CPU Power (p50/p95) |
+|------|------|------|------|------|------|------|------|------|
+| ASUSTeK COMPUTER ASUS Vivobook Pro N6506MV | 24.2% / 25.7% | 10.8GB / 13.2GB | 7.0GB / 7.2GB | 16.0% / 41.0% | 64.0°C / 66.0°C | 99.0% / 100.0% / -1.0% | 18.3W / 44.8W | N/A |
+| Mac16,6 | 4.0% / 12.0% | 22.3GB / 23.9GB | 10.7GB / 14.5GB | 97.0% / 100.0% | N/A | 85% / 85% / +0.0% | 11.7W / 32.3W | 1.1W / 2.2W |
 
-*p50 = median, p95 = 95th percentile*
+!!! Note
+
+    For devices with unified memory (e.g. Apple Silicon), **VRAM usage** represents the portion of shared RAM allocated to the GPU — it does not indicate a separate dedicated memory pool as on discrete GPUs.
 
 
 

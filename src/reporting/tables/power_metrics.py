@@ -25,7 +25,8 @@ class PowerMetricsTableGenerator(BaseTableGenerator):
                 [
                     "Device",
                     "CPU Usage (p50/p95)",
-                    "RAM Used (p50/p95)",
+                    "RAM Used GB (p50/p95)",
+                    "VRAM Used GB (p50/p95)",
                     "GPU Usage (p50/p95)",
                     "GPU Temp (p50/p95)",
                     "Battery (start/end/Δ)",
@@ -41,7 +42,11 @@ class PowerMetricsTableGenerator(BaseTableGenerator):
                 lines.append(self._format_row(device, power))
 
         lines.append("")
-        lines.append("*p50 = median, p95 = 95th percentile*\n")
+        lines.append("!!! Note\n")
+        lines.append(
+            "    For devices with unified memory (e.g. Apple Silicon), **VRAM usage** represents the portion of shared RAM allocated to the GPU — "
+            "it does not indicate a separate dedicated memory pool as on discrete GPUs.\n"
+        )
 
         return "\n".join(lines) + "\n"
 
@@ -70,6 +75,7 @@ class PowerMetricsTableGenerator(BaseTableGenerator):
         ram_p50, ram_p95 = extractor.get_ram_metrics(power)
         gpu_util_p50, gpu_util_p95 = extractor.get_gpu_utilization_metrics(power)
         gpu_temp_p50, gpu_temp_p95 = extractor.get_gpu_temperature_metrics(power)
+        vram_p50, vram_p95 = extractor.get_vram_metrics(power)
         battery_start, battery_end, battery_delta = extractor.get_battery_metrics(power)
         gpu_power_p50, gpu_power_p95 = extractor.get_gpu_power_metrics(power)
         cpu_power_p50, cpu_power_p95 = extractor.get_cpu_power_metrics(power)
@@ -77,6 +83,7 @@ class PowerMetricsTableGenerator(BaseTableGenerator):
         # Format metrics
         cpu_usage = format_percentile_pair(cpu_p50, cpu_p95, "%")
         ram_usage = format_percentile_pair(ram_p50, ram_p95, "GB")
+        vram_usage = format_percentile_pair(vram_p50, vram_p95, "GB")
         gpu_usage = format_percentile_pair(gpu_util_p50, gpu_util_p95, "%")
         gpu_temp = format_percentile_pair(gpu_temp_p50, gpu_temp_p95, "°C")
         battery_info = format_battery_info(battery_start, battery_end, battery_delta)
@@ -84,6 +91,6 @@ class PowerMetricsTableGenerator(BaseTableGenerator):
         cpu_power = format_percentile_pair(cpu_power_p50, cpu_power_p95, "W")
 
         return (
-            f"| {device} | {cpu_usage} | {ram_usage} | {gpu_usage} | {gpu_temp} | "
-            f"{battery_info} | {gpu_power} | {cpu_power} |"
+            f"| {device} | {cpu_usage} | {ram_usage} | {vram_usage} | {gpu_usage} | "
+            f"{gpu_temp} | {battery_info} | {gpu_power} | {cpu_power} |"
         )
