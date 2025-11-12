@@ -35,6 +35,8 @@ def generate_results_docs(
 ) -> None:
     """Generate docs/results.md with full results including plots.
 
+    Preserves any custom content before the "## Benchmark Results" marker.
+
     Args:
         results_dir: Directory containing benchmark result JSON files
         output_path: Path to output markdown file
@@ -46,8 +48,19 @@ def generate_results_docs(
     # Ensure docs directory exists
     output_path.parent.mkdir(parents=True, exist_ok=True)
 
-    # Write the results section directly
-    output_path.write_text(results_section)
+    # Preserve custom content before the marker
+    custom_header = ""
+    marker = "## Benchmark Results"
+
+    if output_path.exists():
+        existing_content = output_path.read_text()
+        if marker in existing_content:
+            # Keep everything before the marker
+            custom_header = existing_content.split(marker, 1)[0]
+
+    # Combine custom header with generated results
+    final_content = custom_header + results_section
+    output_path.write_text(final_content)
     print(f"✅ Generated {output_path} with benchmark results")
 
 

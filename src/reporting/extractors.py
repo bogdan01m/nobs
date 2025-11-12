@@ -272,3 +272,123 @@ class ModelMetricsExtractor:
             List of task dictionaries
         """
         return [t for t in result.get("tasks", []) if t.get("task") == task_type]
+
+
+class SummaryMetricsExtractor:
+    """Extract summary metrics for performance overview table."""
+
+    @staticmethod
+    def extract_embeddings_rps_p50(result: dict[str, Any]) -> float | None:
+        """Extract embeddings RPS P50 metric.
+
+        Args:
+            result: Benchmark result dictionary
+
+        Returns:
+            RPS P50 value or None if not available
+        """
+        models = ModelMetricsExtractor.extract_embeddings_models(result)
+        # Get first model's RPS (usually only one embeddings model per benchmark)
+        for model_data in models.values():
+            return model_data.get("final_mean_rps")
+        return None
+
+    @staticmethod
+    def extract_llm_tps_p50_by_backend(
+        result: dict[str, Any],
+    ) -> dict[str, float | None]:
+        """Extract LLM TPS P50 metric grouped by backend.
+
+        Args:
+            result: Benchmark result dictionary
+
+        Returns:
+            Dict with backend keys (LM_STUDIO, OLLAMA) and TPS P50 values
+        """
+        tps_by_backend: dict[str, float | None] = {"LM_STUDIO": None, "OLLAMA": None}
+        llm_tasks = ModelMetricsExtractor.extract_inference_tasks(result, "llms")
+
+        for task in llm_tasks:
+            backend = task.get("backend", "").upper()
+            if backend not in tps_by_backend:
+                continue
+
+            model = task.get("model", {})
+            runs = model.get("runs", [])
+            if runs:
+                tps_values = [run.get("p50_tps") for run in runs if run.get("p50_tps")]
+                if tps_values:
+                    tps_by_backend[backend] = sum(tps_values) / len(tps_values)
+
+        return tps_by_backend
+
+    @staticmethod
+    def extract_vlm_tps_p50_by_backend(
+        result: dict[str, Any],
+    ) -> dict[str, float | None]:
+        """Extract VLM TPS P50 metric grouped by backend.
+
+        Args:
+            result: Benchmark result dictionary
+
+        Returns:
+            Dict with backend keys (LM_STUDIO, OLLAMA) and TPS P50 values
+        """
+        tps_by_backend: dict[str, float | None] = {"LM_STUDIO": None, "OLLAMA": None}
+        vlm_tasks = ModelMetricsExtractor.extract_inference_tasks(result, "vlms")
+
+        for task in vlm_tasks:
+            backend = task.get("backend", "").upper()
+            if backend not in tps_by_backend:
+                continue
+
+            model = task.get("model", {})
+            runs = model.get("runs", [])
+            if runs:
+                tps_values = [run.get("p50_tps") for run in runs if run.get("p50_tps")]
+                if tps_values:
+                    tps_by_backend[backend] = sum(tps_values) / len(tps_values)
+
+        return tps_by_backend
+
+    @staticmethod
+    def extract_gpu_watts_p50(result: dict[str, Any]) -> float | None:
+        """Extract GPU power consumption P50 across all tasks.
+
+        Args:
+            result: Benchmark result dictionary
+
+        Returns:
+            GPU watts P50 value or None if not available
+        """
+        power_values = []
+        for task in result.get("tasks", []):
+            power = task.get("power_metrics", {})
+            gpu_p50, _ = PowerMetricsExtractor.get_gpu_power_metrics(power)
+            if gpu_p50 != "N/A" and isinstance(gpu_p50, (int, float)):
+                power_values.append(gpu_p50)
+
+        if power_values:
+            return sum(power_values) / len(power_values)
+        return None
+
+    @staticmethod
+    def extract_cpu_watts_p50(result: dict[str, Any]) -> float | None:
+        """Extract CPU power consumption P50 across all tasks.
+
+        Args:
+            result: Benchmark result dictionary
+
+        Returns:
+            CPU watts P50 value or None if not available
+        """
+        power_values = []
+        for task in result.get("tasks", []):
+            power = task.get("power_metrics", {})
+            cpu_p50, _ = PowerMetricsExtractor.get_cpu_power_metrics(power)
+            if cpu_p50 != "N/A" and isinstance(cpu_p50, (int, float)):
+                power_values.append(cpu_p50)
+
+        if power_values:
+            return sum(power_values) / len(power_values)
+        return None

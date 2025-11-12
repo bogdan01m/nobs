@@ -59,6 +59,7 @@ class ResultsSectionGenerator:
 
         sections = [
             self._generate_header(),
+            self._generate_summary(),
             self._generate_power_metrics(),
             self._generate_embeddings(include_plots=include_plots),
             self._generate_llms(include_plots=include_plots),
