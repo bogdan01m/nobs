@@ -39,7 +39,6 @@ It’s designed for **AI/ML engineers** who prefer to run workloads locally — 
 La Perf is a collection of reproducible tests and community-submitted results for :
 - #### **Embeddings** — ✅ Ready (sentence-transformers, [IMDB dataset](https://huggingface.co/datasets/stanfordnlp/imdb))
    sts models:
-   - [thenlper/gte-large](https://huggingface.co/thenlper/gte-large)
    - [modernbert-embed-base](https://huggingface.co/nomic-ai/modernbert-embed-base)
 - #### **LLM inference** — ✅ Ready (LM Studio and Ollama, [Awesome Prompts dataset](https://huggingface.co/datasets/fka/awesome-chatgpt-prompts))
    llm models:
