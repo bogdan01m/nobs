@@ -1,4 +1,3 @@
-# --- добавлено: импорт таймера ---
 import time
 import statistics
 
@@ -72,7 +71,7 @@ def stream_with_results(
     generation_time_s = (t1_stream - first_token_ts) if first_token_ts else None
 
     input_tokens_stream = final_usage.prompt_tokens if final_usage else None
-    output_tokens_stream = final_usage.completion_tokens if final_usage else chunk_count
+    output_tokens_stream = final_usage.completion_tokens if final_usage else None
     tokens_per_sec = (
         round(output_tokens_stream / total_latency_s_stream, 4)
         if (output_tokens_stream and total_latency_s_stream > 0)

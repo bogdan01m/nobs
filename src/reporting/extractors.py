@@ -361,15 +361,11 @@ class SummaryMetricsExtractor:
         Returns:
             GPU watts P50 value or None if not available
         """
-        power_values = []
-        for task in result.get("tasks", []):
-            power = task.get("power_metrics", {})
-            gpu_p50, _ = PowerMetricsExtractor.get_gpu_power_metrics(power)
-            if gpu_p50 != "N/A" and isinstance(gpu_p50, (int, float)):
-                power_values.append(gpu_p50)
-
-        if power_values:
-            return sum(power_values) / len(power_values)
+        # Power metrics are at the root level, not per-task
+        power = result.get("power_metrics", {})
+        gpu_p50, _ = PowerMetricsExtractor.get_gpu_power_metrics(power)
+        if gpu_p50 != "N/A" and isinstance(gpu_p50, (int, float)):
+            return gpu_p50
         return None
 
     @staticmethod
@@ -382,13 +378,9 @@ class SummaryMetricsExtractor:
         Returns:
             CPU watts P50 value or None if not available
         """
-        power_values = []
-        for task in result.get("tasks", []):
-            power = task.get("power_metrics", {})
-            cpu_p50, _ = PowerMetricsExtractor.get_cpu_power_metrics(power)
-            if cpu_p50 != "N/A" and isinstance(cpu_p50, (int, float)):
-                power_values.append(cpu_p50)
-
-        if power_values:
-            return sum(power_values) / len(power_values)
+        # Power metrics are at the root level, not per-task
+        power = result.get("power_metrics", {})
+        cpu_p50, _ = PowerMetricsExtractor.get_cpu_power_metrics(power)
+        if cpu_p50 != "N/A" and isinstance(cpu_p50, (int, float)):
+            return cpu_p50
         return None

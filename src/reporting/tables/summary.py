@@ -34,6 +34,11 @@ class SummaryTableGenerator(BaseTableGenerator):
                 "VLM TPS P50 (ollama)",
                 "GPU Power P50",
                 "CPU Power P50",
+                "Emb Efficiency (RPS/W)",
+                "LLM Efficiency (TPS/W) lms",
+                "LLM Efficiency (TPS/W) ollama",
+                "VLM Efficiency (TPS/W) lms",
+                "VLM Efficiency (TPS/W) ollama",
             ]
         )
 
@@ -59,6 +64,27 @@ class SummaryTableGenerator(BaseTableGenerator):
             gpu_watts = extractor.extract_gpu_watts_p50(result)
             cpu_watts = extractor.extract_cpu_watts_p50(result)
 
+            # Calculate efficiency metrics (performance / power)
+            emb_efficiency = None
+            if embeddings_rps and gpu_watts:
+                emb_efficiency = embeddings_rps / gpu_watts
+
+            llm_efficiency_lms = None
+            if llm_tps_by_backend["LM_STUDIO"] and gpu_watts:
+                llm_efficiency_lms = llm_tps_by_backend["LM_STUDIO"] / gpu_watts
+
+            llm_efficiency_ollama = None
+            if llm_tps_by_backend["OLLAMA"] and gpu_watts:
+                llm_efficiency_ollama = llm_tps_by_backend["OLLAMA"] / gpu_watts
+
+            vlm_efficiency_lms = None
+            if vlm_tps_by_backend["LM_STUDIO"] and gpu_watts:
+                vlm_efficiency_lms = vlm_tps_by_backend["LM_STUDIO"] / gpu_watts
+
+            vlm_efficiency_ollama = None
+            if vlm_tps_by_backend["OLLAMA"] and gpu_watts:
+                vlm_efficiency_ollama = vlm_tps_by_backend["OLLAMA"] / gpu_watts
+
             metrics_results.append(
                 {
                     "result": result,
@@ -69,6 +95,11 @@ class SummaryTableGenerator(BaseTableGenerator):
                     "vlm_tps_ollama": vlm_tps_by_backend["OLLAMA"],
                     "gpu_watts": gpu_watts,
                     "cpu_watts": cpu_watts,
+                    "emb_efficiency": emb_efficiency,
+                    "llm_efficiency_lms": llm_efficiency_lms,
+                    "llm_efficiency_ollama": llm_efficiency_ollama,
+                    "vlm_efficiency_lms": vlm_efficiency_lms,
+                    "vlm_efficiency_ollama": vlm_efficiency_ollama,
                 }
             )
 
@@ -99,6 +130,25 @@ class SummaryTableGenerator(BaseTableGenerator):
         gpu_watts_str = f"{item['gpu_watts']:.1f} W" if item["gpu_watts"] else "-"
         cpu_watts_str = f"{item['cpu_watts']:.1f} W" if item["cpu_watts"] else "-"
 
+        # Format efficiency values
+        emb_eff_str = f"{item['emb_efficiency']:.2f}" if item["emb_efficiency"] else "-"
+        llm_eff_lms_str = (
+            f"{item['llm_efficiency_lms']:.2f}" if item["llm_efficiency_lms"] else "-"
+        )
+        llm_eff_ollama_str = (
+            f"{item['llm_efficiency_ollama']:.2f}"
+            if item["llm_efficiency_ollama"]
+            else "-"
+        )
+        vlm_eff_lms_str = (
+            f"{item['vlm_efficiency_lms']:.2f}" if item["vlm_efficiency_lms"] else "-"
+        )
+        vlm_eff_ollama_str = (
+            f"{item['vlm_efficiency_ollama']:.2f}"
+            if item["vlm_efficiency_ollama"]
+            else "-"
+        )
+
         # Format device info
         vram_str = format_vram(device_info.get("gpu_memory_gb", "N/A"))
         platform_str = format_platform(device_info.get("platform", "Unknown"))
@@ -108,7 +158,9 @@ class SummaryTableGenerator(BaseTableGenerator):
             f"{device_info['gpu_name']} | {vram_str} | "
             f"{emb_rps_str} | {llm_tps_lms_str} | {llm_tps_ollama_str} | "
             f"{vlm_tps_lms_str} | {vlm_tps_ollama_str} | "
-            f"{gpu_watts_str} | {cpu_watts_str} |"
+            f"{gpu_watts_str} | {cpu_watts_str} | "
+            f"{emb_eff_str} | {llm_eff_lms_str} | {llm_eff_ollama_str} | "
+            f"{vlm_eff_lms_str} | {vlm_eff_ollama_str} |"
         )
 
     def _add_footnotes(self) -> list[str]:

@@ -2,6 +2,7 @@
 
 from pathlib import Path
 
+from plots.plot_efficiency import plot_efficiency_comparison
 from plots.plot_embeddings_metrics import plot_embeddings_performance
 from plots.plot_llm_metrics import plot_llm_performance
 from plots.plot_vlm_metrics import plot_vlm_performance
@@ -94,7 +95,25 @@ class ResultsSectionGenerator:
         Returns:
             Summary table markdown
         """
-        return SummaryTableGenerator(self.results).generate()
+        summary = SummaryTableGenerator(self.results).generate()
+
+        # Add efficiency plots after summary table
+        try:
+            plot_efficiency_comparison(self.results_dir)
+            plot_section = (
+                "\n#### Performance Efficiency (Performance per Watt)\n\n"
+                f"![Embeddings Efficiency]({self._plot_path('efficiency_embeddings.png')})\n"
+                "*Embeddings efficiency across devices. Higher values indicate better performance per watt.*\n\n"
+                f"![LLM Efficiency]({self._plot_path('efficiency_llm.png')})\n"
+                "*LLM inference efficiency by backend. Higher values indicate better performance per watt.*\n\n"
+                f"![VLM Efficiency]({self._plot_path('efficiency_vlm.png')})\n"
+                "*VLM inference efficiency by backend. Higher values indicate better performance per watt.*\n"
+            )
+            summary += plot_section
+        except Exception as e:
+            print(f"⚠️  Failed to generate efficiency plots: {e}")
+
+        return summary
 
     def _generate_power_metrics(self) -> str:
         """Generate power metrics table if available.

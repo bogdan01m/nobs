@@ -19,7 +19,7 @@ class PowerMetricsTableGenerator(BaseTableGenerator):
         if not self._has_power_data():
             return ""
 
-        lines = ["### ⚡ Power Metrics\n"]
+        lines = ["### Power Metrics\n"]
         lines.extend(
             self._build_header(
                 [
