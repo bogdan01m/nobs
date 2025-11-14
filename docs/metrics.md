@@ -133,6 +133,95 @@ mean(run1_percentile, run2_percentile, run3_percentile) ± std(run1_percentile, 
 These aggregated values appear in the results tables.
 
 ---
+
+## Power Metrics
+
+### Overview
+
+La Perf monitors system resource usage and power consumption during benchmarks. Power metrics are collected continuously throughout benchmark execution.
+
+| Metric | Description | Unit |
+|--------|-------------|------|
+| **GPU Power** | GPU power consumption | watts |
+| **CPU Power** | CPU power consumption (macOS only) | watts |
+| **GPU VRAM Used** | GPU memory used | MB |
+| **GPU VRAM Total** | Total GPU memory available | MB |
+| **GPU Utilization** | GPU compute utilization | % |
+| **GPU Temperature** | GPU temperature | °C |
+| **CPU Utilization** | CPU utilization across all cores | % |
+| **RAM Used** | System RAM used by process | GB |
+
+### Measurement Methodology
+
+#### Data Collection
+
+Power metrics are sampled continuously during benchmark execution:
+- **Sampling interval**: 1 second (configurable)
+- **Background monitoring**: Runs in parallel with benchmark workload
+- **Platform-specific tools**:
+  - **NVIDIA GPUs**: `nvidia-smi` for power, utilization, memory, temperature
+  - **macOS (Apple Silicon)**: `sudo powermetrics` for GPU/CPU power + `ioreg` for GPU stats
+  - **CPU/RAM**: `psutil` library for cross-platform monitoring
+
+#### macOS powermetrics
+
+On macOS, when `--use-sudo-powermetrics` flag is enabled, the benchmark collects:
+- **GPU Power**: Via `powermetrics --samplers gpu_power`
+- **CPU Power**: Via `powermetrics --samplers cpu_power`
+
+The powermetrics process runs in the background and outputs to a log file, which is parsed after benchmark completion.
+
+#### Percentile Statistics
+
+For each metric, La Perf computes percentiles across all samples collected during the benchmark:
+
+| Percentile | Description |
+|------------|-------------|
+| **P50** | Median value (50th percentile) |
+| **P95** | 95th percentile (high load indicator) |
+
+**Example:** If 2673 power samples were collected over 2672 seconds:
+- `gpu_watts_p50 = 68.92W` means 50% of samples were ≤68.92W
+- `gpu_watts_p95 = 71.47W` means 95% of samples were ≤71.47W
+
+### Metrics Breakdown
+
+#### Power Consumption
+- **`gpu_watts_p50/p95`**: GPU power draw (NVIDIA: from `nvidia-smi`, macOS: from `powermetrics`)
+- **`cpu_watts_p50/p95`**: CPU power draw (macOS only, requires sudo)
+
+#### GPU Resource Usage
+- **`gpu_vram_used_mb_p50/p95`**: GPU memory used by the process
+- **`gpu_vram_total_mb_p50/p95`**: Total GPU memory (should be constant)
+- **`gpu_util_percent_p50/p95`**: GPU compute utilization (0-100%)
+- **`gpu_temp_celsius_p50/p95`**: GPU temperature
+
+#### System Resource Usage
+- **`cpu_util_percent_p50/p95`**: CPU utilization across all cores
+- **`ram_used_gb_p50/p95`**: System RAM used by the benchmark process
+
+### Cross-Run Statistics
+
+When running multiple benchmark iterations, power metrics are aggregated:
+```python
+# For each power metric, compute mean and std across runs
+mean(run1_p50, run2_p50, run3_p50) ± std(run1_p50, run2_p50, run3_p50)
+
+# Example with GPU power P50:
+# final_gpu_watts_p50 = mean([run1_p50, run2_p50, run3_p50])
+# final_gpu_watts_p50_std = std([run1_p50, run2_p50, run3_p50])
+```
+
+### Metadata
+
+Each power metrics result includes:
+- **`samples_collected`**: Total number of samples taken
+- **`monitoring_duration_seconds`**: Total monitoring duration
+
+This allows verifying that sampling worked correctly throughout the benchmark.
+
+---
+
 ### Notes
 - All timing values are wall-clock times measured via `time.perf_counter()`.
 - Benchmarks are repeated at least 3 times to compute mean and standard deviation.
