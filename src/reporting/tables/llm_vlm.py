@@ -2,7 +2,7 @@
 
 from typing import Any
 
-from ..extractors import ModelMetricsExtractor
+from ..extractors import ModelMetricsExtractor, SummaryMetricsExtractor
 from .base import BaseTableGenerator
 
 
@@ -184,4 +184,143 @@ class InferenceTableGenerator(BaseTableGenerator):
             f"{fmt_with_std(tg_p50, tg_p50_std)} | {fmt_with_std(tg_p95, tg_p95_std)} | "
             f"{fmt_with_std(lat_p50, lat_p50_std)} | {fmt_with_std(lat_p95, lat_p95_std)} | "
             f"{input_tokens} | {output_tokens} |"
+        )
+
+
+class InferenceEfficiencyTableGenerator(BaseTableGenerator):
+    """Generate inference performance per watt table for LLMs and VLMs."""
+
+    def __init__(self, results: list[dict[str, Any]], task_type: str):
+        """Initialize with results and task type.
+
+        Args:
+            results: List of benchmark result dictionaries
+            task_type: Either "llms" or "vlms"
+        """
+        super().__init__(results)
+        self.task_type = task_type
+
+    def generate(self) -> str:
+        """Generate inference efficiency table.
+
+        Returns:
+            Markdown table string or empty string if no data
+        """
+        if not self._has_data():
+            return ""
+
+        backend_results = self._extract_metrics_by_backend()
+        if not any(backend_results.values()):
+            return ""
+
+        lines = [self._get_title()]
+
+        for backend in ["LM_STUDIO", "OLLAMA"]:
+            if metrics := backend_results.get(backend):
+                lines.extend(self._generate_backend_section(backend, metrics))
+
+        return "\n".join(lines) + "\n"
+
+    def _get_title(self) -> str:
+        """Get section title based on task type.
+
+        Returns:
+            Section title string
+        """
+        task_name = "LLM" if self.task_type == "llms" else "VLM"
+        return (
+            f"\n#### {task_name} Performance per Watt (GPU)\n"
+            "_Higher values indicate better performance per watt._\n"
+        )
+
+    def _extract_metrics_by_backend(self) -> dict[str, list[dict[str, Any]]]:
+        """Extract efficiency metrics grouped by backend.
+
+        Returns:
+            Dict with backend keys and lists of efficiency metrics
+        """
+        backend_results: dict[str, list] = {
+            "LM_STUDIO": [],
+            "OLLAMA": [],
+        }
+        extractor = SummaryMetricsExtractor()
+
+        for result in self.results:
+            device = result["device_info"]["host"]
+            gpu_watts = extractor.extract_gpu_watts_p50(result)
+
+            if not gpu_watts:
+                continue
+
+            # Extract TPS for the specific backend and task type
+            if self.task_type == "llms":
+                tps_by_backend = extractor.extract_llm_tps_p50_by_backend(result)
+            else:
+                tps_by_backend = extractor.extract_vlm_tps_p50_by_backend(result)
+
+            for backend in ["LM_STUDIO", "OLLAMA"]:
+                tps = tps_by_backend.get(backend)
+                if tps:
+                    efficiency = tps / gpu_watts
+                    backend_results[backend].append(
+                        {
+                            "device": device,
+                            "tps": tps,
+                            "gpu_watts": gpu_watts,
+                            "efficiency": efficiency,
+                        }
+                    )
+
+        return backend_results
+
+    def _generate_backend_section(
+        self, backend: str, metrics: list[dict[str, Any]]
+    ) -> list[str]:
+        """Generate table section for a specific backend.
+
+        Args:
+            backend: Backend name (LM_STUDIO, OLLAMA)
+            metrics: List of efficiency metrics for this backend
+
+        Returns:
+            List of markdown lines for this section
+        """
+        lines = []
+
+        # Add backend header
+        backend_display = backend.replace("_", " ")
+        lines.append(f"\n**{backend_display}**\n")
+
+        # Table header
+        lines.extend(
+            self._build_header(
+                [
+                    "Device",
+                    "TPS P50",
+                    "GPU Power P50 (W)",
+                    "Efficiency (TPS/W)",
+                ]
+            )
+        )
+
+        # Table rows
+        for item in metrics:
+            lines.append(self._format_row(item))
+
+        return lines
+
+    def _format_row(self, item: dict[str, Any]) -> str:
+        """Format a single efficiency table row.
+
+        Args:
+            item: Dict with device and efficiency metrics
+
+        Returns:
+            Markdown table row string
+        """
+        return (
+            f"| {item['device']} | "
+            f"{item['tps']:.1f} | "
+            f"{item['gpu_watts']:.1f} | "
+            f"{item['efficiency']:.2f} |"
         )

@@ -2,7 +2,7 @@
 
 from typing import Any
 
-from ..extractors import ModelMetricsExtractor
+from ..extractors import ModelMetricsExtractor, SummaryMetricsExtractor
 from .base import BaseTableGenerator
 
 
@@ -106,3 +106,83 @@ class EmbeddingsTableGenerator(BaseTableGenerator):
                 )
 
         return rows
+
+
+class EmbeddingsEfficiencyTableGenerator(BaseTableGenerator):
+    """Generate embeddings performance per watt table."""
+
+    def generate(self) -> str:
+        """Generate embeddings efficiency table.
+
+        Returns:
+            Markdown table string or empty string if no data
+        """
+        if not self._has_data():
+            return ""
+
+        metrics_results = self._extract_metrics()
+        if not metrics_results:
+            return ""
+
+        lines = [
+            "\n#### Embeddings Performance per Watt (GPU)\n",
+            "_Higher values indicate better performance per watt._\n",
+        ]
+        lines.extend(
+            self._build_header(
+                [
+                    "Device",
+                    "RPS P50",
+                    "GPU Power P50 (W)",
+                    "Efficiency (RPS/W)",
+                ]
+            )
+        )
+
+        for item in metrics_results:
+            lines.append(self._format_row(item))
+
+        return "\n".join(lines) + "\n"
+
+    def _extract_metrics(self) -> list[dict[str, Any]]:
+        """Extract efficiency metrics for each result.
+
+        Returns:
+            List of dicts with result and efficiency metrics
+        """
+        metrics_results = []
+        extractor = SummaryMetricsExtractor()
+
+        for result in self.results:
+            embeddings_rps = extractor.extract_embeddings_rps_p50(result)
+            gpu_watts = extractor.extract_gpu_watts_p50(result)
+
+            # Only include results with both metrics
+            if embeddings_rps and gpu_watts:
+                efficiency = embeddings_rps / gpu_watts
+                metrics_results.append(
+                    {
+                        "device": result["device_info"]["host"],
+                        "rps": embeddings_rps,
+                        "gpu_watts": gpu_watts,
+                        "efficiency": efficiency,
+                    }
+                )
+
+        return metrics_results
+
+    def _format_row(self, item: dict[str, Any]) -> str:
+        """Format a single efficiency table row.
+
+        Args:
+            item: Dict with device and efficiency metrics
+
+        Returns:
+            Markdown table row string
+        """
+        return (
+            f"| {item['device']} | "
+            f"{item['rps']:.1f} | "
+            f"{item['gpu_watts']:.1f} | "
+            f"{item['efficiency']:.2f} |"
+        )

@@ -48,6 +48,8 @@ The `MLX` backend makes the benchmark harder to maintain, but it provides a more
 
 *W - Watts (power consumption)*
 
+*Efficiency metrics (RPS/W, TPS/W) are calculated using GPU power consumption*
+
 
 #### Performance Efficiency (Performance per Watt)
 

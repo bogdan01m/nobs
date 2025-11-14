@@ -46,11 +46,12 @@ class ResultsSectionGenerator:
             return f"{self.plot_base_path}/plots/{filename}"
         return f"plots/{filename}"
 
-    def generate(self, include_plots: bool = True) -> str:
+    def generate(self, include_plots: bool = True, summary_only: bool = False) -> str:
         """Generate complete results section.
 
         Args:
             include_plots: Whether to include plots/visualizations
+            summary_only: If True, only generate summary table (for README)
 
         Returns:
             Complete markdown section with tables and optionally plots
@@ -58,15 +59,23 @@ class ResultsSectionGenerator:
         if not self.results:
             return self._empty_results_message()
 
-        sections = [
-            self._generate_header(),
-            self._generate_summary(),
-            self._generate_power_metrics(),
-            self._generate_embeddings(include_plots=include_plots),
-            self._generate_llms(include_plots=include_plots),
-            self._generate_vlms(include_plots=include_plots),
-            self._generate_footer(),
-        ]
+        if summary_only:
+            # For README: only header + summary table
+            sections = [
+                self._generate_header(),
+                self._generate_summary(include_efficiency_plots=False),
+            ]
+        else:
+            # For docs/results.md: everything with plots
+            sections = [
+                self._generate_header(),
+                self._generate_summary(include_efficiency_plots=include_plots),
+                self._generate_power_metrics(),
+                self._generate_embeddings(include_plots=include_plots),
+                self._generate_llms(include_plots=include_plots),
+                self._generate_vlms(include_plots=include_plots),
+                self._generate_footer(),
+            ]
 
         return "\n".join(filter(None, sections))
 
@@ -89,29 +98,33 @@ class ResultsSectionGenerator:
 
         return "## Benchmark Results\n\n" f"> **Last Updated**: {timestamp}\n"
 
-    def _generate_summary(self) -> str:
+    def _generate_summary(self, include_efficiency_plots: bool = True) -> str:
         """Generate summary ranking table.
+
+        Args:
+            include_efficiency_plots: Whether to include efficiency plots after summary
 
         Returns:
             Summary table markdown
         """
         summary = SummaryTableGenerator(self.results).generate()
 
-        # Add efficiency plots after summary table
-        try:
-            plot_efficiency_comparison(self.results_dir)
-            plot_section = (
-                "\n#### Performance Efficiency (Performance per Watt)\n\n"
-                f"![Embeddings Efficiency]({self._plot_path('efficiency_embeddings.png')})\n"
-                "*Embeddings efficiency across devices. Higher values indicate better performance per watt.*\n\n"
-                f"![LLM Efficiency]({self._plot_path('efficiency_llm.png')})\n"
-                "*LLM inference efficiency by backend. Higher values indicate better performance per watt.*\n\n"
-                f"![VLM Efficiency]({self._plot_path('efficiency_vlm.png')})\n"
-                "*VLM inference efficiency by backend. Higher values indicate better performance per watt.*\n"
-            )
-            summary += plot_section
-        except Exception as e:
-            print(f"⚠️  Failed to generate efficiency plots: {e}")
+        # Add efficiency plots after summary table if requested
+        if include_efficiency_plots:
+            try:
+                plot_efficiency_comparison(self.results_dir)
+                plot_section = (
+                    "\n#### Performance Efficiency (Performance per Watt)\n\n"
+                    f"![Embeddings Efficiency]({self._plot_path('efficiency_embeddings.png')})\n"
+                    "*Embeddings efficiency across devices. Higher values indicate better performance per watt.*\n\n"
+                    f"![LLM Efficiency]({self._plot_path('efficiency_llm.png')})\n"
+                    "*LLM inference efficiency by backend. Higher values indicate better performance per watt.*\n\n"
+                    f"![VLM Efficiency]({self._plot_path('efficiency_vlm.png')})\n"
+                    "*VLM inference efficiency by backend. Higher values indicate better performance per watt.*\n"
+                )
+                summary += plot_section
+            except Exception as e:
+                print(f"⚠️  Failed to generate efficiency plots: {e}")
 
         return summary
 

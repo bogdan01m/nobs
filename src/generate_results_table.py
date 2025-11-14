@@ -17,14 +17,14 @@ sns.set_style("darkgrid")
 def update_readme(
     results_dir: Path = Path("results"), readme_path: Path = Path("README.md")
 ) -> None:
-    """Update README.md with tables only (no plots).
+    """Update README.md with summary table only.
 
     Args:
         results_dir: Directory containing benchmark result JSON files
         readme_path: Path to README.md file
     """
     generator = ResultsSectionGenerator(results_dir)
-    results_section = generator.generate(include_plots=False)
+    results_section = generator.generate(summary_only=True)
 
     updater = ReadmeUpdater(readme_path)
     updater.update(results_section)

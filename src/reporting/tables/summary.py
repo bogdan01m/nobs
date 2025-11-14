@@ -174,4 +174,5 @@ class SummaryTableGenerator(BaseTableGenerator):
             "*RPS - Requests Per Second (embeddings throughput)*\n",
             "*TPS - Tokens Per Second (generation speed)*\n",
             "*W - Watts (power consumption)*\n",
+            "*Efficiency metrics (RPS/W, TPS/W) are calculated using GPU power consumption*\n",
         ]
