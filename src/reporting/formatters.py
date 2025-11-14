@@ -149,3 +149,27 @@ def format_battery_info(start: Any, end: Any, delta: Any) -> str:
     if start == "N/A" or end == "N/A" or delta == "N/A":
         return "N/A"
     return f"{start}% / {end}% / {delta:+.1f}%"
+
+
+def format_duration(seconds: float | None) -> str:
+    """Format duration from seconds to human-readable format.
+
+    Args:
+        seconds: Duration in seconds
+
+    Returns:
+        Formatted string like "1h 23m" or "45m 30s" or "N/A"
+    """
+    if seconds is None:
+        return "N/A"
+
+    hours = int(seconds // 3600)
+    minutes = int((seconds % 3600) // 60)
+    secs = int(seconds % 60)
+
+    if hours > 0:
+        return f"{hours}h {minutes}m"
+    elif minutes > 0:
+        return f"{minutes}m {secs}s"
+    else:
+        return f"{secs}s"

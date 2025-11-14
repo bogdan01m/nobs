@@ -239,6 +239,21 @@ class PowerMetricsExtractor:
 
         return (vram_p50, vram_p95)
 
+    @staticmethod
+    def get_monitoring_duration(power: dict[str, Any]) -> float | None:
+        """Extract monitoring duration in seconds.
+
+        Args:
+            power: Power metrics dictionary
+
+        Returns:
+            Duration in seconds or None if not available
+        """
+        duration = power.get("monitoring_duration_seconds")
+        if duration is not None and isinstance(duration, (int, float)):
+            return duration
+        return None
+
 
 class ModelMetricsExtractor:
     """Extract model-specific performance metrics."""

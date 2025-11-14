@@ -54,20 +54,23 @@ The `MLX` backend makes the benchmark harder to maintain, but it provides a more
 
 ### Power Metrics
 
-| Device | CPU Usage (p50/p95) | RAM Used GB (p50/p95) | VRAM Used GB (p50/p95) | GPU Usage (p50/p95) | GPU Temp (p50/p95) | Battery (start/end/Δ) | GPU Power (p50/p95) | CPU Power (p50/p95) |
-|------|------|------|------|------|------|------|------|------|
-| ASUSTeK COMPUTER ASUS Vivobook Pro N6506MV | 24.2% / 25.7% | 10.8GB / 13.2GB | 7.0GB / 7.2GB | 16.0% / 41.0% | 64.0°C / 66.0°C | 99.0% / 100.0% / -1.0% | 18.3W / 44.8W | N/A |
-| Mac16,6 | 4.0% / 12.0% | 22.3GB / 23.9GB | 10.7GB / 14.5GB | 97.0% / 100.0% | N/A | 85% / 85% / +0.0% | 11.7W / 32.3W | 1.1W / 2.2W |
-| Mac16,6 (on battery) | 4.1% / 10.8% | 21.4GB / 24.5GB | 11.5GB / 14.6GB | 96.0% / 100.0% | N/A | 85% / 29% / +56.0% | 11.3W / 30.5W | 1.1W / 2.3W |
-| OpenStack Nova 26.0.7-1 A100 40GB | 23.4% / 32.0% | 5.4GB / 6.2GB | 12.0GB / 13.6GB | 77.0% / 85.0% | 59.0°C / 66.0°C | N/A | 218.2W / 256.2W | N/A |
-| OpenStack Nova A100 80GB | 8.7% / 11.3% | 5.6GB / 6.3GB | 12.0GB / 13.6GB | 86.0% / 90.0% | 52.0°C / 55.0°C | N/A | 230.5W / 274.4W | N/A |
-| OpenStack Nova RTX3090 | 17.9% / 22.2% | 4.9GB / 5.6GB | 11.7GB / 13.2GB | 82.0% / 86.0% | 62.0°C / 62.0°C | N/A | 345.6W / 348.7W | N/A |
-| OpenStack Nova RTX4090 | 17.5% / 20.9% | 4.8GB / 5.6GB | 11.8GB / 13.5GB | 84.0% / 89.0% | 57.0°C / 60.0°C | N/A | 282.5W / 331.8W | N/A |
-| OpenStack Nova Tesla T4 | 14.7% / 16.7% | 3.8GB / 4.4GB | 10.7GB / 12.4GB | 95.0% / 96.0% | 49.0°C / 49.0°C | N/A | 68.9W / 71.5W | N/A |
+| Device | CPU Usage (p50/p95) | RAM Used GB (p50/p95) | VRAM Used GB (p50/p95) | GPU Usage (p50/p95) | GPU Temp (p50/p95) | Battery (start/end/Δ) | Duration | GPU Power (p50/p95) | CPU Power (p50/p95) |
+|------|------|------|------|------|------|------|------|------|------|
+| ASUSTeK COMPUTER ASUS Vivobook Pro N6506MV | 24.2% / 25.7% | 10.8GB / 13.2GB | 7.0GB / 7.2GB | 16.0% / 41.0% | 64.0°C / 66.0°C | 99.0% / 100.0% / -1.0% | 2h 8m | 18.3W / 44.8W | N/A |
+| Mac16,6 | 4.0% / 12.0% | 22.3GB / 23.9GB | 10.7GB / 14.5GB | 97.0% / 100.0% | N/A | 85% / 85% / +0.0% | 42m 56s | 11.7W / 32.3W | 1.1W / 2.2W |
+| Mac16,6 (on battery) | 4.1% / 10.8% | 21.4GB / 24.5GB | 11.5GB / 14.6GB | 96.0% / 100.0% | N/A | 85% / 29% / +56.0% | 44m 32s | 11.3W / 30.5W | 1.1W / 2.3W |
+| OpenStack Nova 26.0.7-1 A100 40GB | 23.4% / 32.0% | 5.4GB / 6.2GB | 12.0GB / 13.6GB | 77.0% / 85.0% | 59.0°C / 66.0°C | N/A | 16m 44s | 218.2W / 256.2W | N/A |
+| OpenStack Nova A100 80GB | 8.7% / 11.3% | 5.6GB / 6.3GB | 12.0GB / 13.6GB | 86.0% / 90.0% | 52.0°C / 55.0°C | N/A | 14m 38s | 230.5W / 274.4W | N/A |
+| OpenStack Nova RTX3090 | 17.9% / 22.2% | 4.9GB / 5.6GB | 11.7GB / 13.2GB | 82.0% / 86.0% | 62.0°C / 62.0°C | N/A | 15m 10s | 345.6W / 348.7W | N/A |
+| OpenStack Nova RTX4090 | 17.5% / 20.9% | 4.8GB / 5.6GB | 11.8GB / 13.5GB | 84.0% / 89.0% | 57.0°C / 60.0°C | N/A | 13m 12s | 282.5W / 331.8W | N/A |
+| OpenStack Nova Tesla T4 | 14.7% / 16.7% | 3.8GB / 4.4GB | 10.7GB / 12.4GB | 95.0% / 96.0% | 49.0°C / 49.0°C | N/A | 44m 32s | 68.9W / 71.5W | N/A |
 
 !!! Note
 
     For devices with unified memory (e.g. Apple Silicon), **VRAM usage** represents the portion of shared RAM allocated to the GPU — it does not indicate a separate dedicated memory pool as on discrete GPUs.
+
+
+    **Duration** shows the total monitoring time during benchmark execution.
 
 
 

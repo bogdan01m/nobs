@@ -3,7 +3,7 @@
 from typing import Any
 
 from ..extractors import PowerMetricsExtractor
-from ..formatters import format_battery_info, format_percentile_pair
+from ..formatters import format_battery_info, format_duration, format_percentile_pair
 from .base import BaseTableGenerator
 
 
@@ -30,6 +30,7 @@ class PowerMetricsTableGenerator(BaseTableGenerator):
                     "GPU Usage (p50/p95)",
                     "GPU Temp (p50/p95)",
                     "Battery (start/end/Δ)",
+                    "Duration",
                     "GPU Power (p50/p95)",
                     "CPU Power (p50/p95)",
                 ]
@@ -46,6 +47,10 @@ class PowerMetricsTableGenerator(BaseTableGenerator):
         lines.append(
             "    For devices with unified memory (e.g. Apple Silicon), **VRAM usage** represents the portion of shared RAM allocated to the GPU — "
             "it does not indicate a separate dedicated memory pool as on discrete GPUs.\n"
+        )
+        lines.append("")
+        lines.append(
+            "    **Duration** shows the total monitoring time during benchmark execution.\n"
         )
 
         return "\n".join(lines) + "\n"
@@ -77,6 +82,7 @@ class PowerMetricsTableGenerator(BaseTableGenerator):
         gpu_temp_p50, gpu_temp_p95 = extractor.get_gpu_temperature_metrics(power)
         vram_p50, vram_p95 = extractor.get_vram_metrics(power)
         battery_start, battery_end, battery_delta = extractor.get_battery_metrics(power)
+        duration_seconds = extractor.get_monitoring_duration(power)
         gpu_power_p50, gpu_power_p95 = extractor.get_gpu_power_metrics(power)
         cpu_power_p50, cpu_power_p95 = extractor.get_cpu_power_metrics(power)
 
@@ -87,10 +93,11 @@ class PowerMetricsTableGenerator(BaseTableGenerator):
         gpu_usage = format_percentile_pair(gpu_util_p50, gpu_util_p95, "%")
         gpu_temp = format_percentile_pair(gpu_temp_p50, gpu_temp_p95, "°C")
         battery_info = format_battery_info(battery_start, battery_end, battery_delta)
+        duration = format_duration(duration_seconds)
         gpu_power = format_percentile_pair(gpu_power_p50, gpu_power_p95, "W")
         cpu_power = format_percentile_pair(cpu_power_p50, cpu_power_p95, "W")
 
         return (
             f"| {device} | {cpu_usage} | {ram_usage} | {vram_usage} | {gpu_usage} | "
-            f"{gpu_temp} | {battery_info} | {gpu_power} | {cpu_power} |"
+            f"{gpu_temp} | {battery_info} | {duration} | {gpu_power} | {cpu_power} |"
         )
