@@ -51,17 +51,6 @@ The `MLX` backend makes the benchmark harder to maintain, but it provides a more
 *Efficiency metrics (RPS/W, TPS/W) are calculated using GPU power consumption*
 
 
-#### Performance Efficiency (Performance per Watt)
-
-![Embeddings Efficiency](plots/efficiency_embeddings.png)
-*Embeddings efficiency across devices. Higher values indicate better performance per watt.*
-
-![LLM Efficiency](plots/efficiency_llm.png)
-*LLM inference efficiency by backend. Higher values indicate better performance per watt.*
-
-![VLM Efficiency](plots/efficiency_vlm.png)
-*VLM inference efficiency by backend. Higher values indicate better performance per watt.*
-
 
 ### Power Metrics
 
@@ -104,6 +93,11 @@ _RPS = Rows Per Second — number of text samples encoded per second._
 *Throughput comparison for different embedding models across hardware. Higher values indicate better performance.*
 
 
+![Embeddings Efficiency](plots/efficiency_embeddings.png)
+
+*Embeddings efficiency (RPS/W) across devices. Higher values indicate better performance per watt.*
+
+
 ### LLMs
 
 #### LLM Inference (10 prompts from awesome-chatgpt-prompts)
@@ -130,15 +124,6 @@ _RPS = Rows Per Second — number of text samples encoded per second._
 | OpenStack Nova RTX4090 | gpt-oss:20b | 148.69 ± 0.54 | 153.80 ± 0.24 | 2.69 ± 0.02 | 13.65 ± 0.04 | 0.26 ± 0.00 | 8.68 ± 0.03 | 6.25 ± 0.12 | 18.51 ± 0.08 | 1728 | 11939 |
 | OpenStack Nova Tesla T4 | gpt-oss:20b | 41.49 ± 0.23 | 42.17 ± 0.07 | 13.07 ± 2.85 | 52.33 ± 15.42 | 0.85 ± 0.11 | 35.54 ± 4.21 | 15.88 ± 1.51 | 84.51 ± 10.32 | 1728 | 12812 |
 
-![LLM TTFT vs Input Tokens](plots/llm_ttft_vs_input_tokens.png)
-
-*Time To First Token across prompt lengths. Lower values mean faster first responses.*
-
-
-![LLM Generation Time vs Output Tokens](plots/llm_tg_vs_output_tokens.png)
-
-*Generation time growth relative to output length. Lower values reflect faster completions.*
-
 ![LLM E2E Latency Performance](plots/llm_latency.png)
 
 *End-to-End Latency P50 - Lower is better. Measures full request-to-response time.*
@@ -147,6 +132,11 @@ _RPS = Rows Per Second — number of text samples encoded per second._
 ![LLM Throughput Performance](plots/llm_tps.png)
 
 *Token Generation per second (TPS) - Higher is better. Measures token generation speed.*
+
+
+![LLM Efficiency](plots/efficiency_llm.png)
+
+*LLM inference efficiency (TPS/W) by backend. Higher values indicate better performance per watt.*
 
 
 ### VLMs
@@ -175,15 +165,6 @@ _RPS = Rows Per Second — number of text samples encoded per second._
 | OpenStack Nova RTX4090 | qwen3-vl:8b | 130.42 ± 0.25 | 130.94 ± 0.22 | 5.53 ± 0.01 | 8.99 ± 0.01 | 5.85 ± 0.07 | 7.29 ± 0.01 | 10.97 ± 0.21 | 15.24 ± 0.03 | 1814 | 14971 |
 | OpenStack Nova Tesla T4 | qwen3-vl:8b | 32.63 ± 0.01 | 32.74 ± 0.06 | 23.38 ± 0.04 | 32.20 ± 0.02 | 23.17 ± 0.10 | 32.79 ± 0.04 | 46.78 ± 0.51 | 63.59 ± 0.05 | 1814 | 15706 |
 
-![VLM TTFT vs Input Tokens](plots/vlm_ttft_vs_input_tokens.png)
-
-*TTFT behaviour for multimodal prompts. Lower values mean faster first visual-token outputs.*
-
-
-![VLM Generation Time vs Output Tokens](plots/vlm_tg_vs_output_tokens.png)
-
-*Generation time vs output token count for multimodal responses. Lower values are faster.*
-
 ![VLM E2E Latency Performance](plots/vlm_latency.png)
 
 *End-to-End Latency P50 - Lower is better. Measures full request-to-response time.*
@@ -192,6 +173,11 @@ _RPS = Rows Per Second — number of text samples encoded per second._
 ![VLM Throughput Performance](plots/vlm_tps.png)
 
 *Token Generation per second (TPS) - Higher is better. Measures token generation speed.*
+
+
+![VLM Efficiency](plots/efficiency_vlm.png)
+
+*VLM inference efficiency (TPS/W) by backend. Higher values indicate better performance per watt.*
 
 
 ---

@@ -163,7 +163,9 @@ def plot_efficiency_comparison(
         )
         ax1.set_yticks(range(len(devices)))
         ax1.set_yticklabels(devices, fontsize=10)
-        ax1.set_xlabel("Efficiency (RPS/W)", fontsize=11, fontweight="bold")
+        ax1.set_xlabel(
+            "Efficiency (RPS P50 / GPU W P50)", fontsize=11, fontweight="bold"
+        )
         ax1.set_title(
             "Embeddings Efficiency: Performance per Watt (Higher is Better)",
             fontsize=13,
@@ -217,7 +219,9 @@ def plot_efficiency_comparison(
         )
         ax2.set_yticks(range(len(labels)))
         ax2.set_yticklabels(labels, fontsize=10)
-        ax2.set_xlabel("Efficiency (TPS/W)", fontsize=11, fontweight="bold")
+        ax2.set_xlabel(
+            "Efficiency (TPS P50 / GPU W P50)", fontsize=11, fontweight="bold"
+        )
         ax2.set_title(
             "LLM Inference Efficiency: Performance per Watt (Higher is Better)",
             fontsize=13,
@@ -271,7 +275,9 @@ def plot_efficiency_comparison(
         )
         ax3.set_yticks(range(len(labels)))
         ax3.set_yticklabels(labels, fontsize=10)
-        ax3.set_xlabel("Efficiency (TPS/W)", fontsize=11, fontweight="bold")
+        ax3.set_xlabel(
+            "Efficiency (TPS P50 / GPU W P50)", fontsize=11, fontweight="bold"
+        )
         ax3.set_title(
             "VLM Inference Efficiency: Performance per Watt (Higher is Better)",
             fontsize=13,

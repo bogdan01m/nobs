@@ -14,7 +14,6 @@ from ..tables import (
     PowerMetricsTableGenerator,
     SummaryTableGenerator,
 )
-from .visualizations import generate_token_metric_visualizations
 
 
 class ResultsSectionGenerator:
@@ -102,30 +101,12 @@ class ResultsSectionGenerator:
         """Generate summary ranking table.
 
         Args:
-            include_efficiency_plots: Whether to include efficiency plots after summary
+            include_efficiency_plots: Whether to include efficiency plots after summary (deprecated, now ignored)
 
         Returns:
             Summary table markdown
         """
         summary = SummaryTableGenerator(self.results).generate()
-
-        # Add efficiency plots after summary table if requested
-        if include_efficiency_plots:
-            try:
-                plot_efficiency_comparison(self.results_dir)
-                plot_section = (
-                    "\n#### Performance Efficiency (Performance per Watt)\n\n"
-                    f"![Embeddings Efficiency]({self._plot_path('efficiency_embeddings.png')})\n"
-                    "*Embeddings efficiency across devices. Higher values indicate better performance per watt.*\n\n"
-                    f"![LLM Efficiency]({self._plot_path('efficiency_llm.png')})\n"
-                    "*LLM inference efficiency by backend. Higher values indicate better performance per watt.*\n\n"
-                    f"![VLM Efficiency]({self._plot_path('efficiency_vlm.png')})\n"
-                    "*VLM inference efficiency by backend. Higher values indicate better performance per watt.*\n"
-                )
-                summary += plot_section
-            except Exception as e:
-                print(f"⚠️  Failed to generate efficiency plots: {e}")
-
         return summary
 
     def _generate_power_metrics(self) -> str:
@@ -173,6 +154,19 @@ class ResultsSectionGenerator:
                 except Exception as e:
                     print(f"⚠️  Failed to generate embeddings plot: {e}")
 
+                # Add embeddings efficiency plot
+                try:
+                    plot_efficiency_comparison(self.results_dir)
+                    sections.append(
+                        f"\n![Embeddings Efficiency]({self._plot_path('efficiency_embeddings.png')})\n"
+                    )
+                    sections.append(
+                        "*Embeddings efficiency (RPS/W) across devices. "
+                        "Higher values indicate better performance per watt.*\n"
+                    )
+                except Exception as e:
+                    print(f"⚠️  Failed to generate embeddings efficiency plot: {e}")
+
         return "\n".join(sections)
 
     def _generate_llms(self, include_plots: bool = True) -> str:
@@ -190,30 +184,13 @@ class ResultsSectionGenerator:
 
         sections = ["\n### LLMs\n", table]
 
-        # Add token metric plots if requested
+        # Add performance plots if requested
         if include_plots:
             has_llms = any(
                 any(t["task"] == "llms" for t in r["tasks"]) for r in self.results
             )
 
             if has_llms:
-                token_plots = generate_token_metric_visualizations(self.results_dir)
-                llm_plots = token_plots.get("llms")
-
-                if llm_plots:
-                    sections.append(
-                        f"![LLM TTFT vs Input Tokens]({self._plot_path('llm_ttft_vs_input_tokens.png')})\n"
-                    )
-                    sections.append(
-                        "*Time To First Token across prompt lengths. Lower values mean faster first responses.*\n\n"
-                    )
-                    sections.append(
-                        f"![LLM Generation Time vs Output Tokens]({self._plot_path('llm_tg_vs_output_tokens.png')})\n"
-                    )
-                    sections.append(
-                        "*Generation time growth relative to output length. Lower values reflect faster completions.*\n"
-                    )
-
                 # Add performance plots
                 try:
                     plot_llm_performance(self.results_dir)
@@ -234,6 +211,19 @@ class ResultsSectionGenerator:
                 except Exception as e:
                     print(f"⚠️  Failed to generate LLM plots: {e}")
 
+                # Add LLM efficiency plot
+                try:
+                    plot_efficiency_comparison(self.results_dir)
+                    sections.append(
+                        f"\n![LLM Efficiency]({self._plot_path('efficiency_llm.png')})\n"
+                    )
+                    sections.append(
+                        "*LLM inference efficiency (TPS/W) by backend. "
+                        "Higher values indicate better performance per watt.*\n"
+                    )
+                except Exception as e:
+                    print(f"⚠️  Failed to generate LLM efficiency plot: {e}")
+
         return "\n".join(sections)
 
     def _generate_vlms(self, include_plots: bool = True) -> str:
@@ -251,30 +241,13 @@ class ResultsSectionGenerator:
 
         sections = ["\n### VLMs\n", table]
 
-        # Add token metric plots if requested
+        # Add performance plots if requested
         if include_plots:
             has_vlms = any(
                 any(t["task"] == "vlms" for t in r["tasks"]) for r in self.results
             )
 
             if has_vlms:
-                token_plots = generate_token_metric_visualizations(self.results_dir)
-                vlm_plots = token_plots.get("vlms")
-
-                if vlm_plots:
-                    sections.append(
-                        f"![VLM TTFT vs Input Tokens]({self._plot_path('vlm_ttft_vs_input_tokens.png')})\n"
-                    )
-                    sections.append(
-                        "*TTFT behaviour for multimodal prompts. Lower values mean faster first visual-token outputs.*\n\n"
-                    )
-                    sections.append(
-                        f"![VLM Generation Time vs Output Tokens]({self._plot_path('vlm_tg_vs_output_tokens.png')})\n"
-                    )
-                    sections.append(
-                        "*Generation time vs output token count for multimodal responses. Lower values are faster.*\n"
-                    )
-
                 # Add performance plots
                 try:
                     plot_vlm_performance(self.results_dir)
@@ -294,6 +267,19 @@ class ResultsSectionGenerator:
                     )
                 except Exception as e:
                     print(f"⚠️  Failed to generate VLM plots: {e}")
+
+                # Add VLM efficiency plot
+                try:
+                    plot_efficiency_comparison(self.results_dir)
+                    sections.append(
+                        f"\n![VLM Efficiency]({self._plot_path('efficiency_vlm.png')})\n"
+                    )
+                    sections.append(
+                        "*VLM inference efficiency (TPS/W) by backend. "
+                        "Higher values indicate better performance per watt.*\n"
+                    )
+                except Exception as e:
+                    print(f"⚠️  Failed to generate VLM efficiency plot: {e}")
 
         return "\n".join(sections)
 
