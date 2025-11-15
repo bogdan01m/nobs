@@ -116,8 +116,8 @@ class InferenceTableGenerator(BaseTableGenerator):
                     "TG P95 (s)",
                     "Latency P50 (s)",
                     "Latency P95 (s)",
-                    "Input Tokens",
-                    "Output Tokens",
+                    "Input Tokens (total avg)",
+                    "Output Tokens (total avg)",
                 ]
             )
         )
@@ -140,10 +140,32 @@ class InferenceTableGenerator(BaseTableGenerator):
         device = item["device"]
         model_data = item["task"]["model"]
 
-        # Get token counts from first run
-        first_run = model_data["runs"][0] if model_data["runs"] else {}
-        input_tokens = first_run.get("total_input_tokens", "-")
-        output_tokens = first_run.get("total_output_tokens", "-")
+        # Calculate average token counts across all runs
+        runs = model_data.get("runs", [])
+        if runs:
+            input_tokens_list = [
+                r.get("total_input_tokens", 0)
+                for r in runs
+                if r.get("total_input_tokens")
+            ]
+            output_tokens_list = [
+                r.get("total_output_tokens", 0)
+                for r in runs
+                if r.get("total_output_tokens")
+            ]
+            input_tokens = (
+                round(sum(input_tokens_list) / len(input_tokens_list))
+                if input_tokens_list
+                else "-"
+            )
+            output_tokens = (
+                round(sum(output_tokens_list) / len(output_tokens_list))
+                if output_tokens_list
+                else "-"
+            )
+        else:
+            input_tokens = "-"
+            output_tokens = "-"
 
         # Helper function to format value with std
         def fmt_with_std(val, std_val):
